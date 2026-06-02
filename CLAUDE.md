@@ -10,23 +10,24 @@ An interactive, art-museum-style resume portfolio built as a side-scrolling web 
 - **Build a little, test a little.** Each milestone has a hard definition of done. Nothing moves forward until that bar is cleared.
 
 ## Owner / Context
-- **Owner:** [PLACEHOLDER — user's full name]
-- **Professional title:** [PLACEHOLDER — e.g., "Software Engineer", "Product Manager"]
+- **Owner:** Abigail (Abby) Kamenetsky
+- **Degree:** BA Economics + BS Computer Science, University of Chicago (2025–2029)
 - **Target audience:** Recruiters and hiring managers — they have 90 seconds and have seen a thousand PDF resumes.
 
 ## Tech Stack (June 2026)
 - **Framework:** React 19 + Vite 6
-- **Language:** [PLACEHOLDER — TypeScript or JavaScript, pending user preference]
+- **Language:** JavaScript (not TypeScript — solo project, simple data shapes)
 - **Animation:** Framer Motion
 - **Audio:** Howler.js
 - **Styling:** CSS Modules
-- **Deployment:** Vercel (auto-deploy on push to main)
-- **Domain:** [PLACEHOLDER — custom domain or Vercel auto-URL]
+- **Deployment:** Vercel (auto-deploy on push to main, free tier)
+- **Domain:** Vercel auto-URL for now, custom domain deferred
 - **Node version:** 22 LTS
 
 ## Repository
-- **GitHub username:** [PLACEHOLDER]
+- **GitHub username:** abigailkamenetsky
 - **Repo name:** museum-portfolio
+- **Remote:** https://github.com/abigailkamenetsky/museum-portfolio.git
 - **Branch strategy:** `main` is always deployable. Feature work on named branches. Every completed milestone ends with a commit and push.
 
 ## File Structure
@@ -90,21 +91,21 @@ Each milestone must reach its definition of done before the next one starts. No 
 | 10 | Launch: custom domain, Vercel connected, LinkedIn/resume updated | Pending |
 
 ## Content Map (Resume Sections)
-[PLACEHOLDER — to be filled after user provides resume content]
+Room names are TBD — user will supply them. 4 rooms, 2 paintings each = 8 total slots.
 
-Each "painting" maps to one resume section:
-- Room 1: [Theme TBD]
-  - Painting 1: [Artwork TBD] → [Project/Experience TBD]
-  - Painting 2: [Artwork TBD] → [Project/Experience TBD]
-- Room 2: [Theme TBD]
-  - ...
-- Room 3: [Theme TBD]
-  - ...
-- Room 4: [Theme TBD]
-  - ...
+| # | Status | Painting | Artist | Year | Museum | Resume Section |
+|---|--------|----------|--------|------|--------|----------------|
+| 1 | APPROVED | The School of Athens | Raphael | 1509 | Vatican Museums | UChicago, QUBIT Cohort, Academic Identity, Congressional Recognition |
+| 2 | TBD | — | — | — | — | Technical Skills / Looking Forward |
+| 3 | APPROVED | The Garden of Earthly Delights | Hieronymus Bosch | 1490–1510 | Prado Museum | HelpMynd — mental health/medicine (Stanford Hospital, global mental health reach, 130+ countries) |
+| 4 | APPROVED | La Primavera | Botticelli | 1477–1482 | Uffizi Gallery | Winter Metcalf Consulting (sustainability venture, market analysis, investor pitch) |
+| 5 | APPROVED | The Temptation of St. Anthony | Salvador Dalí | 1946 | Royal Museums of Fine Arts of Belgium | Amazon Web Services (ML model, geographic risk patterns, 2nd place international) |
+| 6 | TBD | — | — | — | — | Carnegie Mellon Research (NP-hard algorithms, international presentation) |
+| 7 | APPROVED | The Calling of Saint Matthew | Caravaggio | 1599–1600 | San Luigi dei Francesi, Rome | Blue Chips Investment Club (DCF valuation, financial analysis, intrinsic value) |
+| 8 | APPROVED | Breton Brother and Sister | William-Adolphe Bouguereau | 1871 | Metropolitan Museum of Art | Introduction / Profile / Personal — personal significance: Abby's baby brother who was blonde |
 
 ## Visual Atmosphere
-[PLACEHOLDER — dark/dramatic Louvre, bright/airy MoMA, warm classical Met, or custom]
+Dark Academia. Victorian/Neoclassical mansion. White gallery walls (paintings must pop). Dark brown hardwood floors. Heavy crown molding throughout. Mauritshuis museum as the primary visual reference. Warm, classical, slightly gothic — Wuthering Heights / Kate Bush in spirit. Not bright or airy.
 
 ## Claude Code Working Rules
 - **Never build across multiple milestones in one step.** One milestone, one conversation, one commit.
