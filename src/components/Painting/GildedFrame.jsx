@@ -1,22 +1,36 @@
 /*
- * Baroque gilded frame — drawn entirely in SVG.
- * Corner ornaments are acanthus C-scrolls with lobes and rosettes.
- * Rail faces show a carved profile gradient (bright edge → deep channel → bright edge).
- * Children render as the painting canvas inside the opening.
+ * Baroque gilded frame — SVG scrollwork on a dark substrate.
+ *
+ * Architecture: near-black base rects for all rails, then gold
+ * scroll ornaments drawn as thick stroked paths layered on top.
+ * Each scroll uses a dark backing stroke + gold surface stroke so
+ * the carved channel appears between adjacent scrolls automatically.
+ *
+ * Reference: the flowing C-scroll / S-scroll baroque style with
+ * spiral termini, multiple overlapping elements per corner, and
+ * large side flourishes.
  */
 
-const RAIL = 32        // frame rail width in px
-const CW   = 204       // canvas (painting) width
-const CH   = 264       // canvas (painting) height
-const FW   = CW + RAIL * 2   // total frame width  = 268
-const FH   = CH + RAIL * 2   // total frame height = 328
+const RAIL = 34
+const CW   = 204
+const CH   = 264
+const FW   = CW + RAIL * 2
+const FH   = CH + RAIL * 2
+
+/* ── GOLD PALETTE ─────────────────────────────────────────────────── */
+const G_LIGHT  = '#d4a832'   // raised highlight
+const G_MID    = '#b88c20'   // main scroll surface
+const G_DARK   = '#8a6410'   // shadow side of scroll
+const G_DEEP   = '#1e0c02'   // carved channel / base
+const G_EDGE   = '#c09828'   // thin outline on base
 
 export default function GildedFrame({ children }) {
   return (
-    <div style={{ position: 'relative', display: 'inline-block',
-      filter: 'drop-shadow(0 12px 36px rgba(0,0,0,0.78)) drop-shadow(0 4px 10px rgba(0,0,0,0.5))' }}>
-
-      {/* SVG frame drawn on top — pointer-events none so canvas is clickable */}
+    <div style={{
+      position: 'relative',
+      display: 'inline-block',
+      filter: 'drop-shadow(0 14px 40px rgba(0,0,0,0.82)) drop-shadow(0 4px 10px rgba(0,0,0,0.55))',
+    }}>
       <svg
         width={FW} height={FH}
         viewBox={`0 0 ${FW} ${FH}`}
@@ -24,254 +38,205 @@ export default function GildedFrame({ children }) {
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          {/* ── ANTIQUE BRASS GRADIENTS ────────────────────────────── */}
-          {/* Palette: dull warm brass — muted highlight, dark channel, no flash */}
-          {/* Top rail: bright→channel→bright (top→bottom) */}
-          <linearGradient id="gf-top" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"    stopColor="#a88830" />
-            <stop offset="14%"   stopColor="#8a6c1c" />
-            <stop offset="32%"   stopColor="#523a0a" />
-            <stop offset="50%"   stopColor="#2a1402" />
-            <stop offset="68%"   stopColor="#523a0a" />
-            <stop offset="86%"   stopColor="#8a6c1c" />
-            <stop offset="100%"  stopColor="#9e8028" />
-          </linearGradient>
-          {/* Bottom rail: reversed */}
-          <linearGradient id="gf-bot" x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0%"    stopColor="#a88830" />
-            <stop offset="14%"   stopColor="#8a6c1c" />
-            <stop offset="32%"   stopColor="#523a0a" />
-            <stop offset="50%"   stopColor="#2a1402" />
-            <stop offset="68%"   stopColor="#523a0a" />
-            <stop offset="86%"   stopColor="#8a6c1c" />
-            <stop offset="100%"  stopColor="#9e8028" />
-          </linearGradient>
-          {/* Left rail (left→right) */}
-          <linearGradient id="gf-lft" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%"    stopColor="#a88830" />
-            <stop offset="14%"   stopColor="#8a6c1c" />
-            <stop offset="32%"   stopColor="#523a0a" />
-            <stop offset="50%"   stopColor="#2a1402" />
-            <stop offset="68%"   stopColor="#523a0a" />
-            <stop offset="86%"   stopColor="#8a6c1c" />
-            <stop offset="100%"  stopColor="#9e8028" />
-          </linearGradient>
-          {/* Right rail: reversed */}
-          <linearGradient id="gf-rgt" x1="1" y1="0" x2="0" y2="0">
-            <stop offset="0%"    stopColor="#a88830" />
-            <stop offset="14%"   stopColor="#8a6c1c" />
-            <stop offset="32%"   stopColor="#523a0a" />
-            <stop offset="50%"   stopColor="#2a1402" />
-            <stop offset="68%"   stopColor="#523a0a" />
-            <stop offset="86%"   stopColor="#8a6c1c" />
-            <stop offset="100%"  stopColor="#9e8028" />
-          </linearGradient>
-
-          {/* Corner blocks: diagonal brass gradient */}
-          <linearGradient id="gf-cnr-tl" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%"   stopColor="#a88830" />
-            <stop offset="45%"  stopColor="#7a5c14" />
-            <stop offset="100%" stopColor="#2a1402" />
-          </linearGradient>
-          <linearGradient id="gf-cnr-tr" x1="1" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor="#a88830" />
-            <stop offset="45%"  stopColor="#7a5c14" />
-            <stop offset="100%" stopColor="#2a1402" />
-          </linearGradient>
-          <linearGradient id="gf-cnr-bl" x1="0" y1="1" x2="1" y2="0">
-            <stop offset="0%"   stopColor="#a88830" />
-            <stop offset="45%"  stopColor="#7a5c14" />
-            <stop offset="100%" stopColor="#2a1402" />
-          </linearGradient>
-          <linearGradient id="gf-cnr-br" x1="1" y1="1" x2="0" y2="0">
-            <stop offset="0%"   stopColor="#a88830" />
-            <stop offset="45%"  stopColor="#7a5c14" />
-            <stop offset="100%" stopColor="#2a1402" />
-          </linearGradient>
-
-          {/* Carved ornament shadow */}
-          <filter id="gf-relief" x="-15%" y="-15%" width="140%" height="140%">
-            <feDropShadow dx="0.8" dy="1.6" stdDeviation="1"
-              floodColor="#1a0800" floodOpacity="0.72" />
+          <filter id="gf-s" x="-20%" y="-20%" width="150%" height="160%">
+            <feDropShadow dx="0.6" dy="1.2" stdDeviation="0.9"
+              floodColor="#100600" floodOpacity="0.8" />
           </filter>
-
-          {/* Inner beaded edge pattern: 8px repeat of small gold dots */}
-          <pattern id="gf-bead-h" x="0" y="0" width="8" height={RAIL}
-            patternUnits="userSpaceOnUse">
-            <circle cx="4" cy={RAIL - 5} r="2.2" fill="#7a5c14" />
-            <circle cx="3.2" cy={RAIL - 5.8} r="0.9" fill="#a88830" />
-          </pattern>
-          <pattern id="gf-bead-v" x="0" y="0" width={RAIL} height="8"
-            patternUnits="userSpaceOnUse">
-            <circle cx={RAIL - 5} cy="4" r="2.2" fill="#7a5c14" />
-            <circle cx={RAIL - 5.8} cy="3.2" r="0.9" fill="#a88830" />
-          </pattern>
         </defs>
 
-        {/* ── RAILS ──────────────────────────────────────────────── */}
-        {/* Top rail */}
-        <rect x={RAIL} y={0} width={CW} height={RAIL} fill="url(#gf-top)" />
-        {/* Bottom rail */}
-        <rect x={RAIL} y={CH + RAIL} width={CW} height={RAIL} fill="url(#gf-bot)" />
-        {/* Left rail */}
-        <rect x={0} y={RAIL} width={RAIL} height={CH} fill="url(#gf-lft)" />
-        {/* Right rail */}
-        <rect x={CW + RAIL} y={RAIL} width={RAIL} height={CH} fill="url(#gf-rgt)" />
+        {/* ── DARK BASE RAILS ──────────────────────────────────────── */}
+        <rect x={0}       y={0}       width={FW}   height={RAIL}  fill={G_DEEP} />
+        <rect x={0}       y={FH-RAIL} width={FW}   height={RAIL}  fill={G_DEEP} />
+        <rect x={0}       y={RAIL}    width={RAIL}  height={CH}    fill={G_DEEP} />
+        <rect x={FW-RAIL} y={RAIL}    width={RAIL}  height={CH}    fill={G_DEEP} />
 
-        {/* ── CORNER BLOCKS ──────────────────────────────────────── */}
-        <rect x={0}        y={0}        width={RAIL} height={RAIL} fill="url(#gf-cnr-tl)" />
-        <rect x={CW+RAIL}  y={0}        width={RAIL} height={RAIL} fill="url(#gf-cnr-tr)" />
-        <rect x={0}        y={CH+RAIL}  width={RAIL} height={RAIL} fill="url(#gf-cnr-bl)" />
-        <rect x={CW+RAIL}  y={CH+RAIL}  width={RAIL} height={RAIL} fill="url(#gf-cnr-br)" />
+        {/* Thin gold hairline on outer and inner edges */}
+        <rect x={0} y={0} width={FW} height={1} fill={G_EDGE} opacity="0.7" />
+        <rect x={0} y={FH-1} width={FW} height={1} fill={G_EDGE} opacity="0.7" />
+        <rect x={0} y={0} width={1} height={FH} fill={G_EDGE} opacity="0.7" />
+        <rect x={FW-1} y={0} width={1} height={FH} fill={G_EDGE} opacity="0.7" />
 
-        {/* ── INNER BEADED EDGE ──────────────────────────────────── */}
-        {/* Bead row along inner edge of top + bottom rails */}
-        <rect x={RAIL} y={0} width={CW} height={RAIL} fill="url(#gf-bead-h)" />
-        <rect x={RAIL} y={CH+RAIL} width={CW} height={RAIL} fill="url(#gf-bead-h)" />
-        {/* Bead row along inner edge of left + right rails */}
-        <rect x={0} y={RAIL} width={RAIL} height={CH} fill="url(#gf-bead-v)" />
-        <rect x={CW+RAIL} y={RAIL} width={RAIL} height={CH} fill="url(#gf-bead-v)" />
+        <rect x={RAIL} y={RAIL} width={CW} height={1} fill={G_EDGE} opacity="0.55" />
+        <rect x={RAIL} y={FH-RAIL-1} width={CW} height={1} fill={G_EDGE} opacity="0.55" />
+        <rect x={RAIL} y={RAIL} width={1} height={CH} fill={G_EDGE} opacity="0.55" />
+        <rect x={FW-RAIL-1} y={RAIL} width={1} height={CH} fill={G_EDGE} opacity="0.55" />
 
-        {/* ── RAIL SURFACE GRAIN LINES ───────────────────────────── */}
-        {/* Faint diagonal lines suggesting wood grain under the gold */}
-        {[...Array(14)].map((_, i) => (
-          <line key={`tg${i}`}
-            x1={RAIL + i * 16} y1={0}
-            x2={RAIL + i * 16 + RAIL} y2={RAIL}
-            stroke="rgba(0,0,0,0.06)" strokeWidth="1" />
-        ))}
+        {/* ── CORNER ORNAMENTS ─────────────────────────────────────── */}
+        <CornerOrnament x={RAIL}       y={RAIL}       rotate={0}   />
+        <CornerOrnament x={FW - RAIL}  y={RAIL}       rotate={90}  />
+        <CornerOrnament x={FW - RAIL}  y={FH - RAIL}  rotate={180} />
+        <CornerOrnament x={RAIL}       y={FH - RAIL}  rotate={270} />
 
-        {/* ── CORNER ORNAMENTS ───────────────────────────────────── */}
-        {/* Each corner: a baroque acanthus C-scroll with lobes and a rosette */}
+        {/* ── SIDE CENTRE FLOURISHES ───────────────────────────────── */}
+        {/* Top */}
+        <SideFlourish cx={FW / 2} cy={RAIL / 2} orient="h" />
+        {/* Bottom */}
+        <SideFlourish cx={FW / 2} cy={FH - RAIL / 2} orient="h" flip />
+        {/* Left */}
+        <SideFlourish cx={RAIL / 2} cy={FH / 2} orient="v" />
+        {/* Right */}
+        <SideFlourish cx={FW - RAIL / 2} cy={FH / 2} orient="v" flip />
 
-        {/* TOP-LEFT CORNER (pivot = RAIL, RAIL) */}
-        <CornerOrnament x={RAIL} y={RAIL} rotate={0} />
-        {/* TOP-RIGHT CORNER */}
-        <CornerOrnament x={CW + RAIL} y={RAIL} rotate={90} />
-        {/* BOTTOM-RIGHT CORNER */}
-        <CornerOrnament x={CW + RAIL} y={CH + RAIL} rotate={180} />
-        {/* BOTTOM-LEFT CORNER */}
-        <CornerOrnament x={RAIL} y={CH + RAIL} rotate={270} />
-
-        {/* ── CENTER ORNAMENTS on long rails ─────────────────────── */}
-        {/* Top center */}
-        <RailRosette cx={FW / 2} cy={RAIL / 2} />
-        {/* Bottom center */}
-        <RailRosette cx={FW / 2} cy={CH + RAIL + RAIL / 2} />
-        {/* Left center */}
-        <RailRosette cx={RAIL / 2} cy={FH / 2} />
-        {/* Right center */}
-        <RailRosette cx={CW + RAIL + RAIL / 2} cy={FH / 2} />
-
-        {/* ── OUTER FRAME EDGE LINES ─────────────────────────────── */}
-        {/* Bright outer lip */}
-        <rect x={0} y={0} width={FW} height={1}
-          fill="rgba(255,235,110,0.5)" />
-        <rect x={0} y={0} width={1} height={FH}
-          fill="rgba(255,235,110,0.5)" />
-        {/* Dark outer shadow edge */}
-        <rect x={0} y={FH - 1} width={FW} height={1}
-          fill="rgba(0,0,0,0.6)" />
-        <rect x={FW - 1} y={0} width={1} height={FH}
-          fill="rgba(0,0,0,0.6)" />
-
-        {/* ── INNER FRAME EDGE (opening edge) ────────────────────── */}
-        <rect x={RAIL - 1} y={RAIL - 1}
-          width={CW + 2} height={1} fill="rgba(0,0,0,0.55)" />
-        <rect x={RAIL - 1} y={RAIL - 1}
-          width={1} height={CH + 2} fill="rgba(0,0,0,0.55)" />
-        <rect x={RAIL - 1} y={RAIL + CH}
-          width={CW + 2} height={1} fill="rgba(255,220,80,0.3)" />
-        <rect x={RAIL + CW} y={RAIL - 1}
-          width={1} height={CH + 2} fill="rgba(255,220,80,0.3)" />
+        {/* ── BEADED INNER LINER ───────────────────────────────────── */}
+        <BeadRow x1={RAIL+4} y1={RAIL-4}  x2={FW-RAIL-4} y2={RAIL-4}   horiz />
+        <BeadRow x1={RAIL+4} y1={FH-RAIL+4} x2={FW-RAIL-4} y2={FH-RAIL+4} horiz />
+        <BeadRow x1={RAIL-4} y1={RAIL+4}  x2={RAIL-4}    y2={FH-RAIL-4} />
+        <BeadRow x1={FW-RAIL+4} y1={RAIL+4} x2={FW-RAIL+4} y2={FH-RAIL-4} />
       </svg>
 
-      {/* Canvas — the painting area, sits inside the frame opening */}
-      <div style={{
-        margin: RAIL,
-        width: CW,
-        height: CH,
-        position: 'relative',
-        zIndex: 1,
-      }}>
+      {/* Canvas */}
+      <div style={{ margin: RAIL, width: CW, height: CH, position: 'relative', zIndex: 1 }}>
         {children}
       </div>
     </div>
   )
 }
 
-/* ── CORNER ORNAMENT ────────────────────────────────────────────── */
+/* ── CORNER ORNAMENT ─────────────────────────────────────────────── */
 /*
- * Baroque acanthus C-scroll centered at the inner corner (0,0).
- * The scroll emerges from the corner and curls outward along both rails.
- * rotate = 0 (top-left) | 90 (top-right) | 180 (bot-right) | 270 (bot-left)
+ * Four overlapping C-scrolls + S-scroll + spiral termini.
+ * pivot = inner corner point (where frame opening meets rail).
+ * rotate 0/90/180/270 to place at each corner.
+ * The ornament extends into BOTH adjacent rails (negative x and y).
  */
 function CornerOrnament({ x, y, rotate }) {
+  const S = (path, col, w) => (
+    <path d={path} stroke={col} strokeWidth={w} fill="none"
+      strokeLinecap="round" strokeLinejoin="round" />
+  )
   return (
-    <g transform={`translate(${x},${y}) rotate(${rotate})`}
-      filter="url(#gf-relief)">
-      {/* Main C-scroll arc: from along top rail to along left rail */}
-      <path
-        d="M-18,-4 C-18,-14 -26,-22 -22,-26 C-18,-30 -10,-28 -8,-22 C-6,-16 -10,-10 -16,-10 C-20,-10 -22,-14 -20,-18 C-18,-22 -14,-22 -12,-18 C-10,-14 -12,-12 -14,-14"
-        fill="none" stroke="#8a6c1c" strokeWidth="8" strokeLinecap="round" />
-      {/* Channel carved into the scroll */}
-      <path
-        d="M-18,-4 C-18,-14 -26,-22 -22,-26 C-18,-30 -10,-28 -8,-22 C-6,-16 -10,-10 -16,-10 C-20,-10 -22,-14 -20,-18 C-18,-22 -14,-22 -12,-18"
-        fill="none" stroke="#3a1e05" strokeWidth="3.5" strokeLinecap="round" opacity="0.7" />
-      {/* Highlight on raised scroll surface */}
-      <path
-        d="M-18,-4 C-18,-14 -26,-22 -22,-26"
-        fill="none" stroke="rgba(255,228,100,0.52)" strokeWidth="2" strokeLinecap="round" />
+    <g transform={`translate(${x},${y}) rotate(${rotate})`} filter="url(#gf-s)">
 
-      {/* Acanthus lobe 1 — going along top rail (negative x direction) */}
-      <path
-        d="M-18,-4 C-22,-2 -28,0 -28,6 C-28,10 -24,12 -20,10 C-16,8 -16,4 -18,-4"
-        fill="#c8a030" />
-      <path
-        d="M-18,-4 C-22,-2 -28,0 -28,6"
-        fill="none" stroke="rgba(255,228,100,0.4)" strokeWidth="1" />
+      {/* ── SCROLL 1: main primary C-scroll (upper-left diagonal) ── */}
+      {/* Dark backing — creates carved channel illusion */}
+      {S('M-6,-2 C-10,-6 -18,-18 -24,-20 C-30,-22 -34,-16 -32,-10 C-30,-4 -24,-2 -18,-4 C-12,-6 -10,-12 -14,-16 C-18,-20 -24,-18 -23,-14 C-22,-10 -18,-10 -16,-13',
+         G_DEEP, 9)}
+      {/* Gold surface */}
+      {S('M-6,-2 C-10,-6 -18,-18 -24,-20 C-30,-22 -34,-16 -32,-10 C-30,-4 -24,-2 -18,-4 C-12,-6 -10,-12 -14,-16 C-18,-20 -24,-18 -23,-14 C-22,-10 -18,-10 -16,-13',
+         G_MID, 5.5)}
+      {/* Highlight on raised ridge */}
+      {S('M-6,-2 C-10,-6 -18,-18 -24,-20 C-30,-22 -34,-16 -32,-10',
+         G_LIGHT, 1.8)}
+      {/* Spiral terminus at scroll end */}
+      {S('M-16,-13 C-14,-16 -12,-16 -12,-13 C-12,-10 -14,-9 -16,-10 C-17,-11 -17,-13 -15.5,-13.5',
+         G_DEEP, 6)}
+      {S('M-16,-13 C-14,-16 -12,-16 -12,-13 C-12,-10 -14,-9 -16,-10 C-17,-11 -17,-13 -15.5,-13.5',
+         G_MID, 3.5)}
 
-      {/* Acanthus lobe 2 — going along left rail (negative y direction) */}
+      {/* ── SCROLL 2: secondary scroll from main — goes along top rail ── */}
+      {S('M-24,-20 C-26,-26 -22,-30 -16,-28 C-10,-26 -8,-20 -12,-16',
+         G_DEEP, 8)}
+      {S('M-24,-20 C-26,-26 -22,-30 -16,-28 C-10,-26 -8,-20 -12,-16',
+         G_MID, 5)}
+      {/* Spiral at end of scroll 2 */}
+      {S('M-12,-16 C-10,-14 -8,-14 -8,-16 C-8,-18 -10,-19 -12,-18 C-13,-17 -12,-16 -11,-16.5',
+         G_DEEP, 5.5)}
+      {S('M-12,-16 C-10,-14 -8,-14 -8,-16 C-8,-18 -10,-19 -12,-18',
+         G_MID, 3)}
+
+      {/* ── SCROLL 3: along left rail ── */}
+      {S('M-6,-2 C-10,2 -14,6 -10,10 C-6,14 -2,12 -2,8 C-2,4 -6,2 -8,4 C-10,6 -8,9 -6,8',
+         G_DEEP, 8)}
+      {S('M-6,-2 C-10,2 -14,6 -10,10 C-6,14 -2,12 -2,8 C-2,4 -6,2 -8,4 C-10,6 -8,9 -6,8',
+         G_MID, 5)}
+      {S('M-6,-2 C-10,2 -14,6 -10,10',
+         G_LIGHT, 1.6)}
+      {/* Spiral at end of scroll 3 */}
+      {S('M-6,8 C-4,10 -2,10 -2,8 C-2,6 -4,5.5 -5.5,6.5 C-6.5,7 -6,8 -5,7.5',
+         G_DEEP, 5.5)}
+      {S('M-6,8 C-4,10 -2,10 -2,8 C-2,6 -4,5.5 -5.5,6.5',
+         G_MID, 3)}
+
+      {/* ── SCROLL 4: extending S-curve along top rail ── */}
+      {S('M-6,-2 C-6,-8 -4,-12 0,-12 C4,-12 6,-8 4,-4',
+         G_DEEP, 7)}
+      {S('M-6,-2 C-6,-8 -4,-12 0,-12 C4,-12 6,-8 4,-4',
+         G_DARK, 4.5)}
+      {/* Leaf/petal at end */}
+      {S('M4,-4 C6,-2 8,-2 8,-4 C8,-6 6,-7 4,-6',
+         G_DEEP, 5)}
+      {S('M4,-4 C6,-2 8,-2 8,-4 C8,-6 6,-7 4,-6',
+         G_MID, 3)}
+
+      {/* ── ACANTHUS LEAF BODY — fills inner corner ── */}
       <path
-        d="M-4,-18 C-2,-22 0,-28 6,-28 C10,-28 12,-24 10,-20 C8,-16 4,-16 -4,-18"
-        fill="#c8a030" />
-
-      {/* Secondary smaller lobe — fills inner corner */}
+        d="M-4,-4 C-8,-8 -14,-8 -12,-4 C-10,0 -6,0 -4,-4"
+        fill={G_DARK} stroke={G_DEEP} strokeWidth="0.5" />
       <path
-        d="M-8,-8 C-12,-10 -14,-16 -10,-18 C-6,-20 -2,-16 -4,-12 C-6,-8 -10,-8 -8,-8"
-        fill="#7a5a10" />
+        d="M-4,-4 C-2,-8 2,-8 2,-4 C2,0 -2,0 -4,-4"
+        fill={G_DARK} stroke={G_DEEP} strokeWidth="0.5" />
+      {/* Centre vein */}
+      <path d="M-4,-4 C-4,-9 -3,-12 -2,-10"
+        stroke={G_LIGHT} strokeWidth="0.7" fill="none" opacity="0.7" />
 
-      {/* Terminal rosette at scroll end */}
-      <circle cx="-20" cy="-24" r="4" fill="#8a6c1c" />
-      <circle cx="-20" cy="-24" r="2.5" fill="#3a2005" />
-      <circle cx="-20" cy="-24" r="1.2" fill="#9e8028" />
-      <circle cx="-20.6" cy="-24.6" r="0.5" fill="rgba(185,148,55,0.85)" />
-
-      {/* Small leaf tips at ends of lobes */}
-      <path d="M-28,8 C-30,10 -28,13 -26,11 Z" fill="#5a3a0a" />
-      <path d="M8,-28 C10,-30 13,-28 11,-26 Z" fill="#5a3a0a" />
+      {/* ── SMALL DETAIL DOTS at spiral centres ── */}
+      <circle cx="-14" cy="-14.5" r="1.4" fill={G_LIGHT} />
+      <circle cx="-10" cy="-17"   r="1.1" fill={G_LIGHT} />
+      <circle cx="-5"  cy="7.5"   r="1.1" fill={G_LIGHT} />
     </g>
   )
 }
 
-/* ── RAIL CENTER ROSETTE ────────────────────────────────────────── */
-function RailRosette({ cx, cy }) {
+/* ── SIDE FLOURISH ───────────────────────────────────────────────── */
+/* A smaller S-scroll arrangement centered on the long rail midpoints */
+function SideFlourish({ cx, cy, orient, flip }) {
+  const sign = flip ? -1 : 1
+  const S = (path, col, w) => (
+    <path d={path} stroke={col} strokeWidth={w} fill="none"
+      strokeLinecap="round" />
+  )
+  const r = orient === 'h' ? 0 : 90
   return (
-    <g transform={`translate(${cx},${cy})`} filter="url(#gf-relief)">
-      {/* Outer petals */}
-      {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => (
-        <ellipse key={angle}
-          cx={0} cy={-7}
-          rx="2.5" ry="4.5"
-          fill="#8a6c1c"
-          transform={`rotate(${angle})`} />
+    <g transform={`translate(${cx},${cy}) rotate(${r}) scale(1,${sign})`} filter="url(#gf-s)">
+      {/* Left S-scroll */}
+      {S('M-2,0 C-6,-2 -10,-6 -8,-10 C-6,-14 -2,-12 -2,-8 C-2,-4 -5,-2 -7,-4',
+         G_DEEP, 7)}
+      {S('M-2,0 C-6,-2 -10,-6 -8,-10 C-6,-14 -2,-12 -2,-8 C-2,-4 -5,-2 -7,-4',
+         G_MID, 4.5)}
+      {S('M-2,0 C-6,-2 -10,-6 -8,-10', G_LIGHT, 1.5)}
+      {/* Left spiral */}
+      {S('M-7,-4 C-9,-2 -9,0 -7,0 C-5,0 -4,-2 -5,-3.5', G_DEEP, 5)}
+      {S('M-7,-4 C-9,-2 -9,0 -7,0 C-5,0 -4,-2 -5,-3.5', G_MID, 3)}
+
+      {/* Right S-scroll (mirror) */}
+      {S('M2,0 C6,-2 10,-6 8,-10 C6,-14 2,-12 2,-8 C2,-4 5,-2 7,-4',
+         G_DEEP, 7)}
+      {S('M2,0 C6,-2 10,-6 8,-10 C6,-14 2,-12 2,-8 C2,-4 5,-2 7,-4',
+         G_MID, 4.5)}
+      {S('M2,0 C6,-2 10,-6 8,-10', G_LIGHT, 1.5)}
+      {/* Right spiral */}
+      {S('M7,-4 C9,-2 9,0 7,0 C5,0 4,-2 5,-3.5', G_DEEP, 5)}
+      {S('M7,-4 C9,-2 9,0 7,0 C5,0 4,-2 5,-3.5', G_MID, 3)}
+
+      {/* Central rosette */}
+      {[0, 60, 120, 180, 240, 300].map((a) => (
+        <ellipse key={a} cx={0} cy={-5} rx={1.8} ry={3.5}
+          fill={G_DARK} transform={`rotate(${a})`} />
       ))}
-      {/* Inner ring */}
-      <circle cx={0} cy={0} r="5.5" fill="#7a5a10" />
-      <circle cx={0} cy={0} r="3.5" fill="#8a6c1c" />
-      <circle cx={0} cy={0} r="2" fill="#3a2005" />
-      <circle cx={0} cy={0} r="1" fill="#9e8028" />
-      <circle cx={-0.4} cy={-0.4} r="0.4" fill="rgba(185,148,55,0.85)" />
+      <circle cx={0} cy={0} r={3.2} fill={G_DARK} />
+      <circle cx={0} cy={0} r={1.8} fill={G_MID} />
+      <circle cx={0} cy={0} r={0.8} fill={G_LIGHT} />
     </g>
+  )
+}
+
+/* ── BEAD ROW ────────────────────────────────────────────────────── */
+function BeadRow({ x1, y1, x2, y2, horiz }) {
+  const len = horiz ? Math.abs(x2 - x1) : Math.abs(y2 - y1)
+  const count = Math.floor(len / 7)
+  return (
+    <>
+      {[...Array(count)].map((_, i) => {
+        const t = (i + 0.5) / count
+        const bx = horiz ? x1 + t * (x2 - x1) : x1
+        const by = horiz ? y1 : y1 + t * (y2 - y1)
+        return (
+          <g key={i}>
+            <circle cx={bx} cy={by} r={2} fill={G_DARK} />
+            <circle cx={bx - 0.5} cy={by - 0.5} r={0.8} fill={G_LIGHT} opacity="0.7" />
+          </g>
+        )
+      })}
+    </>
   )
 }

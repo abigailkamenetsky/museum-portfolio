@@ -201,43 +201,40 @@
     inset 0 -1px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* ── FLOOR ────────────────────────────────────────────────────────── */
+/* ── FLOOR — exact same pattern as wainscoting ────────────────────── */
 
 .floor {
   flex-shrink: 0;
   height: 92px;
-  background-color: #221610;
+  background-color: #1c1209;
   background-image:
-    /* Plank seam lines — vertical divisions every ~72px (like wainscoting) */
     repeating-linear-gradient(
       90deg,
       transparent 0px,
-      transparent 70px,
-      rgba(0, 0, 0, 0.28) 70px,
-      rgba(0, 0, 0, 0.28) 72px,
-      transparent 72px,
-      transparent 74px
+      transparent 158px,
+      rgba(255, 255, 255, 0.022) 158px,
+      rgba(255, 255, 255, 0.022) 160px,
+      transparent 160px,
+      transparent 162px
     ),
-    /* Fine horizontal wood grain lines */
     repeating-linear-gradient(
       to bottom,
       transparent 0px,
-      transparent 4px,
-      rgba(255, 255, 255, 0.018) 4px,
-      rgba(255, 255, 255, 0.018) 5px,
       transparent 5px,
-      transparent 11px,
-      rgba(0, 0, 0, 0.09) 11px,
-      rgba(0, 0, 0, 0.09) 12px
+      rgba(255, 255, 255, 0.012) 5px,
+      rgba(255, 255, 255, 0.012) 6px,
+      transparent 6px,
+      transparent 14px,
+      rgba(0, 0, 0, 0.08) 14px,
+      rgba(0, 0, 0, 0.08) 15px
     ),
-    /* Plank base color variation — slight warmth differences between boards */
     repeating-linear-gradient(
       to right,
-      #221610 0px,
-      #2a1c12 70px,
-      #1e1208 140px,
-      #281a10 210px,
-      #221610 280px
+      #1c1209 0px,
+      #221608 160px,
+      #1a1008 320px,
+      #201408 480px,
+      #1c1209 640px
     );
   box-shadow:
     inset 0 5px 14px rgba(0, 0, 0, 0.55),
