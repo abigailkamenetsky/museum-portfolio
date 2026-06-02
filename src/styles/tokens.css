@@ -1,12 +1,12 @@
 :root {
   /* ── Mauritshuis Wall Green ──────────────────────────────────────────
-     Matched to the grey-sage-green silk wall coverings of the
-     Mauritshuis portrait rooms. Muted, dusty, slightly warm.
-     Close to Farrow & Ball "Mizzle" (No.84).
+     Dark muted heritage green. Grey-olive, sophisticated —
+     matches the library/bookshelf room reference exactly.
+     Close to Farrow & Ball "Studio Green" (No. 93).
   ─────────────────────────────────────────────────────────────────── */
-  --wall-green: #7a9180;
-  --wall-green-dark: #5f7468;
-  --wall-green-light: #96ab9e;
+  --wall-green: #4c5a3d;
+  --wall-green-dark: #363f2b;
+  --wall-green-light: #5e6f4d;
 
   /* ── Floors ─────────────────────────────────────────────────────── */
   --floor-dark: #2c1f14;

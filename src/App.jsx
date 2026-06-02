@@ -48,7 +48,7 @@ export default function App() {
         fontSize: '13px',
         opacity: 0.6,
       }}>
-        var(--wall-green): #7a9180 &nbsp;|&nbsp; Milestone 0 scaffold
+        var(--wall-green): #4c5a3d &nbsp;|&nbsp; Milestone 0 scaffold
       </p>
     </div>
   )
