@@ -1,0 +1,58 @@
+:root {
+  /* ── Mauritshuis Wall Green ──────────────────────────────────────────
+     Matched to the grey-sage-green silk wall coverings of the
+     Mauritshuis portrait rooms. Muted, dusty, slightly warm.
+     Close to Farrow & Ball "Mizzle" (No.84).
+  ─────────────────────────────────────────────────────────────────── */
+  --wall-green: #7a9180;
+  --wall-green-dark: #5f7468;
+  --wall-green-light: #96ab9e;
+
+  /* ── Floors ─────────────────────────────────────────────────────── */
+  --floor-dark: #2c1f14;
+  --floor-mid: #3d2b1a;
+  --floor-grain: #4a3422;
+
+  /* ── Wood (trim, wainscoting, furniture) ─────────────────────────── */
+  --wood-dark: #1e1208;
+  --wood-mid: #2e1c0e;
+  --wood-crown: #241509;
+
+  /* ── Ambient light ───────────────────────────────────────────────── */
+  --light-ambient: #f5e6c8;
+  --light-warm: #e8d0a0;
+  --light-gold: #c9a84c;
+
+  /* ── Frame / gold gilding ────────────────────────────────────────── */
+  --frame-gold: #b8963e;
+  --frame-gold-light: #d4af5a;
+  --frame-shadow: #6b4a1e;
+
+  /* ── Character ───────────────────────────────────────────────────── */
+  --character: #0d0d0d;
+
+  /* ── UI text ─────────────────────────────────────────────────────── */
+  --text-primary: #1a1008;
+  --text-secondary: #3d2e1e;
+  --text-light: #f0e8d8;
+  --text-placard: #2a1f12;
+
+  /* ── Ceiling ─────────────────────────────────────────────────────── */
+  --ceiling: #f2ead8;
+  --ceiling-shadow: #d8cdb8;
+
+  /* ── Wainscoting / dado panel ────────────────────────────────────── */
+  --dado: #1e1208;
+  --dado-height: 120px;
+
+  /* ── Spacing and scale ───────────────────────────────────────────── */
+  --room-height: 600px;
+  --room-width: 1400px;
+  --ceiling-height: 80px;
+  --floor-height: 100px;
+  --wall-height: calc(var(--room-height) - var(--ceiling-height) - var(--floor-height));
+
+  /* ── Typography ──────────────────────────────────────────────────── */
+  --font-serif: 'Georgia', 'Times New Roman', serif;
+  --font-display: 'Palatino Linotype', 'Palatino', 'Book Antiqua', serif;
+}
