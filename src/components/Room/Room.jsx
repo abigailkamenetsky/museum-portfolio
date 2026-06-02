@@ -1,5 +1,6 @@
 import styles from './Room.module.css'
 import CrownMolding from './CrownMolding'
+import GildedFrame from '../Painting/GildedFrame'
 
 export default function Room() {
   return (
@@ -28,8 +29,27 @@ function Wall() {
       <div className={styles.vignette} />
 
       <div className={styles.paintings}>
-        <FramePlaceholder />
-        <FramePlaceholder />
+        <div className={styles.frameWrapper}>
+          <GildedFrame>
+            <div className={styles.canvas}>
+              <span className={styles.canvasPlaceholder}>painting</span>
+            </div>
+          </GildedFrame>
+          <div className={styles.placard}>
+            <p className={styles.placardText}>— &nbsp; —</p>
+          </div>
+        </div>
+
+        <div className={styles.frameWrapper}>
+          <GildedFrame>
+            <div className={styles.canvas}>
+              <span className={styles.canvasPlaceholder}>painting</span>
+            </div>
+          </GildedFrame>
+          <div className={styles.placard}>
+            <p className={styles.placardText}>— &nbsp; —</p>
+          </div>
+        </div>
       </div>
 
       <div className={styles.nameplate}>
@@ -49,21 +69,4 @@ function Wainscoting() {
 
 function Floor() {
   return <div className={styles.floor} />
-}
-
-function FramePlaceholder() {
-  return (
-    <div className={styles.frameWrapper}>
-      <div className={styles.frameOuter}>
-        <div className={styles.frameInner}>
-          <div className={styles.canvas}>
-            <span className={styles.canvasPlaceholder}>painting</span>
-          </div>
-        </div>
-      </div>
-      <div className={styles.placard}>
-        <p className={styles.placardText}>— &nbsp; —</p>
-      </div>
-    </div>
-  )
 }

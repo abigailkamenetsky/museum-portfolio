@@ -30,45 +30,45 @@
   overflow: hidden;
 }
 
-/* Warm amber painting spotlights */
+/* Warm amber painting spotlights — more dramatic, like a real gallery lamp */
 .lightLeft,
 .lightRight {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 38%;
+  width: 40%;
   pointer-events: none;
   z-index: 1;
 }
 
 .lightLeft {
-  left: 8%;
+  left: 6%;
   background: radial-gradient(
-    ellipse 58% 72% at 50% 44%,
-    rgba(218, 165, 62, 0.14) 0%,
-    rgba(190, 140, 42, 0.05) 58%,
+    ellipse 55% 65% at 50% 42%,
+    rgba(220, 168, 55, 0.22) 0%,
+    rgba(190, 135, 30, 0.09) 50%,
     transparent 100%
   );
 }
 
 .lightRight {
-  right: 8%;
+  right: 6%;
   background: radial-gradient(
-    ellipse 58% 72% at 50% 44%,
-    rgba(218, 165, 62, 0.14) 0%,
-    rgba(190, 140, 42, 0.05) 58%,
+    ellipse 55% 65% at 50% 42%,
+    rgba(220, 168, 55, 0.22) 0%,
+    rgba(190, 135, 30, 0.09) 50%,
     transparent 100%
   );
 }
 
-/* Edge vignette for depth */
+/* Strong edge vignette — library photo has very dark corners */
 .vignette {
   position: absolute;
   inset: 0;
   background: radial-gradient(
-    ellipse 88% 78% at 50% 50%,
-    transparent 38%,
-    rgba(0, 0, 0, 0.2) 100%
+    ellipse 75% 65% at 50% 50%,
+    transparent 28%,
+    rgba(0, 0, 0, 0.38) 100%
   );
   pointer-events: none;
   z-index: 2;
@@ -85,7 +85,7 @@
   z-index: 3;
 }
 
-/* ── FRAME ────────────────────────────────────────────────────────── */
+/* ── FRAME WRAPPER (label + frame together) ───────────────────────── */
 
 .frameWrapper {
   display: flex;
@@ -94,59 +94,7 @@
   gap: 10px;
 }
 
-/*
- * Gilded carved-wood frame.
- * Built as three layers: outer moulding → liner channel → canvas.
- * The gold is aged/patinated: muted amber-brown, not bright.
- * Wood grain lines are faintly visible beneath the gold glaze.
- */
-.frameOuter {
-  padding: 9px 8px;
-  background:
-    /* Faint diagonal wood grain beneath gold */
-    repeating-linear-gradient(
-      118deg,
-      transparent 0px,
-      transparent 4px,
-      rgba(0, 0, 0, 0.055) 4px,
-      rgba(0, 0, 0, 0.055) 5px
-    ),
-    /* Aged gold gradient — muted, warm, directional */
-    linear-gradient(
-      148deg,
-      #b8a060 0%,
-      #9a8040 14%,
-      #6a5020 30%,
-      #4a3812 44%,
-      #6a5020 54%,
-      #9a8040 68%,
-      #b8a060 80%,
-      #9a8040 92%,
-      #b0982e 100%
-    );
-  /* Carved depth: outer rim shadow + inner raised edge highlight */
-  box-shadow:
-    inset 0 0 0 1px rgba(200, 160, 50, 0.3),
-    inset 1px 1px 0 rgba(220, 190, 80, 0.2),
-    inset -1px -1px 0 rgba(30, 15, 0, 0.4),
-    0 10px 30px rgba(0, 0, 0, 0.72),
-    0 3px 10px rgba(0, 0, 0, 0.45);
-}
-
-/* Thin inner liner — dark carved channel separating frame from canvas */
-.frameInner {
-  padding: 3px;
-  background: linear-gradient(
-    148deg,
-    #2e1c08 0%,
-    #5a3a14 40%,
-    #2e1c08 60%,
-    #5a3a14 100%
-  );
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
-}
-
-/* Canvas — the placeholder painting area */
+/* Canvas — the placeholder painting area (inside GildedFrame) */
 .canvas {
   width: 204px;
   height: 264px;
@@ -159,7 +107,7 @@
 .canvasPlaceholder {
   font-family: var(--font-display, Georgia, serif);
   font-size: 10px;
-  color: rgba(190, 155, 70, 0.25);
+  color: rgba(190, 155, 70, 0.2);
   letter-spacing: 0.22em;
   text-transform: uppercase;
 }
