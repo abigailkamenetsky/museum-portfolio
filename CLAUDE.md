@@ -105,7 +105,36 @@ Room names are TBD — user will supply them. 4 rooms, 2 paintings each = 8 tota
 | 8 | APPROVED | Breton Brother and Sister | William-Adolphe Bouguereau | 1871 | Metropolitan Museum of Art | Introduction / Profile / Personal — personal significance: Abby's baby brother who was blonde |
 
 ## Visual Atmosphere
-Dark Academia. Victorian/Neoclassical mansion. White gallery walls (paintings must pop). Dark brown hardwood floors. Heavy crown molding throughout. Mauritshuis museum as the primary visual reference. Warm, classical, slightly gothic — Wuthering Heights / Kate Bush in spirit. Not bright or airy.
+
+### Primary References
+1. **Mauritshuis Museum, The Hague** — the single most important visual reference
+2. **Oxford historic libraries** (Duke Humfrey's Library, Bodleian) — atmosphere and furniture
+3. **Dark Academia** — the overall feeling: reverent, hushed, scholarly, slightly gothic
+
+### Walls
+Mauritshuis sage green — muted, dusty blue-green, not bright. Approximately #7D8C7C. This IS the painting surface. Paintings pop against it because it is neutral and recedes.
+Wainscoting / dado rail below the green. Dark wood paneling on the lower third of the wall.
+Crown molding at ceiling. Heavy, ornate, classical.
+
+### Floors
+Dark herringbone parquet. Mauritshuis-style walnut/mahogany. Deep brown, almost black in shadow.
+
+### Furniture (decorative, non-interactive)
+Heavy carved dark wood throughout — Oxford library style.
+Tufted leather Chesterfield chairs. Reading tables. Candelabras. Globe. Dark wood bookcases flanking walls between paintings.
+These exist as atmosphere, not obstacles. Character walks in front of them.
+
+### Lighting
+Warm amber. Candlelight / old oil-lamp quality. Not bright gallery spotlights. Paintings are lit individually with a soft warm glow. The ambient room light is dim and golden.
+
+### Character
+Pure black silhouette. Humanoid. Elegant — think a figure in academic robes, not a game sprite. Moves with arrow keys (left / right). Smooth movement. The character should never draw attention away from the paintings.
+
+### Windows
+Tall Georgian / Dutch-style windows on the far wall between rooms. Warm light filtering through. Suggest depth without requiring 3D.
+
+### Tone
+Mauritshuis intimacy + Oxford gravity. The user should feel like they walked into a private collection in a great house, not a public gallery. Hushed. Beautiful. Slightly heavy with history.
 
 ## Claude Code Working Rules
 - **Never build across multiple milestones in one step.** One milestone, one conversation, one commit.
