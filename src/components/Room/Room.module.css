@@ -206,44 +206,42 @@
 .floor {
   flex-shrink: 0;
   height: 92px;
-  /* Muted dark walnut — pulled slightly cooler/greyer than wainscoting */
-  background-color: #261a10;
+  background-color: #221610;
   background-image:
-    /* Herringbone crosshatch — two diagonal directions */
+    /* Plank seam lines — vertical divisions every ~72px (like wainscoting) */
     repeating-linear-gradient(
-      45deg,
+      90deg,
       transparent 0px,
-      transparent 11px,
-      rgba(255, 255, 255, 0.032) 11px,
-      rgba(255, 255, 255, 0.032) 12px
+      transparent 70px,
+      rgba(0, 0, 0, 0.28) 70px,
+      rgba(0, 0, 0, 0.28) 72px,
+      transparent 72px,
+      transparent 74px
     ),
-    repeating-linear-gradient(
-      -45deg,
-      transparent 0px,
-      transparent 11px,
-      rgba(0, 0, 0, 0.13) 11px,
-      rgba(0, 0, 0, 0.13) 12px
-    ),
-    /* Perpendicular plank seams for depth */
+    /* Fine horizontal wood grain lines */
     repeating-linear-gradient(
       to bottom,
       transparent 0px,
-      transparent 21px,
-      rgba(0, 0, 0, 0.12) 21px,
-      rgba(0, 0, 0, 0.12) 22px
+      transparent 4px,
+      rgba(255, 255, 255, 0.018) 4px,
+      rgba(255, 255, 255, 0.018) 5px,
+      transparent 5px,
+      transparent 11px,
+      rgba(0, 0, 0, 0.09) 11px,
+      rgba(0, 0, 0, 0.09) 12px
     ),
-    /* Plank base color variation (horizontal planks) */
+    /* Plank base color variation — slight warmth differences between boards */
     repeating-linear-gradient(
       to right,
-      #261a10 0px,
-      #2e2014 44px,
-      #221610 88px,
-      #30221a 132px,
-      #261a10 176px
+      #221610 0px,
+      #2a1c12 70px,
+      #1e1208 140px,
+      #281a10 210px,
+      #221610 280px
     );
   box-shadow:
-    inset 0 5px 14px rgba(0, 0, 0, 0.52),
-    inset 0 -1px 3px rgba(0, 0, 0, 0.2);
+    inset 0 5px 14px rgba(0, 0, 0, 0.55),
+    inset 0 -1px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* ── MUSEUM NAMEPLATE ─────────────────────────────────────────────── */

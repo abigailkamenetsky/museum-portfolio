@@ -60,6 +60,56 @@ export default function CrownMolding() {
           <rect x="0" y="15" width={TILE} height="3"
             fill="#1a1208" opacity="0.18" />
 
+          {/* ── THORNY WHITE VINE — runs along the top plate ── */}
+          {/* Main stem: undulates gently through y≈9 */}
+          <path
+            d={
+              [...Array(101)].map((_, i) => {
+                const x = i * (TILE / 100)
+                const y = (9 + Math.sin(x * 0.072) * 3.8).toFixed(2)
+                return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y}`
+              }).join(' ')
+            }
+            stroke="rgba(245,242,232,0.62)"
+            strokeWidth="0.9"
+            fill="none"
+          />
+          {/* Thorns: short spines alternating above/below every 9px */}
+          {[...Array(44)].map((_, i) => {
+            const x = i * 9 + 3
+            const stemY = 9 + Math.sin(x * 0.072) * 3.8
+            const up = i % 2 === 0
+            return (
+              <line key={`thorn-${i}`}
+                x1={x} y1={stemY}
+                x2={x + (up ? 2.5 : 1.5)} y2={stemY + (up ? -4.5 : 4.5)}
+                stroke="rgba(245,242,232,0.55)"
+                strokeWidth="0.65"
+              />
+            )
+          })}
+          {/* Secondary branching tendrils every ~50px */}
+          {[25, 75, 125, 175, 225, 275, 325, 375].map((x) => {
+            const stemY = 9 + Math.sin(x * 0.072) * 3.8
+            return (
+              <g key={`tendril-${x}`}>
+                <path
+                  d={`M${x},${stemY} C${x + 6},${stemY - 5} ${x + 10},${stemY - 3} ${x + 8},${stemY + 2}`}
+                  stroke="rgba(245,242,232,0.45)"
+                  strokeWidth="0.65"
+                  fill="none"
+                />
+                {/* Thorn on tendril */}
+                <line
+                  x1={x + 5} y1={stemY - 3.5}
+                  x2={x + 7} y2={stemY - 7}
+                  stroke="rgba(245,242,232,0.4)"
+                  strokeWidth="0.6"
+                />
+              </g>
+            )
+          })}
+
           {/* ── LAYER 2: EGG-AND-DART BAND (y 18–32) ── */}
           <rect x="0" y="18" width={TILE} height="14" fill="#e4dac4" />
           {/* Repeat egg shapes every 25px */}
@@ -119,17 +169,24 @@ export default function CrownMolding() {
               {/* Column shaft */}
               <rect x={x - 8} y="48" width="16" height="20"
                 fill="url(#cr-col)" />
-              {/* Column capital: gold acanthus bracket */}
+              {/* Column capital: white sculptural bracket */}
               <path
                 d={`M${x - 8},48 C${x - 12},48 ${x - 14},44 ${x - 10},43 L${x},41 L${x + 10},43 C${x + 14},44 ${x + 12},48 ${x + 8},48`}
-                fill="#c9a840" filter="url(#cr-shadow)"
+                fill="#f0ead8" filter="url(#cr-shadow)"
               />
               {/* Capital highlight */}
               <path
                 d={`M${x - 6},48 C${x - 10},47 ${x - 11},44 ${x - 8},43.5`}
                 fill="none"
-                stroke="rgba(255,225,100,0.45)"
+                stroke="rgba(255,252,240,0.6)"
                 strokeWidth="1"
+              />
+              {/* Capital shadow underside */}
+              <path
+                d={`M${x + 6},48 C${x + 10},47 ${x + 11},44 ${x + 8},43.5`}
+                fill="none"
+                stroke="rgba(0,0,0,0.2)"
+                strokeWidth="0.8"
               />
               {/* Column base moulding */}
               <rect x={x - 9} y="65" width="18" height="3"

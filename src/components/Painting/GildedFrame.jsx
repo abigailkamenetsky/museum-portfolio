@@ -24,68 +24,69 @@ export default function GildedFrame({ children }) {
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          {/* ── GOLD GRADIENTS ─────────────────────────────────────── */}
+          {/* ── ANTIQUE BRASS GRADIENTS ────────────────────────────── */}
+          {/* Palette: dull warm brass — muted highlight, dark channel, no flash */}
           {/* Top rail: bright→channel→bright (top→bottom) */}
           <linearGradient id="gf-top" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"    stopColor="#e8c84a" />
-            <stop offset="12%"   stopColor="#c8a030" />
-            <stop offset="30%"   stopColor="#7a5012" />
-            <stop offset="50%"   stopColor="#3c1e05" />
-            <stop offset="70%"   stopColor="#7a5012" />
-            <stop offset="88%"   stopColor="#c8a030" />
-            <stop offset="100%"  stopColor="#e0be40" />
+            <stop offset="0%"    stopColor="#a88830" />
+            <stop offset="14%"   stopColor="#8a6c1c" />
+            <stop offset="32%"   stopColor="#523a0a" />
+            <stop offset="50%"   stopColor="#2a1402" />
+            <stop offset="68%"   stopColor="#523a0a" />
+            <stop offset="86%"   stopColor="#8a6c1c" />
+            <stop offset="100%"  stopColor="#9e8028" />
           </linearGradient>
           {/* Bottom rail: reversed */}
           <linearGradient id="gf-bot" x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0%"    stopColor="#e8c84a" />
-            <stop offset="12%"   stopColor="#c8a030" />
-            <stop offset="30%"   stopColor="#7a5012" />
-            <stop offset="50%"   stopColor="#3c1e05" />
-            <stop offset="70%"   stopColor="#7a5012" />
-            <stop offset="88%"   stopColor="#c8a030" />
-            <stop offset="100%"  stopColor="#e0be40" />
+            <stop offset="0%"    stopColor="#a88830" />
+            <stop offset="14%"   stopColor="#8a6c1c" />
+            <stop offset="32%"   stopColor="#523a0a" />
+            <stop offset="50%"   stopColor="#2a1402" />
+            <stop offset="68%"   stopColor="#523a0a" />
+            <stop offset="86%"   stopColor="#8a6c1c" />
+            <stop offset="100%"  stopColor="#9e8028" />
           </linearGradient>
-          {/* Left rail: bright→channel→bright (left→right) */}
+          {/* Left rail (left→right) */}
           <linearGradient id="gf-lft" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%"    stopColor="#e8c84a" />
-            <stop offset="12%"   stopColor="#c8a030" />
-            <stop offset="30%"   stopColor="#7a5012" />
-            <stop offset="50%"   stopColor="#3c1e05" />
-            <stop offset="70%"   stopColor="#7a5012" />
-            <stop offset="88%"   stopColor="#c8a030" />
-            <stop offset="100%"  stopColor="#e0be40" />
+            <stop offset="0%"    stopColor="#a88830" />
+            <stop offset="14%"   stopColor="#8a6c1c" />
+            <stop offset="32%"   stopColor="#523a0a" />
+            <stop offset="50%"   stopColor="#2a1402" />
+            <stop offset="68%"   stopColor="#523a0a" />
+            <stop offset="86%"   stopColor="#8a6c1c" />
+            <stop offset="100%"  stopColor="#9e8028" />
           </linearGradient>
           {/* Right rail: reversed */}
           <linearGradient id="gf-rgt" x1="1" y1="0" x2="0" y2="0">
-            <stop offset="0%"    stopColor="#e8c84a" />
-            <stop offset="12%"   stopColor="#c8a030" />
-            <stop offset="30%"   stopColor="#7a5012" />
-            <stop offset="50%"   stopColor="#3c1e05" />
-            <stop offset="70%"   stopColor="#7a5012" />
-            <stop offset="88%"   stopColor="#c8a030" />
-            <stop offset="100%"  stopColor="#e0be40" />
+            <stop offset="0%"    stopColor="#a88830" />
+            <stop offset="14%"   stopColor="#8a6c1c" />
+            <stop offset="32%"   stopColor="#523a0a" />
+            <stop offset="50%"   stopColor="#2a1402" />
+            <stop offset="68%"   stopColor="#523a0a" />
+            <stop offset="86%"   stopColor="#8a6c1c" />
+            <stop offset="100%"  stopColor="#9e8028" />
           </linearGradient>
 
-          {/* Corner block: diagonal gradient — top-left bright, bottom-right dark */}
+          {/* Corner blocks: diagonal brass gradient */}
           <linearGradient id="gf-cnr-tl" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%"   stopColor="#e8c84a" />
-            <stop offset="45%"  stopColor="#9a7820" />
-            <stop offset="100%" stopColor="#3c1e05" />
+            <stop offset="0%"   stopColor="#a88830" />
+            <stop offset="45%"  stopColor="#7a5c14" />
+            <stop offset="100%" stopColor="#2a1402" />
           </linearGradient>
           <linearGradient id="gf-cnr-tr" x1="1" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor="#e8c84a" />
-            <stop offset="45%"  stopColor="#9a7820" />
-            <stop offset="100%" stopColor="#3c1e05" />
+            <stop offset="0%"   stopColor="#a88830" />
+            <stop offset="45%"  stopColor="#7a5c14" />
+            <stop offset="100%" stopColor="#2a1402" />
           </linearGradient>
           <linearGradient id="gf-cnr-bl" x1="0" y1="1" x2="1" y2="0">
-            <stop offset="0%"   stopColor="#e8c84a" />
-            <stop offset="45%"  stopColor="#9a7820" />
-            <stop offset="100%" stopColor="#3c1e05" />
+            <stop offset="0%"   stopColor="#a88830" />
+            <stop offset="45%"  stopColor="#7a5c14" />
+            <stop offset="100%" stopColor="#2a1402" />
           </linearGradient>
           <linearGradient id="gf-cnr-br" x1="1" y1="1" x2="0" y2="0">
-            <stop offset="0%"   stopColor="#e8c84a" />
-            <stop offset="45%"  stopColor="#9a7820" />
-            <stop offset="100%" stopColor="#3c1e05" />
+            <stop offset="0%"   stopColor="#a88830" />
+            <stop offset="45%"  stopColor="#7a5c14" />
+            <stop offset="100%" stopColor="#2a1402" />
           </linearGradient>
 
           {/* Carved ornament shadow */}
@@ -97,13 +98,13 @@ export default function GildedFrame({ children }) {
           {/* Inner beaded edge pattern: 8px repeat of small gold dots */}
           <pattern id="gf-bead-h" x="0" y="0" width="8" height={RAIL}
             patternUnits="userSpaceOnUse">
-            <circle cx="4" cy={RAIL - 5} r="2.2" fill="#c8a030" />
-            <circle cx="3.2" cy={RAIL - 5.8} r="0.9" fill="#e8d060" />
+            <circle cx="4" cy={RAIL - 5} r="2.2" fill="#7a5c14" />
+            <circle cx="3.2" cy={RAIL - 5.8} r="0.9" fill="#a88830" />
           </pattern>
           <pattern id="gf-bead-v" x="0" y="0" width={RAIL} height="8"
             patternUnits="userSpaceOnUse">
-            <circle cx={RAIL - 5} cy="4" r="2.2" fill="#c8a030" />
-            <circle cx={RAIL - 5.8} cy="3.2" r="0.9" fill="#e8d060" />
+            <circle cx={RAIL - 5} cy="4" r="2.2" fill="#7a5c14" />
+            <circle cx={RAIL - 5.8} cy="3.2" r="0.9" fill="#a88830" />
           </pattern>
         </defs>
 
@@ -212,7 +213,7 @@ function CornerOrnament({ x, y, rotate }) {
       {/* Main C-scroll arc: from along top rail to along left rail */}
       <path
         d="M-18,-4 C-18,-14 -26,-22 -22,-26 C-18,-30 -10,-28 -8,-22 C-6,-16 -10,-10 -16,-10 C-20,-10 -22,-14 -20,-18 C-18,-22 -14,-22 -12,-18 C-10,-14 -12,-12 -14,-14"
-        fill="none" stroke="#c9a030" strokeWidth="8" strokeLinecap="round" />
+        fill="none" stroke="#8a6c1c" strokeWidth="8" strokeLinecap="round" />
       {/* Channel carved into the scroll */}
       <path
         d="M-18,-4 C-18,-14 -26,-22 -22,-26 C-18,-30 -10,-28 -8,-22 C-6,-16 -10,-10 -16,-10 C-20,-10 -22,-14 -20,-18 C-18,-22 -14,-22 -12,-18"
@@ -238,17 +239,17 @@ function CornerOrnament({ x, y, rotate }) {
       {/* Secondary smaller lobe — fills inner corner */}
       <path
         d="M-8,-8 C-12,-10 -14,-16 -10,-18 C-6,-20 -2,-16 -4,-12 C-6,-8 -10,-8 -8,-8"
-        fill="#b89020" />
+        fill="#7a5a10" />
 
       {/* Terminal rosette at scroll end */}
-      <circle cx="-20" cy="-24" r="4" fill="#c9a030" />
-      <circle cx="-20" cy="-24" r="2.5" fill="#7a5010" />
-      <circle cx="-20" cy="-24" r="1.2" fill="#e8c840" />
-      <circle cx="-20.6" cy="-24.6" r="0.5" fill="rgba(255,245,140,0.9)" />
+      <circle cx="-20" cy="-24" r="4" fill="#8a6c1c" />
+      <circle cx="-20" cy="-24" r="2.5" fill="#3a2005" />
+      <circle cx="-20" cy="-24" r="1.2" fill="#9e8028" />
+      <circle cx="-20.6" cy="-24.6" r="0.5" fill="rgba(185,148,55,0.85)" />
 
       {/* Small leaf tips at ends of lobes */}
-      <path d="M-28,8 C-30,10 -28,13 -26,11 Z" fill="#b08018" />
-      <path d="M8,-28 C10,-30 13,-28 11,-26 Z" fill="#b08018" />
+      <path d="M-28,8 C-30,10 -28,13 -26,11 Z" fill="#5a3a0a" />
+      <path d="M8,-28 C10,-30 13,-28 11,-26 Z" fill="#5a3a0a" />
     </g>
   )
 }
@@ -262,15 +263,15 @@ function RailRosette({ cx, cy }) {
         <ellipse key={angle}
           cx={0} cy={-7}
           rx="2.5" ry="4.5"
-          fill="#c9a030"
+          fill="#8a6c1c"
           transform={`rotate(${angle})`} />
       ))}
       {/* Inner ring */}
-      <circle cx={0} cy={0} r="5.5" fill="#b89020" />
-      <circle cx={0} cy={0} r="3.5" fill="#c9a030" />
-      <circle cx={0} cy={0} r="2" fill="#7a5010" />
-      <circle cx={0} cy={0} r="1" fill="#e8c840" />
-      <circle cx={-0.4} cy={-0.4} r="0.4" fill="rgba(255,245,140,0.9)" />
+      <circle cx={0} cy={0} r="5.5" fill="#7a5a10" />
+      <circle cx={0} cy={0} r="3.5" fill="#8a6c1c" />
+      <circle cx={0} cy={0} r="2" fill="#3a2005" />
+      <circle cx={0} cy={0} r="1" fill="#9e8028" />
+      <circle cx={-0.4} cy={-0.4} r="0.4" fill="rgba(185,148,55,0.85)" />
     </g>
   )
 }
