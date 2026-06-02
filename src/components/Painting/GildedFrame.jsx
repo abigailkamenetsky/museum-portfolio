@@ -17,12 +17,12 @@ const CH   = 264
 const FW   = CW + RAIL * 2
 const FH   = CH + RAIL * 2
 
-/* ── GOLD PALETTE ─────────────────────────────────────────────────── */
-const G_LIGHT  = '#d4a832'   // raised highlight
-const G_MID    = '#b88c20'   // main scroll surface
-const G_DARK   = '#8a6410'   // shadow side of scroll
-const G_DEEP   = '#1e0c02'   // carved channel / base
-const G_EDGE   = '#c09828'   // thin outline on base
+/* ── GOLD PALETTE — warm antique gold, clearly gilded, not brass ──── */
+const G_LIGHT  = '#edd060'   // raised highlight (warm bright gold)
+const G_MID    = '#c8a030'   // main scroll surface (medium antique gold)
+const G_DARK   = '#8a6418'   // shadow underside of scroll
+const G_DEEP   = '#1e0c02'   // carved channel — stays very dark for contrast
+const G_EDGE   = '#d4a830'   // thin hairline on dark base
 
 export default function GildedFrame({ children }) {
   return (
