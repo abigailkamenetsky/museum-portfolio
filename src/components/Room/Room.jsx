@@ -1,4 +1,5 @@
 import styles from './Room.module.css'
+import CrownMolding from './CrownMolding'
 
 export default function Room() {
   return (
@@ -14,7 +15,7 @@ export default function Room() {
 function Ceiling() {
   return (
     <div className={styles.ceiling}>
-      <div className={styles.crownMolding} />
+      <CrownMolding />
     </div>
   )
 }
@@ -32,7 +33,9 @@ function Wall() {
       </div>
 
       <div className={styles.nameplate}>
-        <span className={styles.nameplateText}>Abigail Kamenetsky &nbsp;·&nbsp; A Collection of Work</span>
+        <span className={styles.nameplateText}>
+          Abigail Kamenetsky &nbsp;&middot;&nbsp; A Collection of Work
+        </span>
       </div>
 
       <div className={styles.dadoRail} />
