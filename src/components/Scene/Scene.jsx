@@ -7,15 +7,15 @@
  */
 
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { ContactShadows, useGLTF } from '@react-three/drei'
+import { ContactShadows } from '@react-three/drei'
 import { EffectComposer, N8AO, Bloom, Vignette, HueSaturation, BrightnessContrast } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
-import { Suspense, useRef, useEffect, useMemo } from 'react'
+import { useRef, useEffect, useMemo } from 'react'
 import {
   MeshStandardMaterial, MeshPhysicalMaterial, ExtrudeGeometry, Shape, Path, Vector2,
   PlaneGeometry, BufferAttribute, TextureLoader, RepeatWrapping, SRGBColorSpace,
   EquirectangularReflectionMapping, Object3D, TorusGeometry, CylinderGeometry,
-  SphereGeometry, ConeGeometry, BoxGeometry, Matrix4, Box3,
+  SphereGeometry, ConeGeometry, BoxGeometry, Matrix4,
   Vector3, Euler, MathUtils, ACESFilmicToneMapping, PCFSoftShadowMap,
 } from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
