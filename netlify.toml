@@ -1,0 +1,10 @@
+# Netlify deploy config (alternative to Vercel)
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# SPA fallback (harmless even with no client-side routes)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
