@@ -209,8 +209,9 @@ function rectRing(ow, od, iw, id, depth) {
 function cofferInsertGeo(oX, oZ) {
   const parts = []
   const steps = [
-    [oX, oZ, oX - 0.22, oZ - 0.22, 0.12, 0.00],
-    [oX - 0.40, oZ - 0.40, oX - 0.78, oZ - 0.78, 0.12, 0.22],
+    [oX, oZ, oX - 0.20, oZ - 0.20, 0.11, 0.00],
+    [oX - 0.36, oZ - 0.36, oX - 0.66, oZ - 0.66, 0.11, 0.18],
+    [oX - 0.82, oZ - 0.82, oX - 1.10, oZ - 1.10, 0.11, 0.36],
   ]
   for (const [ow, od, iw, id, dep, z] of steps) { const g = rectRing(ow, od, iw, id, dep); g.translate(0, 0, z); parts.push(g) }
   const merged = mergeGeometries(parts, false); merged.rotateX(-Math.PI / 2); return merged
@@ -244,6 +245,17 @@ function beamBossGeo() {
 }
 
 /* small reusable instanced-mesh wrapper driven by a matrices array */
+/* tiny corner floret scattered into coffer corners */
+function miniRosetteGeo() {
+  const p = [new CylinderGeometry(0.05, 0.065, 0.045, 10)]
+  for (let i = 0; i < 4; i++) {
+    const a = i / 4 * Math.PI * 2 + Math.PI / 4
+    const pet = new SphereGeometry(0.038, 6, 6); pet.scale(1, 0.6, 1.5)
+    pet.translate(Math.cos(a) * 0.085, -0.01, Math.sin(a) * 0.085); p.push(pet)
+  }
+  return mergeGeometries(p, false)
+}
+
 function Instanced({ geo, mat, matrices }) {
   const ref = useRef()
   useEffect(() => {
@@ -292,6 +304,7 @@ function CofferedCeiling({ m }) {
   const insertGeo = useMemo(() => cofferInsertGeo(openX, openZ), [openX, openZ])
   const rosA = useMemo(rosetteFloral, []), rosB = useMemo(rosetteAcanthus, []), rosC = useMemo(rosetteMedallion, [])
   const bossGeo = useMemo(beamBossGeo, [])
+  const miniGeo = useMemo(miniRosetteGeo, [])
 
   // instance matrices
   const insertM = useMemo(() => cells.map(([sx, sy]) => mat4(sx, CEIL - C_DROP, -sy)), [cells])
@@ -311,6 +324,14 @@ function CofferedCeiling({ m }) {
     }
     return arr
   }, [fW, fD, pX, pZ])
+  // four mini florets in the corners of every coffer
+  const miniM = useMemo(() => {
+    const arr = []; const dx = openX * 0.30, dz = openZ * 0.30
+    cells.forEach(([sx, sy]) => {
+      for (const [ox, oz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) arr.push(mat4(sx + ox * dx, CEIL - 0.05, -(sy + oz * dz)))
+    })
+    return arr
+  }, [cells, openX, openZ])
 
   return (
     <group>
@@ -326,6 +347,7 @@ function CofferedCeiling({ m }) {
       <Instanced geo={rosB} mat={m.trim} matrices={rosM.b} />
       <Instanced geo={rosC} mat={m.trim} matrices={rosM.c} />
       <Instanced geo={bossGeo} mat={m.trim} matrices={bossM} />
+      <Instanced geo={miniGeo} mat={m.trim} matrices={miniM} />
 
       <CornerCartouches fW={fW} fD={fD} m={m} />
       {/* real carved-relief centerpiece in the blank center; medallion shows while it loads */}
