@@ -12,7 +12,7 @@ import { EffectComposer, N8AO, Bloom, Vignette, HueSaturation, BrightnessContras
 import { BlendFunction } from 'postprocessing'
 import { Suspense, useRef, useEffect, useMemo } from 'react'
 import {
-  MeshStandardMaterial, MeshPhysicalMaterial, ExtrudeGeometry, Shape, Path, Vector2,
+  MeshStandardMaterial, MeshPhysicalMaterial, ExtrudeGeometry, ShapeGeometry, Shape, Path, Vector2,
   PlaneGeometry, BufferAttribute, TextureLoader, RepeatWrapping, SRGBColorSpace,
   EquirectangularReflectionMapping, Object3D, TorusGeometry, CylinderGeometry,
   SphereGeometry, ConeGeometry, BoxGeometry, Matrix4, DoubleSide, Box3,
@@ -658,79 +658,98 @@ function SideWall({ side, m }) {
   )
 }
 
-/* ── WINDOW SYSTEM ──────────────────────────────────────────── */
-const GOTHIC_WIN = BASE + 'assets/models/gothic_window.glb'
-const GOTHIC_FRAME = BASE + 'assets/models/gothic_frame_lo.glb'   // decimated
-// side-window opening geometry (shared by the wall cut-outs and the frames)
+/* ── WINDOW SYSTEM — fully procedural Gothic museum windows (no GLB) ──── */
 const WALL_T = 0.5                            // wall thickness → real opening depth
 const WIN_SILL = 0.9                          // ~3 ft above the floor
-const WIN_OPEN_W = 4.0                         // opening width (narrower, elegant)
+const WIN_OPEN_W = 4.0                         // opening width (rectangular wall hole)
 const WIN_OPEN_H = 7.5                          // opening height (~56% of wall height)
 const WIN_TOP = WIN_SILL + WIN_OPEN_H          // ≈8.4 — well below the crown
 const WIN_Z = [27, 13.5, 0, -13.5, -27]        // window centres down each long wall
 
-/* transparent mullioned glazing for an opening (local +Z faces the room) */
-function Glazing({ w, h, cols = 2, rows = 5, m }) {
-  const W2 = w / 2, H2 = h / 2, mull = 0.05
+// pointed-arch outline (centred at origin), rect lower + two-arc gothic head
+function pointedArch(w, h, spring = 0.58) {
+  const W2 = w / 2, H2 = h / 2, sy = -H2 + spring * h
+  const s = new Shape()
+  s.moveTo(-W2, -H2); s.lineTo(W2, -H2); s.lineTo(W2, sy)
+  s.quadraticCurveTo(W2, H2, 0, H2)
+  s.quadraticCurveTo(-W2, H2, -W2, sy)
+  s.lineTo(-W2, -H2)
+  return s
+}
+
+/* A real museum window: arched glass + mullions/tracery recessed inside a
+ * carved stone surround (rectangular slab with a pointed-arch opening) that
+ * fills the wall's rectangular hole. Local +Z faces the room.
+ * w,h = the wall opening (rectangular). */
+function MuseumWindow({ w, h, m }) {
+  const tw = Math.min(0.5, w * 0.13)            // stone trim width
+  const iw = w - 2 * tw, ih = h - 2 * tw        // arched glass opening
+  const spring = 0.58
+  const H2 = ih / 2, W2 = iw / 2, sy = -H2 + spring * ih   // arch spring line
+  const mull = 0.06
+
+  const glassGeo = useMemo(() => new ShapeGeometry(pointedArch(iw, ih, spring)), [iw, ih])
+  const trimGeo = useMemo(() => {
+    const o = new Shape()
+    o.moveTo(-w / 2, -h / 2); o.lineTo(w / 2, -h / 2); o.lineTo(w / 2, h / 2); o.lineTo(-w / 2, h / 2); o.lineTo(-w / 2, -h / 2)
+    o.holes.push(pointedArch(iw, ih, spring))
+    return new ExtrudeGeometry(o, { depth: 0.20, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.07, bevelSegments: 2 })
+  }, [w, h, iw, ih])
+  // a slimmer inner reveal band, recessed, to add layered depth
+  const innerGeo = useMemo(() => {
+    const o = new Shape()
+    o.moveTo(-(iw / 2 + 0.14), -(ih / 2 + 0.14)); o.lineTo((iw / 2 + 0.14), -(ih / 2 + 0.14)); o.lineTo((iw / 2 + 0.14), (ih / 2 + 0.14)); o.lineTo(-(iw / 2 + 0.14), (ih / 2 + 0.14)); o.lineTo(-(iw / 2 + 0.14), -(ih / 2 + 0.14))
+    o.holes.push(pointedArch(iw - 0.05, ih - 0.05, spring))
+    return new ExtrudeGeometry(o, { depth: 0.14, bevelEnabled: false })
+  }, [iw, ih])
+
+  const cols = 3
+  const verts = Array.from({ length: cols - 1 }, (_, i) => -W2 + (i + 1) * (iw / cols))
   return (
     <group>
-      {/* muted daylight sky, set deep in the reveal (NOT emissive, exposure-bound) */}
-      <mesh position={[0, 0, -0.36]} material={m.sky}><planeGeometry args={[w + 0.3, h + 0.3]} /></mesh>
-      {/* transparent glass */}
-      <mesh position={[0, 0, -0.22]} material={m.glass}><planeGeometry args={[w, h]} /></mesh>
-      {/* painted-wood mullions in front of the glass */}
-      {Array.from({ length: cols - 1 }, (_, i) => { const x = -W2 + (i + 1) * (w / cols); return <mesh key={'v' + i} position={[x, 0, -0.18]} material={m.trimWhite}><boxGeometry args={[mull, h, 0.06]} /></mesh> })}
-      {Array.from({ length: rows - 1 }, (_, i) => { const y = -H2 + (i + 1) * (h / rows); return <mesh key={'h' + i} position={[0, y, -0.18]} material={m.trimWhite}><boxGeometry args={[w, mull, 0.06]} /></mesh> })}
+      {/* muted daylight sky deep in the reveal (exposure-bound, not emissive) */}
+      <mesh position={[0, 0, -WALL_T * 0.85]} material={m.sky}><planeGeometry args={[w, h]} /></mesh>
+      {/* arched glass */}
+      <mesh geometry={glassGeo} position={[0, 0, -0.26]} material={m.glass} />
+      {/* mullions: verticals up to the spring + a transom, central mullion into
+          the arch, and a small tracery oculus */}
+      {verts.map((x, i) => <mesh key={'v' + i} position={[x, (-H2 + sy) / 2, -0.2]} material={m.trimWhite}><boxGeometry args={[mull, sy + H2, 0.05]} /></mesh>)}
+      <mesh position={[0, sy, -0.2]} material={m.trimWhite}><boxGeometry args={[iw - 0.02, mull, 0.05]} /></mesh>
+      <mesh position={[0, (sy + H2) / 2, -0.2]} material={m.trimWhite}><boxGeometry args={[mull, H2 - sy, 0.05]} /></mesh>
+      <mesh position={[0, sy + (H2 - sy) * 0.42, -0.2]} material={m.trimWhite}><torusGeometry args={[(H2 - sy) * 0.24, mull * 0.6, 6, 18]} /></mesh>
+      {/* recessed inner reveal band + carved stone surround at the room face */}
+      <mesh geometry={innerGeo} position={[0, 0, -0.16]} material={m.trim} />
+      <mesh geometry={trimGeo} position={[0, 0, -0.02]} material={m.trim} castShadow />
+      {/* projecting sill ledge */}
+      <mesh position={[0, -h / 2 + 0.05, 0.16]} material={m.trim}><boxGeometry args={[w + 0.3, 0.16, 0.4]} /></mesh>
+      {/* apex finial */}
+      <mesh position={[0, h / 2 - 0.05, 0.12]} material={m.trim}><coneGeometry args={[0.12, 0.4, 8]} /></mesh>
     </group>
   )
 }
 
-/* far-wall monumental Gothic window: stone tracery + glazing in a real opening */
+/* far-wall monumental Gothic window (same construction, bigger) */
 function GothicFeature({ m }) {
-  const { scene } = useGLTF(GOTHIC_WIN)
-  const node = useMemo(() => {
-    const root = scene.clone(true)
-    const stone = new MeshStandardMaterial({ color: '#cdc7b8', roughness: 0.9, metalness: 0, side: DoubleSide })
-    root.traverse(o => { if (o.isMesh) { o.material = stone; o.frustumCulled = false } })
-    const box = new Box3().setFromObject(root); const sz = new Vector3(); box.getSize(sz); const c = new Vector3(); box.getCenter(c)
-    root.position.sub(c)
-    return { root, sz }
-  }, [scene])
-  const s = Math.min(FEAT_W / node.sz.x, FEAT_H / node.sz.y) * 0.98
   const yC = (FEAT_SILL + FEAT_TOP) / 2
   return (
-    <group position={[0, yC, -D / 2 + 0.05]}>
-      <Glazing w={FEAT_W - 0.3} h={FEAT_H - 0.3} cols={3} rows={7} m={m} />
-      <group position={[0, 0, 0.12]} scale={[s, s, s]}><primitive object={node.root} /></group>
+    <group position={[0, yC, -D / 2 + 0.04]}>
+      <MuseumWindow w={FEAT_W} h={FEAT_H} m={m} />
     </group>
   )
 }
 
-/* side Gothic windows built into BOTH long walls; frame is architectural trim
- * embedded at the opening face, glazing recessed behind it. */
+/* side windows built into BOTH long walls (real rectangular wall openings) */
 function SideGothicWindows({ m, side }) {
-  return <group>{WIN_Z.map((z, i) => <SideGothicWindow key={i} z={z} side={side} m={m} />)}</group>
-}
-function SideGothicWindow({ z, side, m }) {
-  const { scene } = useGLTF(GOTHIC_FRAME)
-  const node = useMemo(() => {
-    const root = scene.clone(true)
-    const stone = new MeshStandardMaterial({ color: '#e2dccd', roughness: 0.85, metalness: 0, side: DoubleSide })
-    root.traverse(o => { if (o.isMesh) { o.material = stone; o.frustumCulled = false } })
-    const box = new Box3().setFromObject(root); const sz = new Vector3(); box.getSize(sz); const c = new Vector3(); box.getCenter(c)
-    root.position.sub(c)
-    return { root, sz }
-  }, [scene])
-  // frame scaled to surround the opening (slightly larger than the hole)
-  const s = (WIN_OPEN_H + 0.7) / node.sz.y
   const yC = (WIN_SILL + WIN_TOP) / 2
   const x = side * (W / 2)
-  const ry = side < 0 ? Math.PI / 2 : -Math.PI / 2   // local +Z faces into the room
+  const ry = side < 0 ? Math.PI / 2 : -Math.PI / 2   // local +Z faces the room
   return (
-    <group position={[x, yC, z]} rotation={[0, ry, 0]}>
-      <Glazing w={WIN_OPEN_W} h={WIN_OPEN_H} cols={2} rows={5} m={m} />
-      {/* ornate frame as carved trim, embedded at the wall opening face */}
-      <group position={[0, 0, 0.0]} scale={[s, s, s]}><primitive object={node.root} /></group>
+    <group>
+      {WIN_Z.map((z, i) => (
+        <group key={i} position={[x, yC, z]} rotation={[0, ry, 0]}>
+          <MuseumWindow w={WIN_OPEN_W} h={WIN_OPEN_H} m={m} />
+        </group>
+      ))}
     </group>
   )
 }
