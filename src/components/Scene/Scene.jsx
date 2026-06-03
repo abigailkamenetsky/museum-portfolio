@@ -110,7 +110,7 @@ function useMaterials() {
     fixture: new MeshStandardMaterial({ color: '#141210', roughness: 0.5, metalness: 0.6 }),
     lens: new MeshStandardMaterial({ color: '#fff3c0', emissive: '#fff3c0', emissiveIntensity: 4, roughness: 0.4 }),
     // tall museum windows
-    glass: new MeshStandardMaterial({ color: '#dfe8f2', emissive: '#eef3fb', emissiveIntensity: 2.4, roughness: 0.15, metalness: 0 }),
+    glass: new MeshStandardMaterial({ color: '#cfe0f2', emissive: '#e6eefb', emissiveIntensity: 1.0, roughness: 0.12, metalness: 0.1, transparent: true, opacity: 0.55 }),
     trimWhite: new MeshStandardMaterial({ color: '#f2efe6', roughness: 0.7, metalness: 0 }),
     darkRoom: new MeshStandardMaterial({ color: '#0a0c08', roughness: 1 }),
   }), [])
@@ -192,8 +192,8 @@ function Room({ m }) {
         )
       })()}
       <mesh geometry={wallWide} position={[0, H / 2, D / 2]} rotation={[0, Math.PI, 0]} material={m.wall} />
-      <mesh geometry={wallSide} position={[-W / 2, H / 2, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow material={m.wallSide} />
-      <mesh geometry={wallSide} position={[W / 2, H / 2, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow material={m.wallSide} />
+      <SideWall side={-1} m={m} />
+      <SideWall side={1} m={m} />
     </group>
   )
 }
@@ -621,7 +621,7 @@ function PictureLight({ pos, target, rotY = 0, m }) {
 function Door({ m }) {
   // tall pedimented doorway, raised proportionally with the grand ceiling
   return (
-    <group position={[-W / 2 + 0.04, 0, 13]} rotation={[0, Math.PI / 2, 0]}>
+    <group position={[0, 0, D / 2 - 0.04]} rotation={[0, Math.PI, 0]}>
       <mesh position={[0, 3.2, -0.02]} material={m.trim} castShadow><boxGeometry args={[2.9, 6.4, 0.22]} /></mesh>
       <mesh position={[0, 3.0, 0.06]} material={m.wood} castShadow><boxGeometry args={[2.3, 5.9, 0.10]} /></mesh>
       <mesh position={[0, 6.5, 0.04]} material={m.trim} castShadow><boxGeometry args={[3.4, 0.34, 0.38]} /></mesh>
@@ -629,9 +629,52 @@ function Door({ m }) {
   )
 }
 
-/* ── GOTHIC FEATURE WINDOW — monumental, centred in the far-wall opening ── */
+/* a long side wall built WITH real openings at each window centre */
+function SideWall({ side, m }) {
+  const x = side * (W / 2)
+  const ry = side < 0 ? Math.PI / 2 : -Math.PI / 2
+  const midY = (WIN_SILL + WIN_TOP) / 2, openH = WIN_TOP - WIN_SILL
+  const zs = [...WIN_Z].sort((a, b) => a - b)
+  const segs = []
+  let cursor = -D / 2
+  for (const wz of zs) {
+    const l = wz - WIN_OPEN_W / 2
+    if (l > cursor + 0.02) segs.push([(cursor + l) / 2, l - cursor])
+    cursor = wz + WIN_OPEN_W / 2
+  }
+  if (D / 2 > cursor + 0.02) segs.push([(cursor + D / 2) / 2, D / 2 - cursor])
+  return (
+    <group>
+      <mesh position={[x, WIN_SILL / 2, 0]} rotation={[0, ry, 0]} receiveShadow material={m.wallSide}><planeGeometry args={[D, WIN_SILL]} /></mesh>
+      <mesh position={[x, (WIN_TOP + H) / 2, 0]} rotation={[0, ry, 0]} receiveShadow material={m.wallSide}><planeGeometry args={[D, H - WIN_TOP]} /></mesh>
+      {segs.map(([cz, len], i) => <mesh key={i} position={[x, midY, cz]} rotation={[0, ry, 0]} receiveShadow material={m.wallSide}><planeGeometry args={[len, openH]} /></mesh>)}
+    </group>
+  )
+}
+
+/* ── WINDOW SYSTEM ──────────────────────────────────────────── */
 const GOTHIC_WIN = BASE + 'assets/models/gothic_window.glb'
-const GOTHIC_FRAME = BASE + 'assets/models/gothic_frame.glb'
+const GOTHIC_FRAME = BASE + 'assets/models/gothic_frame_lo.glb'   // decimated
+// side-window opening geometry (shared by the wall cut-outs and the frames)
+const WIN_SILL = 1.4
+const WIN_FRAME_H = 9.0                       // frame asset scaled to this height
+const WIN_OPEN_W = 5.4
+const WIN_TOP = WIN_SILL + WIN_FRAME_H        // ≈10.4
+const WIN_Z = [27, 13.5, 0, -13.5, -27]       // window centres down each long wall
+
+/* mullioned daylight glass that fills an opening (semi-transparent) */
+function GlassPanes({ w, h, cols = 2, rows = 6, m }) {
+  const W2 = w / 2, H2 = h / 2, mull = 0.05
+  return (
+    <group>
+      <mesh material={m.glass}><planeGeometry args={[w, h]} /></mesh>
+      {Array.from({ length: cols - 1 }, (_, i) => { const x = -W2 + (i + 1) * (w / cols); return <mesh key={'v' + i} position={[x, 0, 0.04]} material={m.trimWhite}><boxGeometry args={[mull, h, 0.06]} /></mesh> })}
+      {Array.from({ length: rows - 1 }, (_, i) => { const y = -H2 + (i + 1) * (h / rows); return <mesh key={'h' + i} position={[0, y, 0.04]} material={m.trimWhite}><boxGeometry args={[w, mull, 0.06]} /></mesh> })}
+    </group>
+  )
+}
+
+/* far-wall monumental Gothic window: tracery + mullioned glass + daylight */
 function GothicFeature({ m }) {
   const { scene } = useGLTF(GOTHIC_WIN)
   const node = useMemo(() => {
@@ -646,24 +689,21 @@ function GothicFeature({ m }) {
   const yC = (FEAT_SILL + FEAT_TOP) / 2
   return (
     <group>
-      {/* bright daylight sky behind the opening */}
-      <mesh position={[0, yC, -D / 2 - 0.25]}>
-        <planeGeometry args={[FEAT_W + 1, FEAT_H + 1]} />
-        <meshBasicMaterial color="#eaf0fb" toneMapped={false} />
-      </mesh>
-      {/* the gothic tracery, scaled into the opening */}
-      <group position={[0, yC, -D / 2 + 0.18]} scale={[s, s, s]}>
-        <primitive object={node.root} />
-      </group>
+      {/* daylight sky behind */}
+      <mesh position={[0, yC, -D / 2 - 0.3]}><planeGeometry args={[FEAT_W + 1.5, FEAT_H + 1.5]} /><meshBasicMaterial color="#eef3fb" toneMapped={false} /></mesh>
+      {/* glass + mullions in the opening */}
+      <group position={[0, yC, -D / 2 + 0.10]}><GlassPanes w={FEAT_W - 0.2} h={FEAT_H - 0.2} cols={3} rows={8} m={m} /></group>
+      {/* gothic stone tracery */}
+      <group position={[0, yC, -D / 2 + 0.22]} scale={[s, s, s]}><primitive object={node.root} /></group>
     </group>
   )
 }
 
-/* ── SIDE GOTHIC WINDOWS — ornate frame asset built into the LEFT wall ── */
-function SideGothicWindows({ m, zs }) {
-  return <group>{zs.map((z, i) => <SideGothicWindow key={i} z={z} m={m} />)}</group>
+/* side Gothic windows built into BOTH long walls (real wall openings exist) */
+function SideGothicWindows({ m, side }) {
+  return <group>{WIN_Z.map((z, i) => <SideGothicWindow key={i} z={z} side={side} m={m} />)}</group>
 }
-function SideGothicWindow({ z, m }) {
+function SideGothicWindow({ z, side, m }) {
   const { scene } = useGLTF(GOTHIC_FRAME)
   const node = useMemo(() => {
     const root = scene.clone(true)
@@ -673,16 +713,17 @@ function SideGothicWindow({ z, m }) {
     root.position.sub(c)
     return { root, sz }
   }, [scene])
-  const targetH = H - 4.0
-  const s = targetH / node.sz.y
-  const glW = node.sz.x * s * 0.8, glH = targetH * 0.9
-  const yC = 1.0 + targetH / 2
+  const s = WIN_FRAME_H / node.sz.y
+  const yC = (WIN_SILL + WIN_TOP) / 2
+  const x = side * (W / 2 - 0.06)
+  const ry = side < 0 ? Math.PI / 2 : -Math.PI / 2
   return (
-    <group position={[-W / 2 + 0.08, yC, z]} rotation={[0, Math.PI / 2, 0]}>
-      {/* recess + bright daylight glass behind the frame */}
-      <mesh position={[0, 0, -0.18]} material={m.darkRoom}><planeGeometry args={[glW + 0.4, glH + 0.4]} /></mesh>
-      <mesh position={[0, 0, -0.12]}><planeGeometry args={[glW, glH]} /><meshBasicMaterial color="#e6edf8" toneMapped={false} /></mesh>
-      {/* the ornate gothic frame, scaled to the window */}
+    <group position={[x, yC, z]} rotation={[0, ry, 0]}>
+      {/* daylight sky deep in the reveal */}
+      <mesh position={[0, 0, -0.5]}><planeGeometry args={[WIN_OPEN_W + 0.6, WIN_FRAME_H + 0.6]} /><meshBasicMaterial color="#e9eff9" toneMapped={false} /></mesh>
+      {/* mullioned glass */}
+      <group position={[0, 0, -0.12]}><GlassPanes w={WIN_OPEN_W - 0.2} h={WIN_FRAME_H - 0.4} cols={2} rows={7} m={m} /></group>
+      {/* ornate gothic frame surround */}
       <group scale={[s, s, s]}><primitive object={node.root} /></group>
     </group>
   )
@@ -777,18 +818,16 @@ function Gallery() {
   const pick = i => A[((i % A.length) + A.length) % A.length]
 
   // procession gallery: central Gothic feature window flanked by paintings on
-  // the far wall; Gothic windows + paintings on the LEFT wall; paintings fill
-  // the RIGHT wall. Windows create bays; paintings sit between them.
+  // the far wall; Gothic windows on BOTH long walls with paintings between them
+  // (WINDOW / PAINTING / WINDOW ... rhythm).
   const back = [-6, 6]                                  // flank the feature window
-  const leftWin = [28, 8, -12, -32]                     // gothic side windows (avoid door ~z=13)
-  const leftArt = [36, 18, -2, -22]                     // paintings between/around bays
-  const rightArt = [34, 26, 18, 10, 2, -6, -14, -22, -30]
+  const art = [34, 20.25, 6.75, -6.75, -20.25, -34]     // between the window bays
 
   let k = 0
   const items = []
   back.forEach((x, i) => items.push({ key: 'b' + i, pos: [x, PY, -hd + 0.12], rot: [0, 0, 0], mw: 2.6, mh: 3.6, art: pick(k++) }))
-  leftArt.forEach((z, i) => items.push({ key: 'la' + i, pos: [-hw + 0.12, PY, z], rot: [0, Math.PI / 2, 0], mw: 2.4, mh: 3.4, art: pick(k++) }))
-  rightArt.forEach((z, i) => items.push({ key: 'ra' + i, pos: [hw - 0.12, PY, z], rot: [0, -Math.PI / 2, 0], mw: 2.4, mh: 3.4, art: pick(k++) }))
+  art.forEach((z, i) => items.push({ key: 'la' + i, pos: [-hw + 0.12, PY, z], rot: [0, Math.PI / 2, 0], mw: 2.4, mh: 3.4, art: pick(k++) }))
+  art.forEach((z, i) => items.push({ key: 'ra' + i, pos: [hw - 0.12, PY, z], rot: [0, -Math.PI / 2, 0], mw: 2.4, mh: 3.4, art: pick(k++) }))
 
   return (
     <group>
@@ -798,14 +837,15 @@ function Gallery() {
       <Trim m={m} />
       <Door m={m} />
       <Suspense fallback={null}><GothicFeature m={m} /></Suspense>
-      <Suspense fallback={null}><SideGothicWindows m={m} zs={leftWin} /></Suspense>
-      {/* faint daylight pools beneath the left windows */}
-      {leftWin.map((z, i) => (
-        <mesh key={'dp' + i} rotation={[-Math.PI / 2, 0, 0]} position={[-hw + 3.5, 0.03, z]}>
-          <planeGeometry args={[4, 5]} />
-          <meshBasicMaterial color="#fff0d2" transparent opacity={0.10} depthWrite={false} />
+      <Suspense fallback={null}><SideGothicWindows m={m} side={-1} /></Suspense>
+      <Suspense fallback={null}><SideGothicWindows m={m} side={1} /></Suspense>
+      {/* faint daylight pools beneath the side windows */}
+      {[-1, 1].flatMap(sd => WIN_Z.map((z, i) => (
+        <mesh key={'dp' + sd + i} rotation={[-Math.PI / 2, 0, 0]} position={[sd * (hw - 3.2), 0.03, z]}>
+          <planeGeometry args={[4, WIN_OPEN_W + 1]} />
+          <meshBasicMaterial color="#eef2fb" transparent opacity={0.09} depthWrite={false} />
         </mesh>
-      ))}
+      )))}
       <Bench m={m} />
       <Character m={m} />
 
@@ -831,7 +871,7 @@ export default function Scene() {
       shadows={false}
       dpr={[1, 1.5]}
       camera={{ position: [0, 2.8, 12], fov: 68 }}
-      gl={{ toneMapping: ACESFilmicToneMapping, toneMappingExposure: 1.34, antialias: true, powerPreference: 'high-performance' }}
+      gl={{ toneMapping: ACESFilmicToneMapping, toneMappingExposure: 1.46, antialias: true, powerPreference: 'high-performance' }}
       onCreated={() => console.log('[Scene] Canvas created, renderer ready')}
       style={{ width: '100vw', height: '100vh', display: 'block' }}
     >
@@ -841,12 +881,14 @@ export default function Scene() {
           Picture spots create the hierarchy; HDRI + soft fills give bounce. */}
       {/* brighter, balanced fill — daylight via hemisphere + a directional from
           the window wall. Walls keep their green material; only light increases. */}
-      <ambientLight intensity={0.50} color="#f0d884" />
-      <hemisphereLight intensity={0.62} color="#e8eeff" groundColor="#241a10" />
-      {/* daylight in from the LEFT windows and the far feature window */}
-      <directionalLight position={[-W, H * 0.7, 12]} intensity={1.7} color="#fff2dc" />
-      <directionalLight position={[-W, H * 0.7, -16]} intensity={1.5} color="#fff2dc" />
-      <directionalLight position={[0, H * 0.55, -D]} intensity={1.2} color="#eef2ff" />
+      <ambientLight intensity={0.62} color="#f0d884" />
+      <hemisphereLight intensity={0.88} color="#e8eeff" groundColor="#241a10" />
+      {/* daylight in from BOTH window walls + the far feature window */}
+      <directionalLight position={[-W, H * 0.7, 14]} intensity={1.6} color="#fff2dc" />
+      <directionalLight position={[-W, H * 0.7, -14]} intensity={1.5} color="#fff2dc" />
+      <directionalLight position={[W, H * 0.7, 14]} intensity={1.6} color="#fff2dc" />
+      <directionalLight position={[W, H * 0.7, -14]} intensity={1.5} color="#fff2dc" />
+      <directionalLight position={[0, H * 0.55, -D]} intensity={1.1} color="#eef2ff" />
       {/* soft grazing fill on the centerpiece bay to reveal carving depth
           (distance-limited so it does not wash the rest of the ceiling) */}
       <pointLight position={[-4, CEIL - 2.4, 0]} intensity={7} distance={11} decay={2} color="#f3e0a8" />
@@ -866,9 +908,9 @@ export default function Scene() {
         {/* bloom only on the lamp lenses */}
         <Bloom intensity={0.28} luminanceThreshold={1.0} luminanceSmoothing={0.2} mipmapBlur />
         {/* cinematic grade: lower brightness, more contrast, desaturate slightly */}
-        <HueSaturation saturation={-0.12} />
-        <BrightnessContrast brightness={-0.04} contrast={0.14} />
-        <Vignette offset={0.22} darkness={0.58} blendFunction={BlendFunction.NORMAL} />
+        <HueSaturation saturation={-0.10} />
+        <BrightnessContrast brightness={-0.01} contrast={0.06} />
+        <Vignette offset={0.26} darkness={0.34} blendFunction={BlendFunction.NORMAL} />
       </EffectComposer>
     </Canvas>
   )
