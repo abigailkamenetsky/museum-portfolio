@@ -95,6 +95,8 @@ function useMaterials() {
     }),
     ceiling: new MeshStandardMaterial({ color: '#ddd5c6', roughness: 0.92, metalness: 0 }),
     trim: new MeshStandardMaterial({ color: '#e2dccd', roughness: 0.84, metalness: 0 }),
+    // matte plaster for the carved centerpiece — same family as the coffers/trim
+    centerpiece: new MeshStandardMaterial({ color: '#e6ddc9', roughness: 0.92, metalness: 0, side: DoubleSide }),
     // aged gold leaf: bronze undertone, metallic, not neon; crevices read dark
     gold: new MeshStandardMaterial({ color: '#8a6f28', roughness: 0.52, metalness: 0.9, envMapIntensity: 0.85 }),
     canvas: new MeshStandardMaterial({ color: '#15100a', roughness: 1 }),
@@ -149,8 +151,10 @@ function Room({ m }) {
     }
     loadInto(loader, CEILP + 'Color.jpg', t => {
       const { big, small } = applyPlaster(t, 5); big.colorSpace = SRGBColorSpace; small.colorSpace = SRGBColorSpace
+      const cp = t.clone(); configure(cp, 3, 3, true)
       m.ceiling.map = big; m.ceiling.color.set('#efe7d6'); m.ceiling.needsUpdate = true
       m.trim.map = small; m.trim.color.set('#ece3d0'); m.trim.needsUpdate = true
+      m.centerpiece.map = cp; m.centerpiece.color.set('#ece3d0'); m.centerpiece.needsUpdate = true
     })
     loadInto(loader, CEILP + 'NormalGL.jpg', t => {
       const { big, small } = applyPlaster(t, 5)
@@ -159,8 +163,10 @@ function Room({ m }) {
     })
     loadInto(loader, CEILP + 'Roughness.jpg', t => {
       const { big, small } = applyPlaster(t, 5)
+      const cp = t.clone(); configure(cp, 3, 3, false)
       m.ceiling.roughnessMap = big; m.ceiling.roughness = 1; m.ceiling.needsUpdate = true
       m.trim.roughnessMap = small; m.trim.roughness = 1; m.trim.needsUpdate = true
+      m.centerpiece.roughnessMap = cp; m.centerpiece.roughness = 1; m.centerpiece.needsUpdate = true
     })
   }, [m])
   return (
@@ -323,8 +329,9 @@ function CofferedCeiling({ m }) {
 
       <CornerCartouches fW={fW} fD={fD} m={m} />
       {/* real carved-relief centerpiece in the blank center; medallion shows while it loads */}
+      <CenterpieceFrame m={m} />
       <Suspense fallback={<CeilingMedallion m={m} />}>
-        <Centerpiece />
+        <Centerpiece m={m} />
       </Suspense>
     </group>
   )
@@ -338,29 +345,68 @@ function CofferedCeiling({ m }) {
 const CP_FLIP = 0          // set to Math.PI if the relief faces up instead of down
 const CP_PANEL = 1.989     // the model's square footprint (metres, from its bbox)
 const CP_URL = BASE + 'assets/models/centerpiece.glb'
-function Centerpiece() {
+// the central recessed bay (3x3 coffer block, centred)
+const bayW = () => 3 * ((W - 2 * C_MARGIN) / C_COLS)
+const bayD = () => 3 * ((D - 2 * C_MARGIN) / C_ROWS)
+
+function Centerpiece({ m }) {
   const { scene } = useGLTF(CP_URL)
   const node = useMemo(() => {
     const root = scene.clone(true)
-    const ivory = new MeshStandardMaterial({ color: '#e8e1d0', roughness: 0.9, metalness: 0, side: DoubleSide })
-    root.traverse(o => { if (o.isMesh) { o.material = ivory; o.frustumCulled = false } })
+    root.traverse(o => { if (o.isMesh) { o.material = m.centerpiece; o.frustumCulled = false } })
     return root
-  }, [scene])
-  // fill the 3x3 blank center block exactly. rotateX(90) maps the panel's
-  // X->worldX, Y->worldZ, Z(depth)->worldY, so scale per-axis accordingly.
-  const fW = W - 2 * C_MARGIN, fD = D - 2 * C_MARGIN
-  const blankW = 3 * (fW / C_COLS)   // 3 skipped columns
-  const blankD = 3 * (fD / C_ROWS)   // 3 skipped rows
-  const sx = blankW / CP_PANEL
-  const sz = blankD / CP_PANEL       // model Y -> world Z
-  const sDepth = 0.4 / 0.057         // relief thickness ~0.4 m
+  }, [scene, m])
+  // inset inside the molding frame; rotateX(90) maps panel X->worldX, Y->worldZ, Z(depth)->worldY
+  const sx = (bayW() - 1.4) / CP_PANEL
+  const sz = (bayD() - 1.4) / CP_PANEL
+  const sDepth = 0.55 / 0.057        // deeper relief, readable from the floor
   return (
-    <group position={[0, CEIL - C_DROP - 0.05, 0]} rotation={[Math.PI / 2 + CP_FLIP, 0, 0]} scale={[sx, sz, sDepth]}>
+    <group position={[0, CEIL - C_DROP + 0.02, 0]} rotation={[Math.PI / 2 + CP_FLIP, 0, 0]} scale={[sx, sz, sDepth]}>
       <primitive object={node} />
     </group>
   )
 }
 useGLTF.preload(CP_URL)
+
+/* Recessed architectural frame that integrates the centerpiece into the ceiling:
+ * a recessed bay panel + layered molding rings + egg-and-dart / bead courses
+ * + acanthus corner ornaments around the central block. */
+function rectPerim(halfW, halfD, spacing, y) {
+  const arr = []
+  const edgeX = z => { const n = Math.max(1, Math.round(2 * halfW / spacing)); const st = 2 * halfW / n; for (let i = 0; i < n; i++) arr.push(mat4(-halfW + (i + 0.5) * st, y, z)) }
+  const edgeZ = x => { const n = Math.max(1, Math.round(2 * halfD / spacing)); const st = 2 * halfD / n; for (let i = 0; i < n; i++) arr.push(mat4(x, y, -halfD + (i + 0.5) * st)) }
+  edgeX(-halfD); edgeX(halfD); edgeZ(-halfW); edgeZ(halfW)
+  return arr
+}
+function CenterpieceFrame({ m }) {
+  const bW = bayW(), bD = bayD()
+  const yTop = CEIL - C_DROP
+  // recessed back panel (so the bay reads as inset, not flush)
+  const recess = useMemo(() => rectRing(bW + 0.2, bD + 0.2, bW - 2.6, bD - 2.6, 0.5), [bW, bD])
+  // three stacked molding rings stepping down and out
+  const r1 = useMemo(() => rectRing(bW + 0.4, bD + 0.4, bW - 0.4, bD - 0.4, 0.16), [bW, bD])
+  const r2 = useMemo(() => rectRing(bW + 1.1, bD + 1.1, bW + 0.3, bD + 0.3, 0.22), [bW, bD])
+  const r3 = useMemo(() => rectRing(bW + 1.8, bD + 1.8, bW + 1.0, bD + 1.0, 0.18), [bW, bD])
+  const eggGeo = useMemo(() => { const g = new SphereGeometry(0.12, 10, 8); g.scale(0.7, 1, 1.3); return g }, [])
+  const beadGeo = useMemo(() => new SphereGeometry(0.07, 8, 8), [])
+  const eggM = useMemo(() => rectPerim((bW + 0.7) / 2, (bD + 0.7) / 2, 0.34, yTop - 0.18), [bW, bD])
+  const beadM = useMemo(() => rectPerim((bW + 1.45) / 2, (bD + 1.45) / 2, 0.2, yTop - 0.40), [bW, bD])
+  const cornerGeo = useMemo(rosetteAcanthus, [])
+  const cx = (bW + 1.45) / 2, cz = (bD + 1.45) / 2
+  return (
+    <group>
+      <mesh geometry={recess} rotation={[-Math.PI / 2, 0, 0]} position={[0, yTop + 0.5, 0]} material={m.ceiling} />
+      <mesh geometry={r1} rotation={[-Math.PI / 2, 0, 0]} position={[0, yTop + 0.02, 0]} material={m.trim} />
+      <mesh geometry={r2} rotation={[-Math.PI / 2, 0, 0]} position={[0, yTop - 0.18, 0]} material={m.trim} />
+      <mesh geometry={r3} rotation={[-Math.PI / 2, 0, 0]} position={[0, yTop - 0.38, 0]} material={m.trim} />
+      <Instanced geo={eggGeo} mat={m.trim} matrices={eggM} />
+      <Instanced geo={beadGeo} mat={m.trim} matrices={beadM} />
+      {[[cx, cz], [-cx, cz], [cx, -cz], [-cx, -cz]].map(([x, z], i) => (
+        <mesh key={i} geometry={cornerGeo} position={[x, yTop - 0.12, z]} scale={1.6} material={m.trim} />
+      ))}
+    </group>
+  )
+}
 
 /* sculpted corner clusters — scroll + acanthus + boss */
 function CornerCartouches({ fW, fD, m }) {
@@ -677,8 +723,12 @@ export default function Scene() {
 
       {/* Grounding is handled by ContactShadows + N8AO (no shadow-map streak).
           Picture spots create the hierarchy; HDRI + soft fills give bounce. */}
-      <ambientLight intensity={0.30} color="#f0d068" />
-      <hemisphereLight intensity={0.34} color="#f3e2c0" groundColor="#1a130c" />
+      <ambientLight intensity={0.34} color="#f0d068" />
+      <hemisphereLight intensity={0.40} color="#f3e2c0" groundColor="#1a130c" />
+      {/* soft grazing fill on the centerpiece bay to reveal carving depth
+          (distance-limited so it does not wash the rest of the ceiling) */}
+      <pointLight position={[-4, CEIL - 2.4, 0]} intensity={7} distance={11} decay={2} color="#f3e0a8" />
+      <pointLight position={[4, CEIL - 2.4, 0]} intensity={7} distance={11} decay={2} color="#f3e0a8" />
       {/* warm keys only at the hall ENDS, dropped well below the ceiling so
           they never burn hotspots onto the ceiling near the centerpiece */}
       {[-26, 26].map((z, i) => (
