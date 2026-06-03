@@ -30,7 +30,7 @@ const CEIL = H
 const BASE = import.meta.env.BASE_URL
 const TEX = BASE + 'assets/textures/'
 const WALNUT = TEX + 'walnut/'   // real CC0 scanned dark walnut (Artaley3D)
-const WALL = TEX + 'plaster/Plaster003_2K-JPG_'
+const WALLP = TEX + 'wallpaper/'   // dark-green baroque damask (from GLB)
 const CEILP = TEX + 'ceilingplaster/Plaster001_1K-JPG_'   // ceiling plaster PBR
 const HDRI = BASE + 'assets/hdri/gallery.hdr'
 
@@ -75,10 +75,16 @@ function Env() {
 /* ── SOLID MATERIALS (work with or without maps) ──────────── */
 function useMaterials() {
   return useMemo(() => ({
-    // deep British-racing green; near-black in shadow, richer only where lit
+    // dark-green baroque damask wallpaper (textures loaded in Room).
+    // Two materials so the damask motif keeps a consistent physical scale on
+    // the short (front/back) and long (side) walls.
     wall: new MeshStandardMaterial({
-      color: '#1c2e1f', roughness: 0.86, metalness: 0,
-      normalScale: new Vector2(0.5, 0.5), envMapIntensity: 0.12, aoMapIntensity: 1.5,
+      color: '#ffffff', roughness: 0.82, metalness: 0,
+      normalScale: new Vector2(1.0, 1.0), envMapIntensity: 0.18,
+    }),
+    wallSide: new MeshStandardMaterial({
+      color: '#ffffff', roughness: 0.82, metalness: 0,
+      normalScale: new Vector2(1.0, 1.0), envMapIntensity: 0.18,
     }),
     // espresso/smoked walnut — far less red, nearly black in shadow, polished oil luster
     floor: new MeshPhysicalMaterial({
@@ -116,9 +122,23 @@ function Room({ m }) {
     loadInto(loader, WALNUT + 'AO.jpg', t => { configure(t, FR, false); m.floor.aoMap = t; m.floor.needsUpdate = true })
 
     // WALLS: real plaster scan, tinted deep green
-    loadInto(loader, WALL + 'Color.jpg', t => { configure(t, 4, true); m.wall.map = t; m.wall.color.set('#2c5232'); m.wall.needsUpdate = true })
-    loadInto(loader, WALL + 'NormalGL.jpg', t => { configure(t, 4, false); m.wall.normalMap = t; m.wall.needsUpdate = true })
-    loadInto(loader, WALL + 'AmbientOcclusion.jpg', t => { configure(t, 4, false); m.wall.aoMap = t; m.wall.needsUpdate = true })
+    // WALLS: dark-green baroque damask wallpaper. ~1.9 m motif → repeat tuned
+    // per wall so front/back (W=34) and sides (D=64) match in scale.
+    const wpFront = { x: Math.round(W / 1.9), y: Math.round(H / 1.9) }   // ~18 x 7
+    const wpSide = { x: Math.round(D / 1.9), y: Math.round(H / 1.9) }    // ~34 x 7
+    const loadWall = (file, srgb, assign) => loadInto(loader, WALLP + file, t => {
+      const front = t, side = t.clone()
+      configure(front, 1, 1, srgb); front.repeat.set(wpFront.x, wpFront.y)
+      configure(side, 1, 1, srgb); side.repeat.set(wpSide.x, wpSide.y)
+      assign(front, side)
+    })
+    loadWall('BaseColor.jpg', true, (f, s) => { m.wall.map = f; m.wallSide.map = s; m.wall.needsUpdate = m.wallSide.needsUpdate = true })
+    loadWall('Normal.png', false, (f, s) => { m.wall.normalMap = f; m.wallSide.normalMap = s; m.wall.needsUpdate = m.wallSide.needsUpdate = true })
+    loadWall('MetalRough.jpg', false, (f, s) => {
+      m.wall.roughnessMap = f; m.wallSide.roughnessMap = s
+      m.wall.roughness = 1; m.wallSide.roughness = 1
+      m.wall.needsUpdate = m.wallSide.needsUpdate = true
+    })
 
     // CEILING: real plaster PBR on the broad surfaces (m.ceiling, big repeat)
     // and the ornament (m.trim, tighter repeat via cloned maps).
@@ -148,8 +168,8 @@ function Room({ m }) {
       <mesh geometry={floorGeo} rotation={[-Math.PI / 2, 0, 0]} receiveShadow material={m.floor} />
       <mesh geometry={wallWide} position={[0, H / 2, -D / 2]} receiveShadow material={m.wall} />
       <mesh geometry={wallWide} position={[0, H / 2, D / 2]} rotation={[0, Math.PI, 0]} material={m.wall} />
-      <mesh geometry={wallSide} position={[-W / 2, H / 2, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow material={m.wall} />
-      <mesh geometry={wallSide} position={[W / 2, H / 2, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow material={m.wall} />
+      <mesh geometry={wallSide} position={[-W / 2, H / 2, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow material={m.wallSide} />
+      <mesh geometry={wallSide} position={[W / 2, H / 2, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow material={m.wallSide} />
     </group>
   )
 }
