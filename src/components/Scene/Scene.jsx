@@ -15,7 +15,7 @@ import {
   MeshStandardMaterial, MeshPhysicalMaterial, ExtrudeGeometry, Shape, Path, Vector2,
   PlaneGeometry, BufferAttribute, TextureLoader, RepeatWrapping, SRGBColorSpace,
   EquirectangularReflectionMapping, Object3D, TorusGeometry, CylinderGeometry,
-  SphereGeometry, ConeGeometry, BoxGeometry, Matrix4, DoubleSide,
+  SphereGeometry, ConeGeometry, BoxGeometry, Matrix4, DoubleSide, Box3,
   Vector3, Euler, MathUtils, ACESFilmicToneMapping, PCFSoftShadowMap,
 } from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
@@ -23,8 +23,11 @@ import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 import { ARTWORKS, ART_BASE } from '../../data/artworks'
 
 /* ── DIMENSIONS — long rectangular palace gallery (~2:1) ────── */
-const W = 24, H = 13, D = 72
+const W = 18, H = 13.5, D = 78
 const CEIL = H
+// central feature-window opening in the far (back) wall
+const FEAT_W = 6, FEAT_SILL = 1.6, FEAT_TOP = 12.2
+const FEAT_H = FEAT_TOP - FEAT_SILL
 // BASE is '/' on root-domain hosts (Vercel/Netlify) and '/museum-portfolio/'
 // on GitHub Pages — so every asset URL resolves correctly on any host.
 const BASE = import.meta.env.BASE_URL
@@ -176,7 +179,18 @@ function Room({ m }) {
   return (
     <group>
       <mesh geometry={floorGeo} rotation={[-Math.PI / 2, 0, 0]} receiveShadow material={m.floor} />
-      <mesh geometry={wallWide} position={[0, H / 2, -D / 2]} receiveShadow material={m.wall} />
+      {/* FAR WALL with a true central opening for the Gothic feature window */}
+      {(() => {
+        const side = (W - FEAT_W) / 2, zb = -D / 2
+        return (
+          <group>
+            <mesh position={[0, FEAT_SILL / 2, zb]} receiveShadow material={m.wall}><planeGeometry args={[W, FEAT_SILL]} /></mesh>
+            <mesh position={[0, (FEAT_TOP + H) / 2, zb]} receiveShadow material={m.wall}><planeGeometry args={[W, H - FEAT_TOP]} /></mesh>
+            <mesh position={[-(FEAT_W / 2 + side / 2), (FEAT_SILL + FEAT_TOP) / 2, zb]} receiveShadow material={m.wall}><planeGeometry args={[side, FEAT_H]} /></mesh>
+            <mesh position={[(FEAT_W / 2 + side / 2), (FEAT_SILL + FEAT_TOP) / 2, zb]} receiveShadow material={m.wall}><planeGeometry args={[side, FEAT_H]} /></mesh>
+          </group>
+        )
+      })()}
       <mesh geometry={wallWide} position={[0, H / 2, D / 2]} rotation={[0, Math.PI, 0]} material={m.wall} />
       <mesh geometry={wallSide} position={[-W / 2, H / 2, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow material={m.wallSide} />
       <mesh geometry={wallSide} position={[W / 2, H / 2, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow material={m.wallSide} />
@@ -191,7 +205,7 @@ function Room({ m }) {
  * cartouches, layered perimeter molding, and a monumental medallion.
  * Density comes from merged + instanced ornament (few draw calls).
  * ════════════════════════════════════════════════════════════ */
-const C_MARGIN = 2.5, C_COLS = 5, C_ROWS = 19, C_RIB = 0.55, C_DROP = 0.85
+const C_MARGIN = 2.0, C_COLS = 5, C_ROWS = 25, C_RIB = 0.50, C_DROP = 0.85
 
 const _dummy = new Object3D()
 const mat4 = (x, y, z, ry = 0, s = 1) => {
@@ -615,47 +629,61 @@ function Door({ m }) {
   )
 }
 
-/* tall divided-light museum windows along the right (+X) long wall */
-function Windows({ m }) {
-  const zs = [-29, -14.5, 0, 14.5, 29]
-  return <group>{zs.map((z, i) => <Window key={i} z={z} w={2.8} hwin={H - 3.2} sillY={1.0} m={m} />)}</group>
-}
-function Window({ z, w, hwin, sillY, m }) {
-  const cy = sillY + hwin / 2
-  const fr = 0.18, dep = 0.18, mull = 0.05
-  const cols = 2, rows = 6
-  const W2 = w / 2, H2 = hwin / 2
+/* ── GOTHIC FEATURE WINDOW — monumental, centred in the far-wall opening ── */
+const GOTHIC_WIN = BASE + 'assets/models/gothic_window.glb'
+const GOTHIC_FRAME = BASE + 'assets/models/gothic_frame.glb'
+function GothicFeature({ m }) {
+  const { scene } = useGLTF(GOTHIC_WIN)
+  const node = useMemo(() => {
+    const root = scene.clone(true)
+    const stone = new MeshStandardMaterial({ color: '#d6d0c2', roughness: 0.85, metalness: 0, side: DoubleSide })
+    root.traverse(o => { if (o.isMesh) { o.material = stone; o.frustumCulled = false } })
+    const box = new Box3().setFromObject(root); const sz = new Vector3(); box.getSize(sz); const c = new Vector3(); box.getCenter(c)
+    root.position.sub(c)
+    return { root, sz }
+  }, [scene])
+  const s = Math.min(FEAT_W / node.sz.x, FEAT_H / node.sz.y) * 0.98
+  const yC = (FEAT_SILL + FEAT_TOP) / 2
   return (
-    <group position={[W / 2 - 0.06, cy, z]} rotation={[0, -Math.PI / 2, 0]}>
-      <mesh position={[0, 0, -0.04]} material={m.darkRoom}><planeGeometry args={[w, hwin]} /></mesh>
-      <mesh position={[0, 0, 0]} material={m.glass}><planeGeometry args={[w, hwin]} /></mesh>
-      {/* outer casing */}
-      <mesh position={[-W2 - fr / 2, 0, dep / 2]} material={m.trimWhite}><boxGeometry args={[fr, hwin + 2 * fr, dep]} /></mesh>
-      <mesh position={[W2 + fr / 2, 0, dep / 2]} material={m.trimWhite}><boxGeometry args={[fr, hwin + 2 * fr, dep]} /></mesh>
-      <mesh position={[0, H2 + fr / 2, dep / 2]} material={m.trimWhite}><boxGeometry args={[w + 2 * fr, fr, dep]} /></mesh>
-      <mesh position={[0, -H2 - fr / 2, dep / 2]} material={m.trimWhite}><boxGeometry args={[w + 2 * fr, fr, dep]} /></mesh>
-      {/* divided-light mullions */}
-      {Array.from({ length: cols - 1 }, (_, i) => { const x = -W2 + (i + 1) * (w / cols); return <mesh key={'v' + i} position={[x, 0, 0.04]} material={m.trimWhite}><boxGeometry args={[mull, hwin, 0.07]} /></mesh> })}
-      {Array.from({ length: rows - 1 }, (_, i) => { const y = -H2 + (i + 1) * (hwin / rows); return <mesh key={'h' + i} position={[0, y, 0.04]} material={m.trimWhite}><boxGeometry args={[w, mull, 0.07]} /></mesh> })}
-      {/* sill + pediment */}
-      <mesh position={[0, -H2 - fr, 0.20]} material={m.trimWhite}><boxGeometry args={[w + 2 * fr + 0.3, 0.14, 0.42]} /></mesh>
-      <mesh position={[0, H2 + fr + 0.14, 0.14]} material={m.trimWhite}><boxGeometry args={[w + 2 * fr + 0.6, 0.24, 0.32]} /></mesh>
-      <mesh position={[0, H2 + fr + 0.34, 0.07]} material={m.trimWhite}><boxGeometry args={[w + 2 * fr + 0.25, 0.16, 0.22]} /></mesh>
+    <group>
+      {/* bright daylight sky behind the opening */}
+      <mesh position={[0, yC, -D / 2 - 0.25]}>
+        <planeGeometry args={[FEAT_W + 1, FEAT_H + 1]} />
+        <meshBasicMaterial color="#eaf0fb" toneMapped={false} />
+      </mesh>
+      {/* the gothic tracery, scaled into the opening */}
+      <group position={[0, yC, -D / 2 + 0.18]} scale={[s, s, s]}>
+        <primitive object={node.root} />
+      </group>
     </group>
   )
 }
 
-/* faint warm daylight pools on the floor in front of the windows */
-function DaylightPatches() {
-  const zs = [-29, -14.5, 0, 14.5, 29]
+/* ── SIDE GOTHIC WINDOWS — ornate frame asset built into the LEFT wall ── */
+function SideGothicWindows({ m, zs }) {
+  return <group>{zs.map((z, i) => <SideGothicWindow key={i} z={z} m={m} />)}</group>
+}
+function SideGothicWindow({ z, m }) {
+  const { scene } = useGLTF(GOTHIC_FRAME)
+  const node = useMemo(() => {
+    const root = scene.clone(true)
+    const stone = new MeshStandardMaterial({ color: '#e2dccd', roughness: 0.82, metalness: 0, side: DoubleSide })
+    root.traverse(o => { if (o.isMesh) { o.material = stone; o.frustumCulled = false } })
+    const box = new Box3().setFromObject(root); const sz = new Vector3(); box.getSize(sz); const c = new Vector3(); box.getCenter(c)
+    root.position.sub(c)
+    return { root, sz }
+  }, [scene])
+  const targetH = H - 4.0
+  const s = targetH / node.sz.y
+  const glW = node.sz.x * s * 0.8, glH = targetH * 0.9
+  const yC = 1.0 + targetH / 2
   return (
-    <group>
-      {zs.map((z, i) => (
-        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[W / 2 - 4.5, 0.03, z + 1.5]}>
-          <planeGeometry args={[4.5, 6]} />
-          <meshBasicMaterial color="#fff0d2" transparent opacity={0.10} depthWrite={false} />
-        </mesh>
-      ))}
+    <group position={[-W / 2 + 0.08, yC, z]} rotation={[0, Math.PI / 2, 0]}>
+      {/* recess + bright daylight glass behind the frame */}
+      <mesh position={[0, 0, -0.18]} material={m.darkRoom}><planeGeometry args={[glW + 0.4, glH + 0.4]} /></mesh>
+      <mesh position={[0, 0, -0.12]}><planeGeometry args={[glW, glH]} /><meshBasicMaterial color="#e6edf8" toneMapped={false} /></mesh>
+      {/* the ornate gothic frame, scaled to the window */}
+      <group scale={[s, s, s]}><primitive object={node.root} /></group>
     </group>
   )
 }
@@ -748,23 +776,19 @@ function Gallery() {
   const A = ARTWORKS
   const pick = i => A[((i % A.length) + A.length) % A.length]
 
-  // long procession gallery: paintings on the back + the LEFT wall;
-  // the RIGHT wall carries the tall windows (so no paintings there).
-  const back = [-6, 0, 6]
-  const sideZ = [-30, -22, -14, -6, 2, 18, 26, 34].filter(z => Math.abs(z) <= hd - 4)
-  const left = sideZ.filter(z => Math.abs(z - 13) > 4)   // leave room for the door
+  // procession gallery: central Gothic feature window flanked by paintings on
+  // the far wall; Gothic windows + paintings on the LEFT wall; paintings fill
+  // the RIGHT wall. Windows create bays; paintings sit between them.
+  const back = [-6, 6]                                  // flank the feature window
+  const leftWin = [28, 8, -12, -32]                     // gothic side windows (avoid door ~z=13)
+  const leftArt = [36, 18, -2, -22]                     // paintings between/around bays
+  const rightArt = [34, 26, 18, 10, 2, -6, -14, -22, -30]
 
   let k = 0
   const items = []
-  back.forEach((x, i) => items.push({ key: 'b' + i, pos: [x, PY + (i === 1 ? 0.2 : 0), -hd + 0.12], rot: [0, 0, 0], mw: i === 1 ? 3.0 : 2.6, mh: i === 1 ? 4.0 : 3.6, art: pick(k++) }))
-  left.forEach((z, i) => items.push({ key: 'l' + i, pos: [-hw + 0.12, PY, z], rot: [0, Math.PI / 2, 0], mw: 2.6, mh: 3.6, art: pick(k++) }))
-
-  const lightFor = it => {
-    const [x, , z] = it.pos
-    if (it.rot[1] === 0) return { pos: [x, H - 1.2, -hd + 1.0], tgt: [x, PY, -hd + 0.1], ry: 0 }
-    if (it.rot[1] > 0) return { pos: [-hw + 1.0, H - 1.2, z], tgt: [-hw + 0.1, PY, z], ry: Math.PI / 2 }
-    return { pos: [hw - 1.0, H - 1.2, z], tgt: [hw - 0.1, PY, z], ry: -Math.PI / 2 }
-  }
+  back.forEach((x, i) => items.push({ key: 'b' + i, pos: [x, PY, -hd + 0.12], rot: [0, 0, 0], mw: 2.6, mh: 3.6, art: pick(k++) }))
+  leftArt.forEach((z, i) => items.push({ key: 'la' + i, pos: [-hw + 0.12, PY, z], rot: [0, Math.PI / 2, 0], mw: 2.4, mh: 3.4, art: pick(k++) }))
+  rightArt.forEach((z, i) => items.push({ key: 'ra' + i, pos: [hw - 0.12, PY, z], rot: [0, -Math.PI / 2, 0], mw: 2.4, mh: 3.4, art: pick(k++) }))
 
   return (
     <group>
@@ -773,22 +797,30 @@ function Gallery() {
       <CofferedCeiling m={m} />
       <Trim m={m} />
       <Door m={m} />
-      <Windows m={m} />
-      <DaylightPatches />
+      <Suspense fallback={null}><GothicFeature m={m} /></Suspense>
+      <Suspense fallback={null}><SideGothicWindows m={m} zs={leftWin} /></Suspense>
+      {/* faint daylight pools beneath the left windows */}
+      {leftWin.map((z, i) => (
+        <mesh key={'dp' + i} rotation={[-Math.PI / 2, 0, 0]} position={[-hw + 3.5, 0.03, z]}>
+          <planeGeometry args={[4, 5]} />
+          <meshBasicMaterial color="#fff0d2" transparent opacity={0.10} depthWrite={false} />
+        </mesh>
+      ))}
       <Bench m={m} />
       <Character m={m} />
 
       {items.map(it => <Painting key={it.key} position={it.pos} rotation={it.rot} maxW={it.mw} maxH={it.mh} art={it.art} m={m} />)}
-      {/* a few wall-wash spots (NOT one per painting — keeps light count low) */}
+      {/* curated warm wall-wash spots (kept few for performance) */}
       {[
-        { pos: [0, H - 1.2, -hd + 1.0], tgt: [0, PY, -hd + 0.1], ry: 0 },
-        { pos: [-hw + 1.0, H - 1.2, -14], tgt: [-hw + 0.1, PY, -14], ry: Math.PI / 2 },
-        { pos: [-hw + 1.0, H - 1.2, 8], tgt: [-hw + 0.1, PY, 8], ry: Math.PI / 2 },
-        { pos: [hw - 1.0, H - 1.2, -14], tgt: [hw - 0.1, PY, -14], ry: -Math.PI / 2 },
-        { pos: [hw - 1.0, H - 1.2, 8], tgt: [hw - 0.1, PY, 8], ry: -Math.PI / 2 },
+        { pos: [-6, H - 1.4, -hd + 1.0], tgt: [-6, PY, -hd + 0.1], ry: 0 },
+        { pos: [6, H - 1.4, -hd + 1.0], tgt: [6, PY, -hd + 0.1], ry: 0 },
+        { pos: [-hw + 1.0, H - 1.4, 18], tgt: [-hw + 0.1, PY, 18], ry: Math.PI / 2 },
+        { pos: [hw - 1.0, H - 1.4, 22], tgt: [hw - 0.1, PY, 22], ry: -Math.PI / 2 },
+        { pos: [hw - 1.0, H - 1.4, -6], tgt: [hw - 0.1, PY, -6], ry: -Math.PI / 2 },
+        { pos: [hw - 1.0, H - 1.4, -26], tgt: [hw - 0.1, PY, -26], ry: -Math.PI / 2 },
       ].map((l, i) => <PictureLight key={'L' + i} pos={l.pos} target={l.tgt} rotY={l.ry} m={m} />)}
 
-      <ContactShadows position={[0, 0.012, 0]} scale={30} resolution={1024} far={6} blur={2.4} opacity={0.55} color="#000000" />
+      <ContactShadows position={[0, 0.012, 0]} scale={Math.max(W, D) * 0.6} resolution={1024} far={6} blur={2.4} opacity={0.55} color="#000000" />
     </group>
   )
 }
@@ -811,8 +843,10 @@ export default function Scene() {
           the window wall. Walls keep their green material; only light increases. */}
       <ambientLight intensity={0.50} color="#f0d884" />
       <hemisphereLight intensity={0.62} color="#e8eeff" groundColor="#241a10" />
-      <directionalLight position={[W, H * 0.7, 6]} intensity={1.8} color="#fff2dc" />
-      <directionalLight position={[W, H * 0.7, -18]} intensity={1.4} color="#fff2dc" />
+      {/* daylight in from the LEFT windows and the far feature window */}
+      <directionalLight position={[-W, H * 0.7, 12]} intensity={1.7} color="#fff2dc" />
+      <directionalLight position={[-W, H * 0.7, -16]} intensity={1.5} color="#fff2dc" />
+      <directionalLight position={[0, H * 0.55, -D]} intensity={1.2} color="#eef2ff" />
       {/* soft grazing fill on the centerpiece bay to reveal carving depth
           (distance-limited so it does not wash the rest of the ceiling) */}
       <pointLight position={[-4, CEIL - 2.4, 0]} intensity={7} distance={11} decay={2} color="#f3e0a8" />
