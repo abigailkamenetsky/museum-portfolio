@@ -23,7 +23,7 @@ import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 import { ARTWORKS, ART_BASE } from '../../data/artworks'
 
 /* ── DIMENSIONS — long rectangular palace gallery (~2:1) ────── */
-const W = 34, H = 14, D = 64
+const W = 24, H = 13, D = 72
 const CEIL = H
 // BASE is '/' on root-domain hosts (Vercel/Netlify) and '/museum-portfolio/'
 // on GitHub Pages — so every asset URL resolves correctly on any host.
@@ -106,6 +106,10 @@ function useMaterials() {
     skin: new MeshStandardMaterial({ color: '#b8946e', roughness: 0.82 }),
     fixture: new MeshStandardMaterial({ color: '#141210', roughness: 0.5, metalness: 0.6 }),
     lens: new MeshStandardMaterial({ color: '#fff3c0', emissive: '#fff3c0', emissiveIntensity: 4, roughness: 0.4 }),
+    // tall museum windows
+    glass: new MeshStandardMaterial({ color: '#dfe8f2', emissive: '#eef3fb', emissiveIntensity: 2.4, roughness: 0.15, metalness: 0 }),
+    trimWhite: new MeshStandardMaterial({ color: '#f2efe6', roughness: 0.7, metalness: 0 }),
+    darkRoom: new MeshStandardMaterial({ color: '#0a0c08', roughness: 1 }),
   }), [])
 }
 
@@ -187,7 +191,7 @@ function Room({ m }) {
  * cartouches, layered perimeter molding, and a monumental medallion.
  * Density comes from merged + instanced ornament (few draw calls).
  * ════════════════════════════════════════════════════════════ */
-const C_MARGIN = 2.5, C_COLS = 7, C_ROWS = 11, C_RIB = 0.60, C_DROP = 0.85
+const C_MARGIN = 2.5, C_COLS = 5, C_ROWS = 19, C_RIB = 0.55, C_DROP = 0.85
 
 const _dummy = new Object3D()
 const mat4 = (x, y, z, ry = 0, s = 1) => {
@@ -256,6 +260,16 @@ function miniRosetteGeo() {
   return mergeGeometries(p, false)
 }
 
+function miniRosetteGeo2() {
+  const p = [new CylinderGeometry(0.04, 0.055, 0.05, 8)]
+  for (let i = 0; i < 4; i++) {
+    const a = i / 4 * Math.PI * 2
+    const pet = new ConeGeometry(0.045, 0.14, 6); pet.rotateX(-Math.PI / 2); pet.rotateY(-a)
+    pet.translate(Math.cos(a) * 0.075, -0.01, Math.sin(a) * 0.075); p.push(pet)
+  }
+  return mergeGeometries(p, false)
+}
+
 function Instanced({ geo, mat, matrices }) {
   const ref = useRef()
   useEffect(() => {
@@ -305,6 +319,7 @@ function CofferedCeiling({ m }) {
   const rosA = useMemo(rosetteFloral, []), rosB = useMemo(rosetteAcanthus, []), rosC = useMemo(rosetteMedallion, [])
   const bossGeo = useMemo(beamBossGeo, [])
   const miniGeo = useMemo(miniRosetteGeo, [])
+  const miniGeo2 = useMemo(miniRosetteGeo2, [])
 
   // instance matrices
   const insertM = useMemo(() => cells.map(([sx, sy]) => mat4(sx, CEIL - C_DROP, -sy)), [cells])
@@ -326,11 +341,11 @@ function CofferedCeiling({ m }) {
   }, [fW, fD, pX, pZ])
   // four mini florets in the corners of every coffer
   const miniM = useMemo(() => {
-    const arr = []; const dx = openX * 0.30, dz = openZ * 0.30
-    cells.forEach(([sx, sy]) => {
-      for (const [ox, oz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) arr.push(mat4(sx + ox * dx, CEIL - 0.05, -(sy + oz * dz)))
+    const a = [], b = []; const dx = openX * 0.30, dz = openZ * 0.30
+    cells.forEach(([sx, sy], ci) => {
+      for (const [ox, oz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) (ci % 2 ? b : a).push(mat4(sx + ox * dx, CEIL - 0.05, -(sy + oz * dz)))
     })
-    return arr
+    return { a, b }
   }, [cells, openX, openZ])
 
   return (
@@ -347,7 +362,8 @@ function CofferedCeiling({ m }) {
       <Instanced geo={rosB} mat={m.trim} matrices={rosM.b} />
       <Instanced geo={rosC} mat={m.trim} matrices={rosM.c} />
       <Instanced geo={bossGeo} mat={m.trim} matrices={bossM} />
-      <Instanced geo={miniGeo} mat={m.trim} matrices={miniM} />
+      <Instanced geo={miniGeo} mat={m.trim} matrices={miniM.a} />
+      <Instanced geo={miniGeo2} mat={m.trim} matrices={miniM.b} />
 
       <CornerCartouches fW={fW} fD={fD} m={m} />
       {/* real carved-relief centerpiece in the blank center; medallion shows while it loads */}
@@ -581,7 +597,7 @@ function PictureLight({ pos, target, rotY = 0, m }) {
         <mesh position={[0, -0.05, 0.16]} rotation={[0.7, 0, 0]} material={m.fixture}><cylinderGeometry args={[0.05, 0.07, 0.16, 12]} /></mesh>
         <mesh position={[0, -0.11, 0.18]} material={m.lens}><sphereGeometry args={[0.025, 8, 8]} /></mesh>
       </group>
-      <spotLight ref={lRef} position={pos} intensity={120} angle={0.4} penumbra={0.7} color="#f4dd86" decay={1.4} distance={34} />
+      <spotLight ref={lRef} position={pos} intensity={150} angle={0.4} penumbra={0.7} color="#f6df88" decay={1.4} distance={36} />
       <object3D ref={tRef} position={target} />
     </>
   )
@@ -589,12 +605,57 @@ function PictureLight({ pos, target, rotY = 0, m }) {
 
 /* ── FURNISHINGS ──────────────────────────────────────────── */
 function Door({ m }) {
-  // tall pedimented doorway suited to the grand wall height
+  // tall pedimented doorway, raised proportionally with the grand ceiling
   return (
     <group position={[-W / 2 + 0.04, 0, 13]} rotation={[0, Math.PI / 2, 0]}>
-      <mesh position={[0, 2.7, -0.02]} material={m.trim} castShadow><boxGeometry args={[2.6, 5.4, 0.20]} /></mesh>
-      <mesh position={[0, 2.55, 0.06]} material={m.wood} castShadow><boxGeometry args={[2.1, 5.0, 0.10]} /></mesh>
-      <mesh position={[0, 5.5, 0.04]} material={m.trim} castShadow><boxGeometry args={[3.0, 0.3, 0.34]} /></mesh>
+      <mesh position={[0, 3.2, -0.02]} material={m.trim} castShadow><boxGeometry args={[2.9, 6.4, 0.22]} /></mesh>
+      <mesh position={[0, 3.0, 0.06]} material={m.wood} castShadow><boxGeometry args={[2.3, 5.9, 0.10]} /></mesh>
+      <mesh position={[0, 6.5, 0.04]} material={m.trim} castShadow><boxGeometry args={[3.4, 0.34, 0.38]} /></mesh>
+    </group>
+  )
+}
+
+/* tall divided-light museum windows along the right (+X) long wall */
+function Windows({ m }) {
+  const zs = [-29, -14.5, 0, 14.5, 29]
+  return <group>{zs.map((z, i) => <Window key={i} z={z} w={2.8} hwin={H - 3.2} sillY={1.0} m={m} />)}</group>
+}
+function Window({ z, w, hwin, sillY, m }) {
+  const cy = sillY + hwin / 2
+  const fr = 0.18, dep = 0.18, mull = 0.05
+  const cols = 2, rows = 6
+  const W2 = w / 2, H2 = hwin / 2
+  return (
+    <group position={[W / 2 - 0.06, cy, z]} rotation={[0, -Math.PI / 2, 0]}>
+      <mesh position={[0, 0, -0.04]} material={m.darkRoom}><planeGeometry args={[w, hwin]} /></mesh>
+      <mesh position={[0, 0, 0]} material={m.glass}><planeGeometry args={[w, hwin]} /></mesh>
+      {/* outer casing */}
+      <mesh position={[-W2 - fr / 2, 0, dep / 2]} material={m.trimWhite}><boxGeometry args={[fr, hwin + 2 * fr, dep]} /></mesh>
+      <mesh position={[W2 + fr / 2, 0, dep / 2]} material={m.trimWhite}><boxGeometry args={[fr, hwin + 2 * fr, dep]} /></mesh>
+      <mesh position={[0, H2 + fr / 2, dep / 2]} material={m.trimWhite}><boxGeometry args={[w + 2 * fr, fr, dep]} /></mesh>
+      <mesh position={[0, -H2 - fr / 2, dep / 2]} material={m.trimWhite}><boxGeometry args={[w + 2 * fr, fr, dep]} /></mesh>
+      {/* divided-light mullions */}
+      {Array.from({ length: cols - 1 }, (_, i) => { const x = -W2 + (i + 1) * (w / cols); return <mesh key={'v' + i} position={[x, 0, 0.04]} material={m.trimWhite}><boxGeometry args={[mull, hwin, 0.07]} /></mesh> })}
+      {Array.from({ length: rows - 1 }, (_, i) => { const y = -H2 + (i + 1) * (hwin / rows); return <mesh key={'h' + i} position={[0, y, 0.04]} material={m.trimWhite}><boxGeometry args={[w, mull, 0.07]} /></mesh> })}
+      {/* sill + pediment */}
+      <mesh position={[0, -H2 - fr, 0.20]} material={m.trimWhite}><boxGeometry args={[w + 2 * fr + 0.3, 0.14, 0.42]} /></mesh>
+      <mesh position={[0, H2 + fr + 0.14, 0.14]} material={m.trimWhite}><boxGeometry args={[w + 2 * fr + 0.6, 0.24, 0.32]} /></mesh>
+      <mesh position={[0, H2 + fr + 0.34, 0.07]} material={m.trimWhite}><boxGeometry args={[w + 2 * fr + 0.25, 0.16, 0.22]} /></mesh>
+    </group>
+  )
+}
+
+/* faint warm daylight pools on the floor in front of the windows */
+function DaylightPatches() {
+  const zs = [-29, -14.5, 0, 14.5, 29]
+  return (
+    <group>
+      {zs.map((z, i) => (
+        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[W / 2 - 4.5, 0.03, z + 1.5]}>
+          <planeGeometry args={[4.5, 6]} />
+          <meshBasicMaterial color="#fff0d2" transparent opacity={0.10} depthWrite={false} />
+        </mesh>
+      ))}
     </group>
   )
 }
@@ -648,13 +709,13 @@ function Character({ m }) {
     ch.position.z = MathUtils.clamp(ch.position.z, -D / 2 + 0.5, D / 2 - 0.5)
     ch.position.y = 0
     // camera lifts a little when looking up, so the view tilts toward the ceiling
-    _off.set(0, 3.0 + pitch.current * 1.1, 8.6).applyEuler(new Euler(0, ch.rotation.y, 0)).add(ch.position)
+    _off.set(0, 2.4 + pitch.current * 1.2, 9.6).applyEuler(new Euler(0, ch.rotation.y, 0)).add(ch.position)
     _off.x = MathUtils.clamp(_off.x, -W / 2 + 0.5, W / 2 - 0.5)
     _off.z = MathUtils.clamp(_off.z, -D / 2 + 0.5, D / 2 - 0.5)
     _off.y = MathUtils.clamp(_off.y, 1.0, CEIL - 0.5)
     _sc.lerp(_off, 0.07); camera.position.copy(_sc)
     // raise the look target with pitch → look up at the ceiling
-    _ct.set(ch.position.x, ch.position.y + 1.55 + pitch.current * 5.0, ch.position.z)
+    _ct.set(ch.position.x, ch.position.y + 2.2 + pitch.current * 5.5, ch.position.z)
     camera.lookAt(_ct)
   })
   return (
@@ -687,17 +748,16 @@ function Gallery() {
   const A = ARTWORKS
   const pick = i => A[((i % A.length) + A.length) % A.length]
 
-  // long corridor gallery: a few on each end wall, a row down each side wall
-  const back = [-8, 0, 8]
-  const sideZ = [-24, -16, -8, 0, 8, 16, 24]
-  const left = sideZ.filter(z => Math.abs(z - 13) > 3.5)   // leave room for the door
-  const right = sideZ
+  // long procession gallery: paintings on the back + the LEFT wall;
+  // the RIGHT wall carries the tall windows (so no paintings there).
+  const back = [-6, 0, 6]
+  const sideZ = [-30, -22, -14, -6, 2, 18, 26, 34].filter(z => Math.abs(z) <= hd - 4)
+  const left = sideZ.filter(z => Math.abs(z - 13) > 4)   // leave room for the door
 
   let k = 0
   const items = []
   back.forEach((x, i) => items.push({ key: 'b' + i, pos: [x, PY + (i === 1 ? 0.2 : 0), -hd + 0.12], rot: [0, 0, 0], mw: i === 1 ? 3.0 : 2.6, mh: i === 1 ? 4.0 : 3.6, art: pick(k++) }))
   left.forEach((z, i) => items.push({ key: 'l' + i, pos: [-hw + 0.12, PY, z], rot: [0, Math.PI / 2, 0], mw: 2.6, mh: 3.6, art: pick(k++) }))
-  right.forEach((z, i) => items.push({ key: 'r' + i, pos: [hw - 0.12, PY, z], rot: [0, -Math.PI / 2, 0], mw: 2.6, mh: 3.6, art: pick(k++) }))
 
   const lightFor = it => {
     const [x, , z] = it.pos
@@ -713,6 +773,8 @@ function Gallery() {
       <CofferedCeiling m={m} />
       <Trim m={m} />
       <Door m={m} />
+      <Windows m={m} />
+      <DaylightPatches />
       <Bench m={m} />
       <Character m={m} />
 
@@ -736,8 +798,8 @@ export default function Scene() {
     <Canvas
       shadows={false}
       dpr={[1, 1.5]}
-      camera={{ position: [0, 3.4, 11], fov: 60 }}
-      gl={{ toneMapping: ACESFilmicToneMapping, toneMappingExposure: 1.18, antialias: true, powerPreference: 'high-performance' }}
+      camera={{ position: [0, 2.8, 12], fov: 68 }}
+      gl={{ toneMapping: ACESFilmicToneMapping, toneMappingExposure: 1.34, antialias: true, powerPreference: 'high-performance' }}
       onCreated={() => console.log('[Scene] Canvas created, renderer ready')}
       style={{ width: '100vw', height: '100vh', display: 'block' }}
     >
@@ -745,8 +807,12 @@ export default function Scene() {
 
       {/* Grounding is handled by ContactShadows + N8AO (no shadow-map streak).
           Picture spots create the hierarchy; HDRI + soft fills give bounce. */}
-      <ambientLight intensity={0.34} color="#f0d068" />
-      <hemisphereLight intensity={0.40} color="#f3e2c0" groundColor="#1a130c" />
+      {/* brighter, balanced fill — daylight via hemisphere + a directional from
+          the window wall. Walls keep their green material; only light increases. */}
+      <ambientLight intensity={0.50} color="#f0d884" />
+      <hemisphereLight intensity={0.62} color="#e8eeff" groundColor="#241a10" />
+      <directionalLight position={[W, H * 0.7, 6]} intensity={1.8} color="#fff2dc" />
+      <directionalLight position={[W, H * 0.7, -18]} intensity={1.4} color="#fff2dc" />
       {/* soft grazing fill on the centerpiece bay to reveal carving depth
           (distance-limited so it does not wash the rest of the ceiling) */}
       <pointLight position={[-4, CEIL - 2.4, 0]} intensity={7} distance={11} decay={2} color="#f3e0a8" />
