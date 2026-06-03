@@ -26,8 +26,8 @@ An interactive, art-museum-style resume portfolio built as a side-scrolling web 
 
 ## Repository
 - **GitHub username:** abigailkamenetsky
-- **Repo name:** museum-portfolio
-- **Remote:** https://github.com/abigailkamenetsky/museum-portfolio.git
+- **Repo name:** museum-portfolio (private)
+- **Remote:** git@github.com:abigailkamenetsky/museum-portfolio.git
 - **Branch strategy:** `main` is always deployable. Feature work on named branches. Every completed milestone ends with a commit and push.
 
 ## File Structure
@@ -78,8 +78,8 @@ Each milestone must reach its definition of done before the next one starts. No 
 
 | # | Name | Status |
 |---|------|--------|
-| 0 | Environment: Node, Git, Vite, GitHub, Vercel live URL | Pending |
-| 1 | Static Room: HTML/CSS museum room, no JS logic | Pending |
+| 0 | Environment: Node, Git, Vite, GitHub, Vercel live URL | Complete |
+| 1 | Static Room: HTML/CSS museum room, no JS logic | Complete |
 | 2 | Character Movement: keyboard-driven, wall collision | Pending |
 | 3 | One Real Painting: Wikimedia image, frame, proximity glow, placard | Pending |
 | 4 | Modal: full-screen overlay, left painting / right narrative, CTA | Pending |
