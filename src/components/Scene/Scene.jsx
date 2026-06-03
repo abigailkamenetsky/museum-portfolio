@@ -299,10 +299,7 @@ function CofferedCeiling({ m }) {
       <Instanced geo={bossGeo} mat={m.trim} matrices={bossM} />
 
       <CornerCartouches fW={fW} fD={fD} m={m} />
-      {/* monumental centerpiece (guaranteed-visible procedural medallion, enlarged) */}
-      <group scale={[2.4, 1.0, 2.4]}>
-        <CeilingMedallion m={m} />
-      </group>
+      <CeilingMedallion m={m} />
     </group>
   )
 }
