@@ -7,15 +7,15 @@
  */
 
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { ContactShadows } from '@react-three/drei'
+import { ContactShadows, useGLTF } from '@react-three/drei'
 import { EffectComposer, N8AO, Bloom, Vignette, HueSaturation, BrightnessContrast } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
-import { useRef, useEffect, useMemo } from 'react'
+import { Suspense, useRef, useEffect, useMemo } from 'react'
 import {
   MeshStandardMaterial, MeshPhysicalMaterial, ExtrudeGeometry, Shape, Path, Vector2,
   PlaneGeometry, BufferAttribute, TextureLoader, RepeatWrapping, SRGBColorSpace,
   EquirectangularReflectionMapping, Object3D, TorusGeometry, CylinderGeometry,
-  SphereGeometry, ConeGeometry, BoxGeometry, Matrix4,
+  SphereGeometry, ConeGeometry, BoxGeometry, Matrix4, DoubleSide,
   Vector3, Euler, MathUtils, ACESFilmicToneMapping, PCFSoftShadowMap,
 } from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
@@ -302,10 +302,38 @@ function CofferedCeiling({ m }) {
       <Instanced geo={bossGeo} mat={m.trim} matrices={bossM} />
 
       <CornerCartouches fW={fW} fD={fD} m={m} />
-      <CeilingMedallion m={m} />
+      {/* real carved-relief centerpiece in the blank center; medallion shows while it loads */}
+      <Suspense fallback={<CeilingMedallion m={m} />}>
+        <Centerpiece />
+      </Suspense>
     </group>
   )
 }
+
+/* Ceiling centerpiece — the real ceiling_wall_carving_034 relief panel.
+ * Model: ~1.989 sq panel, carving depth along Z (a vertical "wall" carving).
+ * rotateX(+90deg) lays it flat with the relief facing DOWN into the room;
+ * scaled to fill the blank center, skinned in ivory plaster to match the ceiling.
+ * Knobs if needed: CP_FLIP (relief facing wrong way), CP_SIZE (footprint metres). */
+const CP_FLIP = 0          // set to Math.PI if the relief faces up instead of down
+const CP_SIZE = 10         // centerpiece footprint in metres (blank center is ~12 wide)
+const CP_URL = BASE + 'assets/models/centerpiece.glb'
+function Centerpiece() {
+  const { scene } = useGLTF(CP_URL)
+  const node = useMemo(() => {
+    const root = scene.clone(true)
+    const ivory = new MeshStandardMaterial({ color: '#e8e1d0', roughness: 0.9, metalness: 0, side: DoubleSide })
+    root.traverse(o => { if (o.isMesh) { o.material = ivory; o.frustumCulled = false } })
+    return root
+  }, [scene])
+  const s = CP_SIZE / 1.989
+  return (
+    <group position={[0, CEIL - C_DROP - 0.08, 0]} rotation={[Math.PI / 2 + CP_FLIP, 0, 0]} scale={[s, s, s]}>
+      <primitive object={node} />
+    </group>
+  )
+}
+useGLTF.preload(CP_URL)
 
 /* sculpted corner clusters — scroll + acanthus + boss */
 function CornerCartouches({ fW, fD, m }) {
