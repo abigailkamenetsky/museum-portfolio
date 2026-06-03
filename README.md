@@ -1,7 +1,12 @@
 # Museum Portfolio
 
+**🔗 Live site: https://abigailkamenetsky.github.io/museum-portfolio/**
+
 An interactive 3D art-museum portfolio: walk a character through a grand gallery
 and discover paintings that reveal resume content.
+
+Auto-deployed to GitHub Pages on every push to `main` (see
+`.github/workflows/deploy.yml`).
 
 ## Tech stack
 - **React 19 + Vite 6** (build system)
