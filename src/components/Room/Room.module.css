@@ -28,6 +28,10 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  /* Crown molding shadow falling down + baseboard shadow rising up */
+  box-shadow:
+    inset 0  14px 28px rgba(0, 0, 0, 0.14),
+    inset 0 -8px  16px rgba(0, 0, 0, 0.09);
 }
 
 /* Warm amber painting spotlights — more dramatic, like a real gallery lamp */
@@ -133,138 +137,5 @@
   opacity: 0.65;
 }
 
-/* ── DADO RAIL — thin dark wood strip, no gold ────────────────────── */
 
-.dadoRail {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 8px;
-  /* Dark walnut wood — no gold, purely structural */
-  background:
-    repeating-linear-gradient(
-      90deg,
-      transparent 0px,
-      transparent 29px,
-      rgba(255, 255, 255, 0.03) 29px,
-      rgba(255, 255, 255, 0.03) 30px
-    ),
-    linear-gradient(to bottom, #3a2510, #221408, #160e04);
-  box-shadow:
-    inset 0 1px 2px rgba(255, 220, 120, 0.08),
-    0 2px 6px rgba(0, 0, 0, 0.65);
-  z-index: 4;
-}
 
-/* ── WAINSCOTING ──────────────────────────────────────────────────── */
-
-/*
- * WAINSCOTING — dark walnut raised vertical panels.
- * Uses solid colour stops (no transparent overlays) so the
- * panel bevel and seam are clearly legible at every screen width.
- *
- * Each 160 px tile:
- *   0–1 px    near-black seam
- *   1–5 px    left bevel highlight (catches light)
- *   5–154 px  panel face (dark walnut)
- *   154–159 px right bevel shadow
- *   159–160 px near-black seam
- */
-.wainscoting {
-  flex-shrink: 0;
-  height: 104px;
-  background-image:
-    /* ① Panel structure — solid colour stops, no transparency */
-    repeating-linear-gradient(
-      90deg,
-      #090502  0px,   /* seam */
-      #090502  1px,
-      #2e1c0e  1px,   /* left bevel highlight */
-      #2e1c0e  5px,
-      #1c1008  5px,   /* panel face */
-      #1c1008  154px,
-      #0e0804  154px, /* right bevel shadow */
-      #0e0804  159px,
-      #090502  159px, /* seam */
-      #090502  160px
-    ),
-    /* ② Fine horizontal grain — very slight warmth shimmer */
-    repeating-linear-gradient(
-      to bottom,
-      #1c1008  0px,
-      #1e1209  5px,
-      #1c1008  6px,
-      #1a0f07  14px,
-      #1c1008  15px
-    );
-  box-shadow:
-    inset 0 6px 14px rgba(0, 0, 0, 0.45),
-    inset 0 -2px 5px rgba(0, 0, 0, 0.25);
-}
-
-/*
- * FLOOR — dark hardwood planks seen from the front.
- * Each plank is 20 px tall in this 2-D view:
- *   0–1 px   dark seam
- *   1–4 px   top surface lit from above (lighter)
- *   4–19 px  plank face (main walnut tone)
- *   19–20 px bottom edge shadow
- *
- * Vertical grain lines run left-to-right for wood texture.
- * Plank colour shifts slightly every 80 px for realism.
- */
-.floor {
-  flex-shrink: 0;
-  height: 92px;
-  background-image:
-    /* ① Horizontal plank structure — solid stops */
-    repeating-linear-gradient(
-      to bottom,
-      #090502  0px,   /* seam */
-      #090502  1px,
-      #2c1c0e  1px,   /* top-lit surface */
-      #2c1c0e  4px,
-      #1e1209  4px,   /* plank face */
-      #1e1209  19px,
-      #0e0805  19px,  /* bottom shadow */
-      #0e0805  20px
-    ),
-    /* ② Subtle vertical grain — solid thin lines */
-    repeating-linear-gradient(
-      to right,
-      #1e1209  0px,
-      #211409  9px,
-      #1e1209  10px,
-      #1c1007  19px,
-      #1e1209  20px
-    );
-  box-shadow:
-    inset 0 6px 16px rgba(0, 0, 0, 0.55),
-    inset 0 -1px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* ── MUSEUM NAMEPLATE ─────────────────────────────────────────────── */
-
-.nameplate {
-  position: absolute;
-  bottom: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: linear-gradient(to bottom, #f3ead2, #e8ddc0);
-  border: 1px solid rgba(165, 128, 42, 0.62);
-  padding: 6px 26px 7px;
-  white-space: nowrap;
-  box-shadow:
-    0 2px 10px rgba(0, 0, 0, 0.48),
-    inset 0 1px 0 rgba(255, 242, 185, 0.45);
-  z-index: 5;
-}
-
-.nameplateText {
-  font-family: Georgia, serif;
-  font-size: 11px;
-  color: #28180a;
-  letter-spacing: 0.26em;
-  text-transform: uppercase;
-}

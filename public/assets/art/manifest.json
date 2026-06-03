@@ -1,0 +1,66 @@
+[
+  {
+    "file": "art1.jpg",
+    "title": "Abigail Inskeep Bradford",
+    "artist": "Rembrandt Peale",
+    "date": "1803\u20138",
+    "kind": "portrait",
+    "aspect": 1.226
+  },
+  {
+    "file": "art2.jpg",
+    "title": "Saint Martin and the Beggar",
+    "artist": "Domenico Theotok\u00f3poulos, called El Greco",
+    "date": "c. 1597\u2013c. 1600",
+    "kind": "portrait",
+    "aspect": 1.75
+  },
+  {
+    "file": "art3.jpg",
+    "title": "Helena Tromper Du Bois",
+    "artist": "Anthony van Dyck",
+    "date": "c. 1631",
+    "kind": "portrait",
+    "aspect": 1.223
+  },
+  {
+    "file": "art4.jpg",
+    "title": "Portrait of Philip IV",
+    "artist": "Workshop of Diego Rodriguez de Vel\u00e1zquez",
+    "date": "c. 1632",
+    "kind": "portrait",
+    "aspect": 1.677
+  },
+  {
+    "file": "art5.jpg",
+    "title": "Friar Pedro Shoots El Maragato as His Horse Runs Off",
+    "artist": "Francisco Jos\u00e9 de Goya y Lucientes",
+    "date": "c. 1806",
+    "kind": "landscape",
+    "aspect": 0.755
+  },
+  {
+    "file": "art6.jpg",
+    "title": "Am\u00e9d\u00e9e-David, the Comte de Pastoret",
+    "artist": "Jean Auguste Dominique Ingres",
+    "date": "1823\u201326",
+    "kind": "portrait",
+    "aspect": 1.238
+  },
+  {
+    "file": "art7.jpg",
+    "title": "Isabella Wolff",
+    "artist": "Sir Thomas Lawrence",
+    "date": "1803\u201315",
+    "kind": "portrait",
+    "aspect": 1.257
+  },
+  {
+    "file": "art8.jpg",
+    "title": "Elizabeth Grant Bankson Beatty (Mrs. James Beatty) and Her Daughter Su",
+    "artist": "Joshua Johnson",
+    "date": "c. 1805",
+    "kind": "portrait",
+    "aspect": 1.147
+  }
+]

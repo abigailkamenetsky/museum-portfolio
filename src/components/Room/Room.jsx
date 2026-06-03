@@ -1,13 +1,15 @@
 import styles from './Room.module.css'
 import CrownMolding from './CrownMolding'
 import GildedFrame from '../Painting/GildedFrame'
+import FloorPlanks from './FloorPlanks'
+import Baseboard from './Baseboard'
+import PlasterOverlay from './PlasterOverlay'
 
 export default function Room() {
   return (
     <div className={styles.room}>
       <Ceiling />
       <Wall />
-      <Wainscoting />
       <Floor />
     </div>
   )
@@ -24,6 +26,7 @@ function Ceiling() {
 function Wall() {
   return (
     <div className={styles.wall}>
+      <PlasterOverlay />
       <div className={styles.lightLeft} />
       <div className={styles.lightRight} />
       <div className={styles.vignette} />
@@ -52,21 +55,11 @@ function Wall() {
         </div>
       </div>
 
-      <div className={styles.nameplate}>
-        <span className={styles.nameplateText}>
-          Abigail Kamenetsky &nbsp;&middot;&nbsp; A Collection of Work
-        </span>
-      </div>
-
-      <div className={styles.dadoRail} />
+      <Baseboard />
     </div>
   )
 }
 
-function Wainscoting() {
-  return <div className={styles.wainscoting} />
-}
-
 function Floor() {
-  return <div className={styles.floor} />
+  return <FloorPlanks />
 }

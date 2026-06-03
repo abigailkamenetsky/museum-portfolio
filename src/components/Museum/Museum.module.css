@@ -4,4 +4,5 @@
   overflow: hidden;
   background: var(--floor-dark);
   display: flex;
+  position: relative;
 }
