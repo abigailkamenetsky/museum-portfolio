@@ -12,7 +12,7 @@ import { EffectComposer, N8AO, Bloom, Vignette, HueSaturation, BrightnessContras
 import { BlendFunction } from 'postprocessing'
 import { Suspense, useRef, useEffect, useMemo } from 'react'
 import {
-  MeshStandardMaterial, MeshPhysicalMaterial, ExtrudeGeometry, ShapeGeometry, Shape, Path, Vector2,
+  MeshStandardMaterial, MeshPhysicalMaterial, MeshBasicMaterial, ExtrudeGeometry, ShapeGeometry, Shape, Path, Vector2,
   PlaneGeometry, BufferAttribute, TextureLoader, RepeatWrapping, SRGBColorSpace,
   EquirectangularReflectionMapping, Object3D, TorusGeometry, CylinderGeometry,
   SphereGeometry, ConeGeometry, BoxGeometry, Matrix4, DoubleSide, Box3,
@@ -20,6 +20,7 @@ import {
 } from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
+import { makeLandscapeTexture } from './textures'
 import { ARTWORKS, ART_BASE } from '../../data/artworks'
 
 /* ── DIMENSIONS — long rectangular palace gallery (~2:1) ────── */
@@ -113,6 +114,7 @@ function useMaterials() {
     // real glass: transparent, faintly reflective, NOT emissive / not white
     glass: new MeshStandardMaterial({ color: '#aebccb', roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.30, envMapIntensity: 0.9 }),
     sky: new MeshStandardMaterial({ color: '#9fb2c6', roughness: 1, metalness: 0 }),   // muted daylight behind glass
+    scenery: new MeshBasicMaterial({ map: makeLandscapeTexture() }),                   // estate grounds seen through windows
     trimWhite: new MeshStandardMaterial({ color: '#f2efe6', roughness: 0.7, metalness: 0 }),
     darkRoom: new MeshStandardMaterial({ color: '#0a0c08', roughness: 1 }),
   }), [])
@@ -665,6 +667,7 @@ const WIN_OPEN_W = 4.0                         // opening width (rectangular wal
 const WIN_OPEN_H = 7.5                          // opening height (~56% of wall height)
 const WIN_TOP = WIN_SILL + WIN_OPEN_H          // ≈8.4 — well below the crown
 const WIN_Z = [27, 13.5, 0, -13.5, -27]        // window centres down each long wall
+const GOTHIC_FRAME = BASE + 'assets/models/gothic_frame_lo.glb'   // ornate surround (decimated)
 
 // pointed-arch outline (centred at origin), rect lower + two-arc gothic head
 function pointedArch(w, h, spring = 0.58) {
@@ -677,53 +680,42 @@ function pointedArch(w, h, spring = 0.58) {
   return s
 }
 
-/* A real museum window: arched glass + mullions/tracery recessed inside a
- * carved stone surround (rectangular slab with a pointed-arch opening) that
- * fills the wall's rectangular hole. Local +Z faces the room.
- * w,h = the wall opening (rectangular). */
+/* A real museum window: the ORNATE GOTHIC FRAME asset is the carved surround,
+ * scaled to wrap the wall opening and embedded into the wall. Inside it sits
+ * arched glass + mullions, and beyond the glass the estate landscape.
+ * w,h = the wall opening (rectangular). Local +Z faces the room. */
 function MuseumWindow({ w, h, m }) {
-  const tw = Math.min(0.5, w * 0.13)            // stone trim width
-  const iw = w - 2 * tw, ih = h - 2 * tw        // arched glass opening
+  const { scene } = useGLTF(GOTHIC_FRAME)
+  const node = useMemo(() => {
+    const root = scene.clone(true)
+    const stone = new MeshStandardMaterial({ color: '#e4dece', roughness: 0.85, metalness: 0, side: DoubleSide })
+    root.traverse(o => { if (o.isMesh) { o.material = stone; o.frustumCulled = false } })
+    const box = new Box3().setFromObject(root); const sz = new Vector3(); box.getSize(sz); const c = new Vector3(); box.getCenter(c)
+    root.position.sub(c)
+    return { root, sz }
+  }, [scene])
+  // frame scaled so it wraps & overlaps the opening (embedded in the wall)
+  const s = (h + 0.7) / node.sz.y
   const spring = 0.58
-  const H2 = ih / 2, W2 = iw / 2, sy = -H2 + spring * ih   // arch spring line
-  const mull = 0.06
-
-  const glassGeo = useMemo(() => new ShapeGeometry(pointedArch(iw, ih, spring)), [iw, ih])
-  const trimGeo = useMemo(() => {
-    const o = new Shape()
-    o.moveTo(-w / 2, -h / 2); o.lineTo(w / 2, -h / 2); o.lineTo(w / 2, h / 2); o.lineTo(-w / 2, h / 2); o.lineTo(-w / 2, -h / 2)
-    o.holes.push(pointedArch(iw, ih, spring))
-    return new ExtrudeGeometry(o, { depth: 0.20, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.07, bevelSegments: 2 })
-  }, [w, h, iw, ih])
-  // a slimmer inner reveal band, recessed, to add layered depth
-  const innerGeo = useMemo(() => {
-    const o = new Shape()
-    o.moveTo(-(iw / 2 + 0.14), -(ih / 2 + 0.14)); o.lineTo((iw / 2 + 0.14), -(ih / 2 + 0.14)); o.lineTo((iw / 2 + 0.14), (ih / 2 + 0.14)); o.lineTo(-(iw / 2 + 0.14), (ih / 2 + 0.14)); o.lineTo(-(iw / 2 + 0.14), -(ih / 2 + 0.14))
-    o.holes.push(pointedArch(iw - 0.05, ih - 0.05, spring))
-    return new ExtrudeGeometry(o, { depth: 0.14, bevelEnabled: false })
-  }, [iw, ih])
-
-  const cols = 3
-  const verts = Array.from({ length: cols - 1 }, (_, i) => -W2 + (i + 1) * (iw / cols))
+  const gW = w * 0.82, gH = h * 0.88                 // arched glass inside the frame hole
+  const H2 = gH / 2, W2 = gW / 2, sy = -H2 + spring * gH, mull = 0.06
+  const glassGeo = useMemo(() => new ShapeGeometry(pointedArch(gW, gH, spring)), [gW, gH])
+  const verts = [-W2 + gW / 3, -W2 + 2 * gW / 3]
   return (
     <group>
-      {/* muted daylight sky deep in the reveal (exposure-bound, not emissive) */}
-      <mesh position={[0, 0, -WALL_T * 0.85]} material={m.sky}><planeGeometry args={[w, h]} /></mesh>
+      {/* estate grounds, far beyond the glass */}
+      <mesh position={[0, 0, -WALL_T - 0.6]} material={m.scenery}><planeGeometry args={[w * 2.0, h * 1.7]} /></mesh>
       {/* arched glass */}
-      <mesh geometry={glassGeo} position={[0, 0, -0.26]} material={m.glass} />
-      {/* mullions: verticals up to the spring + a transom, central mullion into
-          the arch, and a small tracery oculus */}
-      {verts.map((x, i) => <mesh key={'v' + i} position={[x, (-H2 + sy) / 2, -0.2]} material={m.trimWhite}><boxGeometry args={[mull, sy + H2, 0.05]} /></mesh>)}
-      <mesh position={[0, sy, -0.2]} material={m.trimWhite}><boxGeometry args={[iw - 0.02, mull, 0.05]} /></mesh>
-      <mesh position={[0, (sy + H2) / 2, -0.2]} material={m.trimWhite}><boxGeometry args={[mull, H2 - sy, 0.05]} /></mesh>
-      <mesh position={[0, sy + (H2 - sy) * 0.42, -0.2]} material={m.trimWhite}><torusGeometry args={[(H2 - sy) * 0.24, mull * 0.6, 6, 18]} /></mesh>
-      {/* recessed inner reveal band + carved stone surround at the room face */}
-      <mesh geometry={innerGeo} position={[0, 0, -0.16]} material={m.trim} />
-      <mesh geometry={trimGeo} position={[0, 0, -0.02]} material={m.trim} castShadow />
+      <mesh geometry={glassGeo} position={[0, 0, -0.30]} material={m.glass} />
+      {/* mullions: verticals to the spring, transom, central mullion into the arch, oculus */}
+      {verts.map((x, i) => <mesh key={'v' + i} position={[x, (-H2 + sy) / 2, -0.24]} material={m.trimWhite}><boxGeometry args={[mull, sy + H2, 0.05]} /></mesh>)}
+      <mesh position={[0, sy, -0.24]} material={m.trimWhite}><boxGeometry args={[gW - 0.02, mull, 0.05]} /></mesh>
+      <mesh position={[0, (sy + H2) / 2, -0.24]} material={m.trimWhite}><boxGeometry args={[mull, H2 - sy, 0.05]} /></mesh>
+      <mesh position={[0, sy + (H2 - sy) * 0.42, -0.24]} material={m.trimWhite}><torusGeometry args={[(H2 - sy) * 0.24, mull * 0.6, 6, 18]} /></mesh>
+      {/* the ornate gothic frame as the carved architectural surround, embedded */}
+      <group scale={[s, s, s]}><primitive object={node.root} /></group>
       {/* projecting sill ledge */}
-      <mesh position={[0, -h / 2 + 0.05, 0.16]} material={m.trim}><boxGeometry args={[w + 0.3, 0.16, 0.4]} /></mesh>
-      {/* apex finial */}
-      <mesh position={[0, h / 2 - 0.05, 0.12]} material={m.trim}><coneGeometry args={[0.12, 0.4, 8]} /></mesh>
+      <mesh position={[0, -h / 2 + 0.05, 0.18]} material={m.trim}><boxGeometry args={[w + 0.4, 0.16, 0.42]} /></mesh>
     </group>
   )
 }

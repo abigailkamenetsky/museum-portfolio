@@ -50,6 +50,89 @@ function tex(cv, wrap = ClampToEdgeWrapping, srgb = false) {
 }
 
 /* ════════════════════════════════════════════════════════════
+ * EXTERIOR LANDSCAPE — historic-estate grounds seen through the windows.
+ * Sky + sun haze, distant hills/tree-line, lawn, near oak + cypress trees,
+ * a hedge and a stone path. Drawn so it reads as real grounds with depth.
+ * ════════════════════════════════════════════════════════════ */
+export function makeLandscapeTexture() {
+  const W = 1024, H = 1024
+  const cv = canvas(W, H), x = cv.getContext('2d')
+  const rng = prng(2026)
+  const HZ = H * 0.58                       // horizon line
+
+  // sky
+  const sky = x.createLinearGradient(0, 0, 0, HZ)
+  sky.addColorStop(0, '#8fb3d8'); sky.addColorStop(0.6, '#c2d6e8'); sky.addColorStop(1, '#e6ede6')
+  x.fillStyle = sky; x.fillRect(0, 0, W, HZ)
+  // sun haze
+  const sun = x.createRadialGradient(W * 0.68, H * 0.16, 8, W * 0.68, H * 0.16, W * 0.5)
+  sun.addColorStop(0, 'rgba(255,250,228,0.85)'); sun.addColorStop(1, 'rgba(255,250,228,0)')
+  x.fillStyle = sun; x.fillRect(0, 0, W, HZ)
+  // soft clouds
+  for (let i = 0; i < 16; i++) {
+    const cx = rng() * W, cy = rng() * HZ * 0.7, r = 40 + rng() * 120
+    const g = x.createRadialGradient(cx, cy, 0, cx, cy, r)
+    g.addColorStop(0, 'rgba(255,255,255,0.5)'); g.addColorStop(1, 'rgba(255,255,255,0)')
+    x.fillStyle = g; x.beginPath(); x.ellipse(cx, cy, r, r * 0.5, 0, 0, 7); x.fill()
+  }
+
+  // distant hills
+  x.fillStyle = '#9fb592'; x.beginPath(); x.moveTo(0, HZ)
+  for (let i = 0; i <= 10; i++) x.lineTo(i * W / 10, HZ - 20 - Math.sin(i * 1.3) * 26 - rng() * 14)
+  x.lineTo(W, HZ); x.closePath(); x.fill()
+
+  // lawn
+  const lawn = x.createLinearGradient(0, HZ, 0, H)
+  lawn.addColorStop(0, '#83975a'); lawn.addColorStop(1, '#566a3a')
+  x.fillStyle = lawn; x.fillRect(0, HZ - 2, W, H - HZ + 2)
+
+  // receding stone path (centre-ish)
+  x.fillStyle = '#b9b2a0'; x.beginPath()
+  x.moveTo(W * 0.46, HZ); x.lineTo(W * 0.54, HZ); x.lineTo(W * 0.72, H); x.lineTo(W * 0.28, H); x.closePath(); x.fill()
+  x.strokeStyle = 'rgba(0,0,0,0.12)'; x.lineWidth = 1
+  for (let i = 1; i < 6; i++) { const t = i / 6, y = HZ + t * (H - HZ); const w2 = 0.04 + t * 0.18; x.beginPath(); x.moveTo(W * (0.5 - w2), y); x.lineTo(W * (0.5 + w2), y); x.stroke() }
+
+  // distant tree-line
+  for (let i = 0; i < 60; i++) {
+    const cx = rng() * W, cy = HZ - 6 - rng() * 18, r = 12 + rng() * 26
+    x.fillStyle = `rgb(${50 + rng() * 20 | 0},${78 + rng() * 24 | 0},${48 + rng() * 18 | 0})`
+    x.beginPath(); x.ellipse(cx, cy, r, r * 0.8, 0, 0, 7); x.fill()
+  }
+
+  // helper: leafy canopy (clustered blobs) on a trunk
+  const oak = (cx, cy, scale) => {
+    x.fillStyle = '#3b2a18'; x.fillRect(cx - 4 * scale, cy, 8 * scale, 70 * scale)  // trunk
+    for (let i = 0; i < 14; i++) {
+      const bx = cx + (rng() - 0.5) * 110 * scale, by = cy - 30 * scale - rng() * 90 * scale, r = (24 + rng() * 30) * scale
+      x.fillStyle = `rgb(${36 + rng() * 26 | 0},${70 + rng() * 30 | 0},${40 + rng() * 20 | 0})`
+      x.beginPath(); x.arc(bx, by, r, 0, 7); x.fill()
+    }
+  }
+  const cypress = (cx, cy, scale) => {
+    const grad = x.createLinearGradient(cx, cy - 200 * scale, cx, cy)
+    grad.addColorStop(0, '#2f4a2c'); grad.addColorStop(1, '#24381f')
+    x.fillStyle = grad; x.beginPath()
+    x.moveTo(cx, cy - 200 * scale); x.quadraticCurveTo(cx + 26 * scale, cy - 90 * scale, cx + 14 * scale, cy)
+    x.lineTo(cx - 14 * scale, cy); x.quadraticCurveTo(cx - 26 * scale, cy - 90 * scale, cx, cy - 200 * scale); x.fill()
+  }
+  // mid + foreground trees
+  oak(W * 0.16, H * 0.74, 1.0)
+  oak(W * 0.84, H * 0.78, 1.15)
+  cypress(W * 0.30, H * 0.92, 1.0)
+  cypress(W * 0.66, H * 0.96, 1.1)
+  oak(W * 0.50, H * 0.96, 1.3)
+
+  // hedge along the foreground
+  const hedge = x.createLinearGradient(0, H * 0.86, 0, H)
+  hedge.addColorStop(0, '#46622f'); hedge.addColorStop(1, '#33491f')
+  x.fillStyle = hedge; x.fillRect(0, H * 0.9, W, H * 0.1)
+  for (let i = 0; i < W; i += 26) { x.fillStyle = `rgba(80,110,60,${0.3 + rng() * 0.3})`; x.beginPath(); x.arc(i, H * 0.9, 18, Math.PI, 0); x.fill() }
+
+  const t = new CanvasTexture(cv); t.colorSpace = SRGBColorSpace
+  return t
+}
+
+/* ════════════════════════════════════════════════════════════
  * AGED WALNUT FLOOR — full-floor composite built from the real scan.
  * Each plank samples a DIFFERENT random crop (flipped/offset) of the
  * scan, then gets its own tint + roughness, so no two boards match and
