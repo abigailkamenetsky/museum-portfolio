@@ -26,9 +26,29 @@ import { ARTWORKS, ART_BASE } from '../../data/artworks'
 /* ── DIMENSIONS — long rectangular palace gallery (~2:1) ────── */
 const W = 18, H = 13.5, D = 78
 const CEIL = H
-// central feature-window opening in the far (back) wall
-const FEAT_W = 6, FEAT_SILL = 1.6, FEAT_TOP = 12.2
-const FEAT_H = FEAT_TOP - FEAT_SILL
+const WALL_T = 0.5                              // wall thickness → real opening depth
+const WIN_Z = [27, 13.5, 0, -13.5, -27]         // window centres down each long wall
+
+/* Ornate-frame metrics MEASURED from gothic_frame_lo.glb:
+ *   outer 1.239 x 2.001, inner opening 0.736 x 0.994 (59% W, 50% H).
+ * The frame OPENING drives the glass + the wall hole. A mild vertical
+ * stretch makes the opening read more window-like without distorting much. */
+const FRAME_OW = 1.239, FRAME_OH = 2.001, FRAME_HW = 0.736, FRAME_HH = 0.994, FRAME_VS = 1.28
+const frameScale = oh => { const sx = oh / (FRAME_OH * FRAME_VS); return { sx, sy: sx * FRAME_VS } }
+
+// side windows
+const SIDE_FRAME_H = 8.6
+const _sf = frameScale(SIDE_FRAME_H)
+const WIN_OPEN_W = FRAME_HW * _sf.sx          // see-through hole width  ≈ glass
+const WIN_OPEN_H = FRAME_HH * _sf.sy          // see-through hole height
+const WIN_CY = 5.4                            // window vertical centre
+
+// far feature window
+const FEAT_FRAME_H = 12.4
+const _ff = frameScale(FEAT_FRAME_H)
+const FEAT_W = FRAME_HW * _ff.sx
+const FEAT_H = FRAME_HH * _ff.sy
+const FEAT_CY = 6.7
 // BASE is '/' on root-domain hosts (Vercel/Netlify) and '/museum-portfolio/'
 // on GitHub Pages — so every asset URL resolves correctly on any host.
 const BASE = import.meta.env.BASE_URL
@@ -186,12 +206,13 @@ function Room({ m }) {
       {/* FAR WALL with a true central opening for the Gothic feature window */}
       {(() => {
         const side = (W - FEAT_W) / 2, zb = -D / 2
+        const fb = FEAT_CY - FEAT_H / 2, ft = FEAT_CY + FEAT_H / 2
         return (
           <group>
-            <mesh position={[0, FEAT_SILL / 2, zb]} receiveShadow material={m.wall}><planeGeometry args={[W, FEAT_SILL]} /></mesh>
-            <mesh position={[0, (FEAT_TOP + H) / 2, zb]} receiveShadow material={m.wall}><planeGeometry args={[W, H - FEAT_TOP]} /></mesh>
-            <mesh position={[-(FEAT_W / 2 + side / 2), (FEAT_SILL + FEAT_TOP) / 2, zb]} receiveShadow material={m.wall}><planeGeometry args={[side, FEAT_H]} /></mesh>
-            <mesh position={[(FEAT_W / 2 + side / 2), (FEAT_SILL + FEAT_TOP) / 2, zb]} receiveShadow material={m.wall}><planeGeometry args={[side, FEAT_H]} /></mesh>
+            <mesh position={[0, fb / 2, zb]} receiveShadow material={m.wall}><planeGeometry args={[W, fb]} /></mesh>
+            <mesh position={[0, (ft + H) / 2, zb]} receiveShadow material={m.wall}><planeGeometry args={[W, H - ft]} /></mesh>
+            <mesh position={[-(FEAT_W / 2 + side / 2), FEAT_CY, zb]} receiveShadow material={m.wall}><planeGeometry args={[side, FEAT_H]} /></mesh>
+            <mesh position={[(FEAT_W / 2 + side / 2), FEAT_CY, zb]} receiveShadow material={m.wall}><planeGeometry args={[side, FEAT_H]} /></mesh>
           </group>
         )
       })()}
@@ -638,7 +659,8 @@ function Door({ m }) {
 function SideWall({ side, m }) {
   // wall slab sits just outside the room boundary, inner face at x = side*W/2
   const cx = side * (W / 2 + WALL_T / 2)
-  const midY = (WIN_SILL + WIN_TOP) / 2, openH = WIN_TOP - WIN_SILL
+  const midY = WIN_CY, openH = WIN_OPEN_H
+  const bottom = WIN_CY - WIN_OPEN_H / 2, top = WIN_CY + WIN_OPEN_H / 2
   const zs = [...WIN_Z].sort((a, b) => a - b)
   const segs = []
   let cursor = -D / 2
@@ -653,93 +675,66 @@ function SideWall({ side, m }) {
   )
   return (
     <group>
-      {slab(WIN_SILL, WIN_SILL / 2, D, 0)}
-      {slab(H - WIN_TOP, (WIN_TOP + H) / 2, D, 0)}
+      {slab(bottom, bottom / 2, D, 0)}
+      {slab(H - top, (top + H) / 2, D, 0)}
       {segs.map(([cz, len], i) => <group key={i}>{slab(openH, midY, len, cz)}</group>)}
     </group>
   )
 }
 
-/* ── WINDOW SYSTEM — fully procedural Gothic museum windows (no GLB) ──── */
-const WALL_T = 0.5                            // wall thickness → real opening depth
-const WIN_SILL = 0.9                          // ~3 ft above the floor
-const WIN_OPEN_W = 4.0                         // opening width (rectangular wall hole)
-const WIN_OPEN_H = 7.5                          // opening height (~56% of wall height)
-const WIN_TOP = WIN_SILL + WIN_OPEN_H          // ≈8.4 — well below the crown
-const WIN_Z = [27, 13.5, 0, -13.5, -27]        // window centres down each long wall
-const GOTHIC_FRAME = BASE + 'assets/models/gothic_frame_lo.glb'   // ornate surround (decimated)
+/* ── WINDOW SYSTEM — the ornate frame IS the surround; glass derives from it ── */
+const GOTHIC_FRAME = BASE + 'assets/models/gothic_frame_lo.glb'
 
-// pointed-arch outline (centred at origin), rect lower + two-arc gothic head
-function pointedArch(w, h, spring = 0.58) {
-  const W2 = w / 2, H2 = h / 2, sy = -H2 + spring * h
-  const s = new Shape()
-  s.moveTo(-W2, -H2); s.lineTo(W2, -H2); s.lineTo(W2, sy)
-  s.quadraticCurveTo(W2, H2, 0, H2)
-  s.quadraticCurveTo(-W2, H2, -W2, sy)
-  s.lineTo(-W2, -H2)
-  return s
-}
-
-/* A real museum window: the ORNATE GOTHIC FRAME asset is the carved surround,
- * scaled to wrap the wall opening and embedded into the wall. Inside it sits
- * arched glass + mullions, and beyond the glass the estate landscape.
- * w,h = the wall opening (rectangular). Local +Z faces the room. */
-function MuseumWindow({ w, h, m }) {
+/* The frame asset is the architectural boundary. We scale it by its outer
+ * height; the glass + mullions are computed FROM the frame's measured inner
+ * opening (FRAME_HW/FRAME_HH) and sit just inside it, so the visible glass
+ * follows the frame's opening. The wall hole equals that opening too. */
+function MuseumWindow({ frameH, m }) {
   const { scene } = useGLTF(GOTHIC_FRAME)
   const node = useMemo(() => {
     const root = scene.clone(true)
     const stone = new MeshStandardMaterial({ color: '#e4dece', roughness: 0.85, metalness: 0, side: DoubleSide })
     root.traverse(o => { if (o.isMesh) { o.material = stone; o.frustumCulled = false } })
-    const box = new Box3().setFromObject(root); const sz = new Vector3(); box.getSize(sz); const c = new Vector3(); box.getCenter(c)
-    root.position.sub(c)
-    return { root, sz }
+    root.position.set(0, 0, 0)   // asset is already centred at origin
+    return root
   }, [scene])
-  // frame scaled so it wraps & overlaps the opening (embedded in the wall)
-  const s = (h + 0.7) / node.sz.y
-  const spring = 0.58
-  const gW = w * 0.82, gH = h * 0.88                 // arched glass inside the frame hole
-  const H2 = gH / 2, W2 = gW / 2, sy = -H2 + spring * gH, mull = 0.06
-  const glassGeo = useMemo(() => new ShapeGeometry(pointedArch(gW, gH, spring)), [gW, gH])
-  const verts = [-W2 + gW / 3, -W2 + 2 * gW / 3]
+  const { sx, sy } = frameScale(frameH)
+  const holeW = FRAME_HW * sx, holeH = FRAME_HH * sy   // the frame's real opening
+  const glW = holeW * 0.95, glH = holeH * 0.95         // glass fills 95% of it
+  const mull = Math.min(0.06, glW * 0.03)
   return (
     <group>
-      {/* estate grounds, far beyond the glass */}
-      <mesh position={[0, 0, -WALL_T - 0.6]} material={m.scenery}><planeGeometry args={[w * 2.0, h * 1.7]} /></mesh>
-      {/* arched glass */}
-      <mesh geometry={glassGeo} position={[0, 0, -0.30]} material={m.glass} />
-      {/* mullions: verticals to the spring, transom, central mullion into the arch, oculus */}
-      {verts.map((x, i) => <mesh key={'v' + i} position={[x, (-H2 + sy) / 2, -0.24]} material={m.trimWhite}><boxGeometry args={[mull, sy + H2, 0.05]} /></mesh>)}
-      <mesh position={[0, sy, -0.24]} material={m.trimWhite}><boxGeometry args={[gW - 0.02, mull, 0.05]} /></mesh>
-      <mesh position={[0, (sy + H2) / 2, -0.24]} material={m.trimWhite}><boxGeometry args={[mull, H2 - sy, 0.05]} /></mesh>
-      <mesh position={[0, sy + (H2 - sy) * 0.42, -0.24]} material={m.trimWhite}><torusGeometry args={[(H2 - sy) * 0.24, mull * 0.6, 6, 18]} /></mesh>
-      {/* the ornate gothic frame as the carved architectural surround, embedded */}
-      <group scale={[s, s, s]}><primitive object={node.root} /></group>
-      {/* projecting sill ledge */}
-      <mesh position={[0, -h / 2 + 0.05, 0.18]} material={m.trim}><boxGeometry args={[w + 0.4, 0.16, 0.42]} /></mesh>
+      {/* estate grounds far beyond the glass (occluded outside the hole by the wall) */}
+      <mesh position={[0, 0, -WALL_T - 0.7]} material={m.scenery}><planeGeometry args={[holeW * 2.6, holeH * 2.2]} /></mesh>
+      {/* glass, recessed inside the frame opening */}
+      <mesh position={[0, 0, -0.30]} material={m.glass}><planeGeometry args={[glW, glH]} /></mesh>
+      {/* mullions fitted entirely inside the glass */}
+      {[-glW / 3, glW / 3].map((x, i) => <mesh key={'v' + i} position={[x, 0, -0.26]} material={m.trimWhite}><boxGeometry args={[mull, glH, 0.04]} /></mesh>)}
+      {[-glH / 4, 0, glH / 4].map((y, i) => <mesh key={'h' + i} position={[0, y, -0.26]} material={m.trimWhite}><boxGeometry args={[glW, mull, 0.04]} /></mesh>)}
+      {/* the ornate frame: the carved architectural surround, embedded in the wall */}
+      <group scale={[sx, sy, sx]}><primitive object={node} /></group>
     </group>
   )
 }
 
-/* far-wall monumental Gothic window (same construction, bigger) */
+/* far-wall monumental Gothic window */
 function GothicFeature({ m }) {
-  const yC = (FEAT_SILL + FEAT_TOP) / 2
   return (
-    <group position={[0, yC, -D / 2 + 0.04]}>
-      <MuseumWindow w={FEAT_W} h={FEAT_H} m={m} />
+    <group position={[0, FEAT_CY, -D / 2 + 0.04]}>
+      <MuseumWindow frameH={FEAT_FRAME_H} m={m} />
     </group>
   )
 }
 
-/* side windows built into BOTH long walls (real rectangular wall openings) */
+/* side windows built into BOTH long walls (real openings; frame = surround) */
 function SideGothicWindows({ m, side }) {
-  const yC = (WIN_SILL + WIN_TOP) / 2
   const x = side * (W / 2)
   const ry = side < 0 ? Math.PI / 2 : -Math.PI / 2   // local +Z faces the room
   return (
     <group>
       {WIN_Z.map((z, i) => (
-        <group key={i} position={[x, yC, z]} rotation={[0, ry, 0]}>
-          <MuseumWindow w={WIN_OPEN_W} h={WIN_OPEN_H} m={m} />
+        <group key={i} position={[x, WIN_CY, z]} rotation={[0, ry, 0]}>
+          <MuseumWindow frameH={SIDE_FRAME_H} m={m} />
         </group>
       ))}
     </group>
