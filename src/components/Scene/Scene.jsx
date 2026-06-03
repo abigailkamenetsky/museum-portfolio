@@ -29,26 +29,9 @@ const CEIL = H
 const WALL_T = 0.5                              // wall thickness → real opening depth
 const WIN_Z = [27, 13.5, 0, -13.5, -27]         // window centres down each long wall
 
-/* Ornate-frame metrics MEASURED from gothic_frame_lo.glb:
- *   outer 1.239 x 2.001, inner opening 0.736 x 0.994 (59% W, 50% H).
- * The frame OPENING drives the glass + the wall hole. A mild vertical
- * stretch makes the opening read more window-like without distorting much. */
-const FRAME_OW = 1.239, FRAME_OH = 2.001, FRAME_HW = 0.736, FRAME_HH = 0.994, FRAME_VS = 1.28
-const frameScale = oh => { const sx = oh / (FRAME_OH * FRAME_VS); return { sx, sy: sx * FRAME_VS } }
-
-// side windows
-const SIDE_FRAME_H = 8.6
-const _sf = frameScale(SIDE_FRAME_H)
-const WIN_OPEN_W = FRAME_HW * _sf.sx          // see-through hole width  ≈ glass
-const WIN_OPEN_H = FRAME_HH * _sf.sy          // see-through hole height
-const WIN_CY = 5.4                            // window vertical centre
-
-// far feature window
-const FEAT_FRAME_H = 12.4
-const _ff = frameScale(FEAT_FRAME_H)
-const FEAT_W = FRAME_HW * _ff.sx
-const FEAT_H = FRAME_HH * _ff.sy
-const FEAT_CY = 6.7
+// tall arched window openings (the procedural Gothic window fills these fully)
+const WIN_OPEN_W = 3.2, WIN_OPEN_H = 8.4, WIN_CY = 5.4
+const FEAT_W = 4.4, FEAT_H = 10.4, FEAT_CY = 6.4
 // BASE is '/' on root-domain hosts (Vercel/Netlify) and '/museum-portfolio/'
 // on GitHub Pages — so every asset URL resolves correctly on any host.
 const BASE = import.meta.env.BASE_URL
@@ -112,10 +95,10 @@ function useMaterials() {
     }),
     // espresso/smoked walnut — far less red, nearly black in shadow, polished oil luster
     floor: new MeshPhysicalMaterial({
-      color: '#2b1d17', roughness: 0.45, metalness: 0,
-      clearcoat: 0.18, clearcoatRoughness: 0.55,
-      normalScale: new Vector2(1.0, 1.0), envMapIntensity: 0.7, aoMapIntensity: 1.4,
-      anisotropy: 0.5, anisotropyRotation: Math.PI / 2,   // luster stretches along planks
+      color: '#241710', roughness: 0.55, metalness: 0,
+      clearcoat: 0.08, clearcoatRoughness: 0.7,
+      normalScale: new Vector2(1.0, 1.0), envMapIntensity: 0.22, aoMapIntensity: 1.4,
+      anisotropy: 0.4, anisotropyRotation: Math.PI / 2,   // subtle luster along planks
     }),
     ceiling: new MeshStandardMaterial({ color: '#ddd5c6', roughness: 0.92, metalness: 0 }),
     trim: new MeshStandardMaterial({ color: '#e2dccd', roughness: 0.84, metalness: 0 }),
@@ -682,37 +665,71 @@ function SideWall({ side, m }) {
   )
 }
 
-/* ── WINDOW SYSTEM — the ornate frame IS the surround; glass derives from it ── */
-const GOTHIC_FRAME = BASE + 'assets/models/gothic_frame_lo.glb'
+// pointed-arch outline (centred at origin): rect lower + two-arc gothic head
+function pointedArch(w, h, spring = 0.6) {
+  const W2 = w / 2, H2 = h / 2, sy = -H2 + spring * h
+  const s = new Shape()
+  s.moveTo(-W2, -H2); s.lineTo(W2, -H2); s.lineTo(W2, sy)
+  s.quadraticCurveTo(W2, H2, 0, H2)
+  s.quadraticCurveTo(-W2, H2, -W2, sy)
+  s.lineTo(-W2, -H2)
+  return s
+}
 
-/* The frame asset is the architectural boundary. We scale it by its outer
- * height; the glass + mullions are computed FROM the frame's measured inner
- * opening (FRAME_HW/FRAME_HH) and sit just inside it, so the visible glass
- * follows the frame's opening. The wall hole equals that opening too. */
-function MuseumWindow({ frameH, m }) {
-  const { scene } = useGLTF(GOTHIC_FRAME)
-  const node = useMemo(() => {
-    const root = scene.clone(true)
-    const stone = new MeshStandardMaterial({ color: '#e4dece', roughness: 0.85, metalness: 0, side: DoubleSide })
-    root.traverse(o => { if (o.isMesh) { o.material = stone; o.frustumCulled = false } })
-    root.position.set(0, 0, 0)   // asset is already centred at origin
-    return root
-  }, [scene])
-  const { sx, sy } = frameScale(frameH)
-  const holeW = FRAME_HW * sx, holeH = FRAME_HH * sy   // the frame's real opening
-  const glW = holeW * 0.95, glH = holeH * 0.95         // glass fills 95% of it
-  const mull = Math.min(0.06, glW * 0.03)
+/* ── WINDOW SYSTEM — procedural Gothic window that FILLS the opening ──────
+ * Carved trim (rect slab with a pointed-arch hole) embedded in the wall, with
+ * arched glass filling the opening, sash/transom divisions in the straight
+ * part, Y-tracery + oculus in the arch, side colonnettes, hood mould + finial.
+ * w,h = the wall opening (rectangular). Local +Z faces the room. */
+function MuseumWindow({ w, h, m }) {
+  const tw = Math.min(0.42, w * 0.12)              // trim width
+  const iw = w - 2 * tw, ih = h - 2 * tw           // arched opening (glass)
+  const spring = 0.6
+  const H2 = ih / 2, W2 = iw / 2, sy = -H2 + spring * ih   // arch spring line
+  const mull = 0.055
+
+  const glassGeo = useMemo(() => new ShapeGeometry(pointedArch(iw * 0.99, ih * 0.99, spring)), [iw, ih])
+  const trimGeo = useMemo(() => {
+    const o = new Shape()
+    o.moveTo(-w / 2, -h / 2); o.lineTo(w / 2, -h / 2); o.lineTo(w / 2, h / 2); o.lineTo(-w / 2, h / 2); o.lineTo(-w / 2, -h / 2)
+    o.holes.push(pointedArch(iw, ih, spring))
+    return new ExtrudeGeometry(o, { depth: 0.22, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.07, bevelSegments: 2 })
+  }, [w, h, iw, ih])
+  const innerGeo = useMemo(() => {           // recessed reveal band for depth
+    const o = new Shape(); const a = 0.13
+    o.moveTo(-(iw / 2 + a), -(ih / 2 + a)); o.lineTo((iw / 2 + a), -(ih / 2 + a)); o.lineTo((iw / 2 + a), (ih / 2 + a)); o.lineTo(-(iw / 2 + a), (ih / 2 + a)); o.lineTo(-(iw / 2 + a), -(ih / 2 + a))
+    o.holes.push(pointedArch(iw - 0.04, ih - 0.04, spring))
+    return new ExtrudeGeometry(o, { depth: 0.16, bevelEnabled: false })
+  }, [iw, ih])
+
+  const cols = 3, vx = [-W2 + iw / cols, -W2 + 2 * iw / cols]   // two vertical mullions
+  const straightH = sy + H2                                     // straight (sash) region height
+  const transoms = [-H2 + straightH * 0.33, -H2 + straightH * 0.66, sy]   // sash rails + spring transom
+  const arcR = (H2 - sy) * 0.30
   return (
     <group>
-      {/* estate grounds far beyond the glass (occluded outside the hole by the wall) */}
-      <mesh position={[0, 0, -WALL_T - 0.7]} material={m.scenery}><planeGeometry args={[holeW * 2.6, holeH * 2.2]} /></mesh>
-      {/* glass, recessed inside the frame opening */}
-      <mesh position={[0, 0, -0.30]} material={m.glass}><planeGeometry args={[glW, glH]} /></mesh>
-      {/* mullions fitted entirely inside the glass */}
-      {[-glW / 3, glW / 3].map((x, i) => <mesh key={'v' + i} position={[x, 0, -0.26]} material={m.trimWhite}><boxGeometry args={[mull, glH, 0.04]} /></mesh>)}
-      {[-glH / 4, 0, glH / 4].map((y, i) => <mesh key={'h' + i} position={[0, y, -0.26]} material={m.trimWhite}><boxGeometry args={[glW, mull, 0.04]} /></mesh>)}
-      {/* the ornate frame: the carved architectural surround, embedded in the wall */}
-      <group scale={[sx, sy, sx]}><primitive object={node} /></group>
+      {/* estate grounds, far beyond the glass — fills the whole opening */}
+      <mesh position={[0, 0, -WALL_T - 0.7]} material={m.scenery}><planeGeometry args={[w * 2.0, h * 1.7]} /></mesh>
+      {/* arched glass filling the opening */}
+      <mesh geometry={glassGeo} position={[0, 0, -0.30]} material={m.glass} />
+      {/* mullions: 2 verticals up to the spring, sash transoms, central mullion into
+          the arch, two Y-tracery bars, and an oculus — all inside the glass */}
+      {vx.map((x, i) => <mesh key={'v' + i} position={[x, (-H2 + sy) / 2, -0.26]} material={m.trimWhite}><boxGeometry args={[mull, straightH, 0.05]} /></mesh>)}
+      {transoms.map((y, i) => <mesh key={'t' + i} position={[0, y, -0.26]} material={m.trimWhite}><boxGeometry args={[iw - 0.04, mull, 0.05]} /></mesh>)}
+      <mesh position={[0, (sy + H2) / 2, -0.26]} material={m.trimWhite}><boxGeometry args={[mull, H2 - sy, 0.05]} /></mesh>
+      <mesh position={[-W2 * 0.34, sy + (H2 - sy) * 0.45, -0.26]} rotation={[0, 0, 0.5]} material={m.trimWhite}><boxGeometry args={[mull, (H2 - sy) * 0.9, 0.05]} /></mesh>
+      <mesh position={[W2 * 0.34, sy + (H2 - sy) * 0.45, -0.26]} rotation={[0, 0, -0.5]} material={m.trimWhite}><boxGeometry args={[mull, (H2 - sy) * 0.9, 0.05]} /></mesh>
+      <mesh position={[0, sy + (H2 - sy) * 0.5, -0.26]} material={m.trimWhite}><torusGeometry args={[arcR, mull * 0.7, 8, 20]} /></mesh>
+      {/* recessed reveal + carved stone surround at the room face */}
+      <mesh geometry={innerGeo} position={[0, 0, -0.18]} material={m.trim} />
+      <mesh geometry={trimGeo} position={[0, 0, -0.02]} material={m.trim} castShadow />
+      {/* side colonnettes (slim shafts on the jambs) */}
+      {[-1, 1].map(s => <mesh key={'c' + s} position={[s * (iw / 2 + tw * 0.5), 0, 0.06]} material={m.trim}><cylinderGeometry args={[tw * 0.32, tw * 0.32, h * 0.96, 10]} /></mesh>)}
+      {/* hood mould over the arch + apex finial */}
+      <mesh position={[0, H2 + tw * 0.4, 0.04]} material={m.trim}><torusGeometry args={[W2 + tw * 0.4, 0.06, 8, 22, Math.PI]} /></mesh>
+      <mesh position={[0, h / 2 + 0.02, 0.08]} material={m.trim}><coneGeometry args={[0.13, 0.46, 8]} /></mesh>
+      {/* projecting sill */}
+      <mesh position={[0, -h / 2 + 0.04, 0.18]} material={m.trim}><boxGeometry args={[w + 0.4, 0.16, 0.42]} /></mesh>
     </group>
   )
 }
@@ -721,7 +738,7 @@ function MuseumWindow({ frameH, m }) {
 function GothicFeature({ m }) {
   return (
     <group position={[0, FEAT_CY, -D / 2 + 0.04]}>
-      <MuseumWindow frameH={FEAT_FRAME_H} m={m} />
+      <MuseumWindow w={FEAT_W} h={FEAT_H} m={m} />
     </group>
   )
 }
@@ -734,7 +751,7 @@ function SideGothicWindows({ m, side }) {
     <group>
       {WIN_Z.map((z, i) => (
         <group key={i} position={[x, WIN_CY, z]} rotation={[0, ry, 0]}>
-          <MuseumWindow frameH={SIDE_FRAME_H} m={m} />
+          <MuseumWindow w={WIN_OPEN_W} h={WIN_OPEN_H} m={m} />
         </group>
       ))}
     </group>
@@ -851,13 +868,6 @@ function Gallery() {
       <Suspense fallback={null}><GothicFeature m={m} /></Suspense>
       <Suspense fallback={null}><SideGothicWindows m={m} side={-1} /></Suspense>
       <Suspense fallback={null}><SideGothicWindows m={m} side={1} /></Suspense>
-      {/* faint daylight pools beneath the side windows */}
-      {[-1, 1].flatMap(sd => WIN_Z.map((z, i) => (
-        <mesh key={'dp' + sd + i} rotation={[-Math.PI / 2, 0, 0]} position={[sd * (hw - 3.2), 0.03, z]}>
-          <planeGeometry args={[4, WIN_OPEN_W + 1]} />
-          <meshBasicMaterial color="#eef2fb" transparent opacity={0.09} depthWrite={false} />
-        </mesh>
-      )))}
       <Bench m={m} />
       <Character m={m} />
 
@@ -883,7 +893,7 @@ export default function Scene() {
       shadows={false}
       dpr={[1, 1.5]}
       camera={{ position: [0, 2.8, 12], fov: 68 }}
-      gl={{ toneMapping: ACESFilmicToneMapping, toneMappingExposure: 1.06, antialias: true, powerPreference: 'high-performance' }}
+      gl={{ toneMapping: ACESFilmicToneMapping, toneMappingExposure: 0.82, antialias: true, powerPreference: 'high-performance' }}
       onCreated={() => console.log('[Scene] Canvas created, renderer ready')}
       style={{ width: '100vw', height: '100vh', display: 'block' }}
     >
@@ -896,11 +906,11 @@ export default function Scene() {
       <ambientLight intensity={0.34} color="#f0d884" />
       <hemisphereLight intensity={0.48} color="#dfe6f0" groundColor="#1a130c" />
       {/* soft daylight from both window walls + the far feature (dialed down) */}
-      <directionalLight position={[-W, H * 0.7, 14]} intensity={0.9} color="#fbeed2" />
-      <directionalLight position={[-W, H * 0.7, -14]} intensity={0.8} color="#fbeed2" />
-      <directionalLight position={[W, H * 0.7, 14]} intensity={0.9} color="#fbeed2" />
-      <directionalLight position={[W, H * 0.7, -14]} intensity={0.8} color="#fbeed2" />
-      <directionalLight position={[0, H * 0.55, -D]} intensity={0.7} color="#e6ecf6" />
+      <directionalLight position={[-W, H * 0.7, 14]} intensity={0.55} color="#fbeed2" />
+      <directionalLight position={[-W, H * 0.7, -14]} intensity={0.5} color="#fbeed2" />
+      <directionalLight position={[W, H * 0.7, 14]} intensity={0.55} color="#fbeed2" />
+      <directionalLight position={[W, H * 0.7, -14]} intensity={0.5} color="#fbeed2" />
+      <directionalLight position={[0, H * 0.55, -D]} intensity={0.5} color="#e6ecf6" />
       {/* soft grazing fill on the centerpiece bay to reveal carving depth
           (distance-limited so it does not wash the rest of the ceiling) */}
       <pointLight position={[-4, CEIL - 2.4, 0]} intensity={7} distance={11} decay={2} color="#f3e0a8" />
@@ -918,7 +928,7 @@ export default function Scene() {
         {/* AO at junctions — half-res + modest radius to stay cheap */}
         <N8AO halfRes aoRadius={1.1} intensity={2.3} />
         {/* bloom only on the lamp lenses */}
-        <Bloom intensity={0.14} luminanceThreshold={1.05} luminanceSmoothing={0.2} mipmapBlur />
+        <Bloom intensity={0.08} luminanceThreshold={1.1} luminanceSmoothing={0.2} mipmapBlur />
         {/* cinematic grade: lower brightness, more contrast, desaturate slightly */}
         <HueSaturation saturation={-0.10} />
         <BrightnessContrast brightness={-0.03} contrast={0.12} />
