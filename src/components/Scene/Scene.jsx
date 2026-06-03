@@ -25,11 +25,14 @@ import { ARTWORKS, ART_BASE } from '../../data/artworks'
 /* ── DIMENSIONS — long rectangular palace gallery (~2:1) ────── */
 const W = 34, H = 14, D = 64
 const CEIL = H
-const TEX = '/assets/textures/'
+// BASE is '/' on root-domain hosts (Vercel/Netlify) and '/museum-portfolio/'
+// on GitHub Pages — so every asset URL resolves correctly on any host.
+const BASE = import.meta.env.BASE_URL
+const TEX = BASE + 'assets/textures/'
 const WALNUT = TEX + 'walnut/'   // real CC0 scanned dark walnut (Artaley3D)
 const WALL = TEX + 'plaster/Plaster003_2K-JPG_'
 const CEILP = TEX + 'ceilingplaster/Plaster001_1K-JPG_'   // ceiling plaster PBR
-const HDRI = '/assets/hdri/gallery.hdr'
+const HDRI = BASE + 'assets/hdri/gallery.hdr'
 
 /* ── helpers ──────────────────────────────────────────────── */
 function configure(t, rep, srgb) {

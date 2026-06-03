@@ -14,4 +14,4 @@ export const ARTWORKS = [
   { file: 'art8.jpg', title: 'Mrs. James Beatty and Her Daughter', artist: 'Joshua Johnson',                 date: 'c. 1805',              kind: 'portrait',  aspect: 1.147 },
 ]
 
-export const ART_BASE = '/assets/art/'
+export const ART_BASE = import.meta.env.BASE_URL + 'assets/art/'
