@@ -161,7 +161,7 @@ function Room({ m }) {
  * cartouches, layered perimeter molding, and a monumental medallion.
  * Density comes from merged + instanced ornament (few draw calls).
  * ════════════════════════════════════════════════════════════ */
-const C_MARGIN = 2.5, C_COLS = 7, C_ROWS = 12, C_RIB = 0.60, C_DROP = 0.85
+const C_MARGIN = 2.5, C_COLS = 7, C_ROWS = 11, C_RIB = 0.60, C_DROP = 0.85
 
 const _dummy = new Object3D()
 const mat4 = (x, y, z, ry = 0, s = 1) => {
@@ -316,7 +316,7 @@ function CofferedCeiling({ m }) {
  * scaled to fill the blank center, skinned in ivory plaster to match the ceiling.
  * Knobs if needed: CP_FLIP (relief facing wrong way), CP_SIZE (footprint metres). */
 const CP_FLIP = 0          // set to Math.PI if the relief faces up instead of down
-const CP_SIZE = 10         // centerpiece footprint in metres (blank center is ~12 wide)
+const CP_PANEL = 1.989     // the model's square footprint (metres, from its bbox)
 const CP_URL = BASE + 'assets/models/centerpiece.glb'
 function Centerpiece() {
   const { scene } = useGLTF(CP_URL)
@@ -326,9 +326,16 @@ function Centerpiece() {
     root.traverse(o => { if (o.isMesh) { o.material = ivory; o.frustumCulled = false } })
     return root
   }, [scene])
-  const s = CP_SIZE / 1.989
+  // fill the 3x3 blank center block exactly. rotateX(90) maps the panel's
+  // X->worldX, Y->worldZ, Z(depth)->worldY, so scale per-axis accordingly.
+  const fW = W - 2 * C_MARGIN, fD = D - 2 * C_MARGIN
+  const blankW = 3 * (fW / C_COLS)   // 3 skipped columns
+  const blankD = 3 * (fD / C_ROWS)   // 3 skipped rows
+  const sx = blankW / CP_PANEL
+  const sz = blankD / CP_PANEL       // model Y -> world Z
+  const sDepth = 0.4 / 0.057         // relief thickness ~0.4 m
   return (
-    <group position={[0, CEIL - C_DROP - 0.08, 0]} rotation={[Math.PI / 2 + CP_FLIP, 0, 0]} scale={[s, s, s]}>
+    <group position={[0, CEIL - C_DROP - 0.05, 0]} rotation={[Math.PI / 2 + CP_FLIP, 0, 0]} scale={[sx, sz, sDepth]}>
       <primitive object={node} />
     </group>
   )
@@ -650,11 +657,12 @@ export default function Scene() {
 
       {/* Grounding is handled by ContactShadows + N8AO (no shadow-map streak).
           Picture spots create the hierarchy; HDRI + soft fills give bounce. */}
-      <ambientLight intensity={0.22} color="#f0d068" />
-      <hemisphereLight intensity={0.26} color="#f3e2c0" groundColor="#1a130c" />
-      {/* warm overhead keys down the long hall — only 4 (keeps light count low) */}
-      {[-21, -7, 7, 21].map((z, i) => (
-        <pointLight key={i} position={[0, CEIL - 1.0, z]} intensity={24} distance={44} color="#f6dd84" />
+      <ambientLight intensity={0.30} color="#f0d068" />
+      <hemisphereLight intensity={0.34} color="#f3e2c0" groundColor="#1a130c" />
+      {/* warm keys only at the hall ENDS, dropped well below the ceiling so
+          they never burn hotspots onto the ceiling near the centerpiece */}
+      {[-26, 26].map((z, i) => (
+        <pointLight key={i} position={[0, CEIL - 4.5, z]} intensity={26} distance={48} color="#f6dd84" />
       ))}
 
       <Gallery />
