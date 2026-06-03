@@ -665,6 +665,29 @@ function SideWall({ side, m }) {
   )
 }
 
+/* Ornate gothic frame asset used purely as a CARVED SURROUND: scaled larger
+ * than the window and placed just behind it so its ornament peeks around the
+ * whole perimeter (crest above the arch, apron below the sill, sides alongside).
+ * Its own opening is hidden behind the window — it does NOT define the glass. */
+const GOTHIC_FRAME = BASE + 'assets/models/gothic_frame_lo.glb'
+const FRAME_OW = 1.239, FRAME_OH = 2.001    // measured outer bbox of the asset
+function FrameSurround({ w, h, m }) {
+  const { scene } = useGLTF(GOTHIC_FRAME)
+  const node = useMemo(() => {
+    const root = scene.clone(true)
+    const stone = new MeshStandardMaterial({ color: '#e4dece', roughness: 0.86, metalness: 0, side: DoubleSide })
+    root.traverse(o => { if (o.isMesh) { o.material = stone; o.frustumCulled = false } })
+    root.position.set(0, 0, 0)
+    return root
+  }, [scene])
+  const sx = (w + 1.6) / FRAME_OW            // outer a bit wider than the window
+  const sy = (h + 2.4) / FRAME_OH            // taller → crest above, apron below
+  const sz = Math.min(sx, sy) * 0.7
+  return (
+    <group position={[0, 0, -0.12]} scale={[sx, sy, sz]}><primitive object={node} /></group>
+  )
+}
+
 // pointed-arch outline (centred at origin): rect lower + two-arc gothic head
 function pointedArch(w, h, spring = 0.6) {
   const W2 = w / 2, H2 = h / 2, sy = -H2 + spring * h
@@ -708,6 +731,8 @@ function MuseumWindow({ w, h, m }) {
   const arcR = (H2 - sy) * 0.30
   return (
     <group>
+      {/* ornate gothic carved surround wrapping the window perimeter */}
+      <FrameSurround w={w} h={h} m={m} />
       {/* estate grounds, far beyond the glass — fills the whole opening */}
       <mesh position={[0, 0, -WALL_T - 0.7]} material={m.scenery}><planeGeometry args={[w * 2.0, h * 1.7]} /></mesh>
       {/* arched glass filling the opening */}
