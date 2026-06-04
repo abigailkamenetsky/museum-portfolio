@@ -1152,6 +1152,21 @@ function Character() {
     const t = new CanvasTexture(c); t.colorSpace = SRGBColorSpace; t.anisotropy = 8
     return new MeshBasicMaterial({ map: t, transparent: true, alphaTest: 0.3, toneMapped: false })
   }, [])
+  // dark-burgundy LACE bow material (canvas: burgundy base + lighter lace floral motif)
+  const bowMat = useMemo(() => {
+    const c = document.createElement('canvas'); c.width = 128; c.height = 128
+    const ctx = c.getContext('2d')
+    ctx.fillStyle = '#561020'; ctx.fillRect(0, 0, 128, 128)            // very dark burgundy
+    ctx.fillStyle = 'rgba(150,55,75,0.55)'                              // lace dots/florets
+    for (let gy = 0; gy < 128; gy += 24) for (let gx = 0; gx < 128; gx += 24) {
+      ctx.beginPath(); ctx.arc(gx, gy, 2.4, 0, 7); ctx.fill()
+      for (let k = 0; k < 6; k++) { const a = k / 6 * 6.283; ctx.beginPath(); ctx.arc(gx + Math.cos(a) * 6.5, gy + Math.sin(a) * 6.5, 1.7, 0, 7); ctx.fill() }
+    }
+    ctx.strokeStyle = 'rgba(130,40,60,0.4)'; ctx.lineWidth = 1
+    for (let gy = 12; gy < 140; gy += 24) { ctx.beginPath(); for (let gx = 0; gx <= 128; gx += 4) ctx.lineTo(gx, gy + Math.sin(gx / 5) * 2.5); ctx.stroke() }
+    const t = new CanvasTexture(c); t.colorSpace = SRGBColorSpace; t.wrapS = t.wrapT = RepeatWrapping; t.repeat.set(2.5, 2.5); t.anisotropy = 8
+    return new MeshStandardMaterial({ map: t, roughness: 0.5, metalness: 0.05 })
+  }, [])
   // load fabric textures: skirt denim + brown leather boots (hair stays pure curls)
   useEffect(() => {
     const L = new TextureLoader()
@@ -1307,16 +1322,19 @@ function Character() {
               <mesh geometry={geo} castShadow material={mat.hair} />
             </group>
           ))}
-          {/* cherry-maroon ribbon bow ON TOP of the back curls (proud so it's visible) */}
-          <group position={[0, 1.59, -0.205]} rotation={[0.2, 0, 0]}>
+          {/* dark-burgundy lace ribbon bow — protrudes from the curls but a connector
+              behind it reaches into the hair so there's no sideways gap */}
+          <group position={[0, 1.59, -0.18]} rotation={[0.25, 0, 0]}>
             {/* two triangular loops, apex meeting at the centre */}
-            <mesh position={[-0.08, 0.01, 0]} rotation={[0, 0, -Math.PI / 2]} scale={[1, 1, 0.32]} castShadow material={mat.bow}><coneGeometry args={[0.065, 0.17, 4]} /></mesh>
-            <mesh position={[0.08, 0.01, 0]} rotation={[0, 0, Math.PI / 2]} scale={[1, 1, 0.32]} castShadow material={mat.bow}><coneGeometry args={[0.065, 0.17, 4]} /></mesh>
+            <mesh position={[-0.08, 0.01, 0]} rotation={[0, 0, -Math.PI / 2]} scale={[1, 1, 0.4]} castShadow material={bowMat}><coneGeometry args={[0.065, 0.17, 4]} /></mesh>
+            <mesh position={[0.08, 0.01, 0]} rotation={[0, 0, Math.PI / 2]} scale={[1, 1, 0.4]} castShadow material={bowMat}><coneGeometry args={[0.065, 0.17, 4]} /></mesh>
             {/* centre knot */}
-            <mesh scale={[1, 1, 0.6]} castShadow material={mat.bow}><boxGeometry args={[0.045, 0.055, 0.05]} /></mesh>
+            <mesh scale={[1, 1, 0.7]} castShadow material={bowMat}><boxGeometry args={[0.045, 0.055, 0.06]} /></mesh>
+            {/* connector into the hair (kills the sideways gap) */}
+            <mesh position={[0, 0, 0.06]} material={bowMat}><boxGeometry args={[0.036, 0.045, 0.12]} /></mesh>
             {/* ribbon tails */}
-            <mesh position={[-0.035, -0.11, 0]} rotation={[0, 0, 0.22]} scale={[1, 1, 0.32]} castShadow material={mat.bow}><coneGeometry args={[0.04, 0.16, 4]} /></mesh>
-            <mesh position={[0.035, -0.11, 0]} rotation={[0, 0, -0.22]} scale={[1, 1, 0.32]} castShadow material={mat.bow}><coneGeometry args={[0.04, 0.16, 4]} /></mesh>
+            <mesh position={[-0.035, -0.11, 0]} rotation={[0, 0, 0.22]} scale={[1, 1, 0.4]} castShadow material={bowMat}><coneGeometry args={[0.04, 0.16, 4]} /></mesh>
+            <mesh position={[0.035, -0.11, 0]} rotation={[0, 0, -0.22]} scale={[1, 1, 0.4]} castShadow material={bowMat}><coneGeometry args={[0.04, 0.16, 4]} /></mesh>
           </group>
           {/* shoulders pivot; short sleeve cap + bare arm */}
           <group ref={armL} position={[-0.17, 1.43, 0]}>
