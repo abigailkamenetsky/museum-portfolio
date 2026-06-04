@@ -1102,6 +1102,13 @@ function Character() {
     }
     // just a couple of subtle baby hairs at the temples
     for (let i = 0; i < 4; i++) { const s = i < 2 ? -1 : 1; geos.push(curlTorus(s * (0.115 + Math.random() * 0.025), 1.64 + rnd(0.04), 0.06 + rnd(0.02), 0.011 + Math.random() * 0.007)) }
+    // BACK FILL: a dense band of curls over the occiput that bridges the crown to the
+    // falling length, so the back of the head is one smooth rounded curve (no gap)
+    for (let i = 0; i < 50; i++) {
+      const a = (Math.random() - 0.5) * 2.0, yy = 0.25 - Math.random() * 0.85
+      const r = 0.152
+      geos.push(curlTorus(Math.sin(a) * r * 0.95 + rnd(0.02), 1.63 + yy * r * 0.92, -Math.abs(Math.cos(a)) * r * 0.92 - 0.025, 0.027 + Math.random() * 0.015))
+    }
     return mergeGeometries(geos, false)
   }, [])
   // ALL-DOWN length split into SECTIONS around the back+sides; each section is a
@@ -1252,13 +1259,13 @@ function Character() {
       <group ref={modelRef} position={[0, 0.07, 0]}>{/* lift so the heeled boots rest on the floor (no clipping) */}
         {/* torso + head + hair + arms + skirt (bobs as one during the walk) */}
         <group ref={body}>
-          {/* denim mini — sits on the hips, flattened front-to-back */}
-          <mesh position={[0, 0.9, 0]} scale={[1, 1, 0.74]} castShadow material={mat.denim}><cylinderGeometry args={[0.128, 0.16, 0.26, 22, 1, true]} /></mesh>
+          {/* denim mini — ROUND so it fully encloses the hips (no skin poke-through) */}
+          <mesh position={[0, 0.9, 0]} castShadow material={mat.denim}><cylinderGeometry args={[0.142, 0.166, 0.26, 24, 1, true]} /></mesh>
           {/* two front patch pockets */}
-          {[-1, 1].map(s => <mesh key={'pk' + s} position={[s * 0.06, 0.88, 0.108]} castShadow material={mat.denimDark}><boxGeometry args={[0.06, 0.075, 0.012]} /></mesh>)}
+          {[-1, 1].map(s => <mesh key={'pk' + s} position={[s * 0.06, 0.88, 0.138]} castShadow material={mat.denimDark}><boxGeometry args={[0.06, 0.075, 0.012]} /></mesh>)}
           {/* maroon belt + gold buckle at the waist */}
-          <mesh position={[0, 1.02, 0]} scale={[1, 1, 0.78]} castShadow material={mat.belt}><cylinderGeometry args={[0.122, 0.126, 0.05, 22]} /></mesh>
-          <mesh position={[0, 1.02, 0.094]} castShadow material={mat.gold}><boxGeometry args={[0.05, 0.042, 0.02]} /></mesh>
+          <mesh position={[0, 1.02, 0]} castShadow material={mat.belt}><cylinderGeometry args={[0.13, 0.134, 0.05, 24]} /></mesh>
+          <mesh position={[0, 1.02, 0.128]} castShadow material={mat.gold}><boxGeometry args={[0.05, 0.042, 0.02]} /></mesh>
           {/* hourglass tee: chest → THIN waist → smoothly flares to the hips  ) . (  */}
           <mesh position={[0, 1.40, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.1, 0.084, 0.1, 18]} /></mesh>
           <mesh position={[0, 1.30, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.084, 0.066, 0.12, 18]} /></mesh>
