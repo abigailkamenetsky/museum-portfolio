@@ -1072,7 +1072,7 @@ function Character() {
   const hairRefs = useRef([])   // per-section hair groups (each sways individually)
   const arrowRef = useRef()     // "Guide Me" floor arrow
   const keys = useRef({})
-  const st = useRef({ yaw: Math.PI, yawT: Math.PI, pitch: 0.12, pitchT: 0.12, vel: new Vector3(), face: Math.PI, phase: 0, t: 0, dist: 6.2, dragging: false })
+  const st = useRef({ yaw: Math.PI, yawT: Math.PI, pitch: 0.12, pitchT: 0.12, vel: new Vector3(), face: Math.PI, phase: 0, t: 0, dist: 6.2, dragging: false, touchWalk: false })
   const arrowMat = useMemo(() => new MeshBasicMaterial({ color: '#ecc657', transparent: true, opacity: 0.6, depthWrite: false, toneMapped: false }), [])
   const mat = useMemo(() => ({
     skin: new MeshStandardMaterial({ color: '#c8996f', roughness: 0.72, metalness: 0 }),
@@ -1190,8 +1190,13 @@ function Character() {
     const up = e => { keys.current[e.code] = false }
     const canvas = document.querySelector('canvas')
     // DRAG-TO-LOOK: hold and drag to orbit; release stops. No pointer lock, no Esc.
-    let dragging = false, lx = 0, ly = 0
-    const down = e => { dragging = true; st.current.dragging = true; lx = e.clientX; ly = e.clientY }
+    // MOBILE: holding the screen ≥150ms walks forward (drag still steers the camera).
+    const coarse = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches
+    let dragging = false, lx = 0, ly = 0, walkTimer = null
+    const down = e => {
+      dragging = true; st.current.dragging = true; lx = e.clientX; ly = e.clientY
+      if (coarse) { clearTimeout(walkTimer); walkTimer = setTimeout(() => { st.current.touchWalk = true }, 150) }
+    }
     const move = e => {
       if (!dragging) return
       const s = st.current
@@ -1199,18 +1204,20 @@ function Character() {
       s.pitchT = MathUtils.clamp(s.pitchT - (e.clientY - ly) * DRAG_SENS, -1.48, 1.48)  // vertical → tilt (±~85°)
       lx = e.clientX; ly = e.clientY
     }
-    const end = () => { dragging = false; st.current.dragging = false }
+    const end = () => { dragging = false; st.current.dragging = false; clearTimeout(walkTimer); st.current.touchWalk = false }
     const wheel = e => { e.preventDefault(); st.current.dist = MathUtils.clamp(st.current.dist + e.deltaY * 0.004, 3.5, 9) }
     window.addEventListener('keydown', dn); window.addEventListener('keyup', up)
     canvas && canvas.addEventListener('pointerdown', down)
     window.addEventListener('pointermove', move)
     window.addEventListener('pointerup', end)
+    window.addEventListener('pointercancel', end)
     canvas && canvas.addEventListener('wheel', wheel, { passive: false })
     return () => {
       window.removeEventListener('keydown', dn); window.removeEventListener('keyup', up)
       canvas && canvas.removeEventListener('pointerdown', down)
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerup', end)
+      window.removeEventListener('pointercancel', end)
       canvas && canvas.removeEventListener('wheel', wheel)
     }
   }, [])
@@ -1234,7 +1241,7 @@ function Character() {
     s.yaw += dyaw * Math.min(1, 11 * d)
     s.pitch += (s.pitchT - s.pitch) * Math.min(1, 11 * d)
     // camera-relative input
-    const fwd = locked ? 0 : (k['KeyW'] || k['ArrowUp'] ? 1 : 0) - (k['KeyS'] || k['ArrowDown'] ? 1 : 0)
+    const fwd = locked ? 0 : ((k['KeyW'] || k['ArrowUp'] || s.touchWalk ? 1 : 0) - (k['KeyS'] || k['ArrowDown'] ? 1 : 0))
     const strafe = locked ? 0 : (k['KeyD'] || k['ArrowRight'] ? 1 : 0) - (k['KeyA'] || k['ArrowLeft'] ? 1 : 0)
     const run = !locked && (k['ShiftLeft'] || k['ShiftRight'])
     const sin = Math.sin(s.yaw), cos = Math.cos(s.yaw)

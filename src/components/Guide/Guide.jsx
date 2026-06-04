@@ -12,7 +12,7 @@ const serif = 'Georgia, "Times New Roman", serif'
 /* ── teleport / guide-me actions ─────────────────────────── */
 function teleport(w) {
   closeGuide()
-  museum.set({ fade: 1 })
+  museum.set({ guide: null, fade: 1 })   // abandon any active Guide-Me arrow
   setTimeout(() => {
     museum.set({ teleport: { x: w.pos[0], z: w.pos[1], yaw: w.yaw, title: w.wing }, fade: 0, titleCard: w.wing })
     setTimeout(() => { if (museum.get().titleCard === w.wing) museum.set({ titleCard: null }) }, 2800)
