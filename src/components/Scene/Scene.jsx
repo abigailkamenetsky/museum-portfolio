@@ -7,7 +7,7 @@
  */
 
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { ContactShadows, useGLTF } from '@react-three/drei'
+import { ContactShadows, useGLTF, useTexture } from '@react-three/drei'
 import { EffectComposer, N8AO, Bloom, Vignette, HueSaturation, BrightnessContrast } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
 import { Suspense, useRef, useEffect, useMemo } from 'react'
@@ -668,6 +668,7 @@ function BackWall({ m }) {
  * whole perimeter (crest above the arch, apron below the sill, sides alongside).
  * Its own opening is hidden behind the window — it does NOT define the glass. */
 const GOTHIC_FRAME = BASE + 'assets/models/gothic_frame_lo.glb'
+const FOREST_URL = BASE + 'assets/scenery/forest.jpg'   // real forest (equirect slice)
 const FRAME_OW = 1.239, FRAME_OH = 2.001    // measured outer bbox of the asset
 function FrameSurround({ w, h, m }) {
   const { scene } = useGLTF(GOTHIC_FRAME)
@@ -703,6 +704,14 @@ function pointedArch(w, h, spring = 0.6) {
  * part, Y-tracery + oculus in the arch, side colonnettes, hood mould + finial.
  * w,h = the wall opening (rectangular). Local +Z faces the room. */
 function MuseumWindow({ w, h, m }) {
+  // real forest backdrop: a unique vertical slice of the equirectangular image
+  const forest = useTexture(FOREST_URL)
+  const sceneryMat = useMemo(() => {
+    const t = forest.clone(); t.needsUpdate = true
+    t.colorSpace = SRGBColorSpace; t.wrapS = t.wrapT = RepeatWrapping
+    t.repeat.set(0.18, 0.82); t.offset.set(Math.random() * 0.75, 0.10)
+    return new MeshBasicMaterial({ map: t, color: '#bcbcbc' })   // slight dim so sky doesn't blow
+  }, [forest])
   const tw = Math.min(0.42, w * 0.12)              // trim width
   const iw = w - 2 * tw, ih = h - 2 * tw           // arched opening (glass)
   const spring = 0.6
@@ -731,8 +740,8 @@ function MuseumWindow({ w, h, m }) {
     <group>
       {/* ornate gothic carved surround wrapping the window perimeter */}
       <FrameSurround w={w} h={h} m={m} />
-      {/* estate grounds just behind the glass — sized to the opening (no leak) */}
-      <mesh position={[0, 0, -WALL_T - 0.35]} material={m.scenery}><planeGeometry args={[w * 1.25, h * 1.15]} /></mesh>
+      {/* real forest just behind the glass — sized to the opening (no leak) */}
+      <mesh position={[0, 0, -WALL_T - 0.35]} material={sceneryMat}><planeGeometry args={[w * 1.25, h * 1.15]} /></mesh>
       {/* arched glass filling the opening */}
       <mesh geometry={glassGeo} position={[0, 0, -0.30]} material={m.glass} />
       {/* mullions: 2 verticals up to the spring, sash transoms, central mullion into
