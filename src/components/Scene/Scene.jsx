@@ -617,7 +617,7 @@ function useGoldFrame() {
     mat.metalness = 1.0
     mat.roughness = 0.42               // roughnessMap still multiplies for variation
     mat.envMapIntensity = 1.1          // catch gold reflections so metal reads as gold
-    if (mat.emissive) { mat.emissive.set('#5a4410'); mat.emissiveIntensity = 0.22 }   // warm self-glow so it stays gold in shadow
+    if (mat.emissive) { mat.emissive.set('#4a3608'); mat.emissiveIntensity = 0.08 }   // faint warm glow (low, so distant ornament doesn't glow as dots)
     if (mat.emissive) mat.emissiveIntensity = 0
     mat.needsUpdate = true
     return { geo, mat, nw, nh, nd }
@@ -670,7 +670,7 @@ function Painting({ position, rotation = [0, 0, 0], maxW, maxH, art, cls = 1, fr
   if (imgAR > planeAR) { rx = planeAR / imgAR; ox = (1 - rx) / 2 }   // image wider → crop sides
   else { ry = imgAR / planeAR; oy = (1 - ry) / 2 }                   // image taller → crop top/bottom
 
-  const sx = outerW / frame.nw, sy = outerH / frame.nh, sz = 0.24 / frame.nd
+  const sx = outerW / frame.nw, sy = outerH / frame.nh, sz = 0.18 / frame.nd   // shallower depth → less edge-on gold
   const crestW = outerW
   const crestGeo = useMemo(() => crest(crestW, big), [crestW, big])
 
@@ -695,11 +695,14 @@ function Painting({ position, rotation = [0, 0, 0], maxW, maxH, art, cls = 1, fr
       <mesh position={[0, 0, FZ - 0.01]} material={artMat}><planeGeometry args={[pw, ph]} /></mesh>
       {/* carved gold frame (shared GLB geometry, scaled to this opening) */}
       <mesh geometry={frame.geo} material={frame.mat} position={[0, 0, FZ]} scale={[sx, sy, sz]} castShadow receiveShadow />
-      {/* procedural crest above + apron below (apron = crest mirrored). The GLB
-          frame already carries the corner ornament, so no separate corner nodes
-          (those projected off the frame and read as floating gold from a distance). */}
-      <mesh geometry={crestGeo} material={frame.mat} position={[0, outerH / 2 - 0.04, FZ + 0.03]} castShadow />
-      <mesh geometry={crestGeo} material={frame.mat} position={[0, -outerH / 2 + 0.04, FZ + 0.03]} rotation={[0, 0, Math.PI]} scale={[1, 0.7, 1]} castShadow />
+      {/* crest above + apron below ONLY on the front-facing back-wall masterpieces.
+          On the side walls these project toward the room and, seen edge-on from
+          down the hall, read as floating gold dashes — so side paintings rely on
+          the GLB frame's own ornament. */}
+      {cls === 2 && <>
+        <mesh geometry={crestGeo} material={frame.mat} position={[0, outerH / 2 - 0.04, FZ + 0.03]} castShadow />
+        <mesh geometry={crestGeo} material={frame.mat} position={[0, -outerH / 2 + 0.04, FZ + 0.03]} rotation={[0, 0, Math.PI]} scale={[1, 0.7, 1]} castShadow />
+      </>}
     </group>
   )
 }
