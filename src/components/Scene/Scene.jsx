@@ -753,6 +753,21 @@ function buildBaroqueFrame(w, h) {
   for (const s of [-1, 1]) add(leafGeo(h * 0.06, w * 0.05), [s * apronW * 0.42, ay, 0.14], [Math.PI * 0.5, 0, s * 0.6])
   // ── beadwork along the jambs ──
   for (const s of [-1, 1]) for (let i = 0; i < 9; i++) { const y = -h * 0.03 - ih * 0.45 + (i + 0.5) * ih * 0.9 / 9; add(new SphereGeometry(w * 0.011, 6, 6), [s * (iw / 2 + 0.06), y, 0.14]) }
+  // ── floral garlands (under the cartouche + across the apron) ──
+  const garland = (gx0, gy0, span, sag, z) => {
+    const n = 8
+    for (let i = 0; i <= n; i++) {
+      const t = i / n, gx = gx0 - span / 2 + t * span, gy = gy0 - Math.sin(Math.PI * t) * sag
+      add(new SphereGeometry(w * 0.013, 6, 6), [gx, gy, z])
+      if (i % 2 === 0) add(leafGeo(h * 0.04, w * 0.03), [gx, gy - 0.04, z], [Math.PI / 2, 0, (t - 0.5) * 1.2])
+    }
+  }
+  garland(0, cy - h * 0.06, w * 0.55, h * 0.05, 0.23)
+  garland(0, ay + h * 0.05, apronW * 0.55, h * 0.04, 0.16)
+  // ── climbing vine of alternating leaves up each pilaster ──
+  for (const s of [-1, 1]) { const px = s * (w / 2 + 0.16); for (let i = 0; i < 7; i++) { const y = -h * 0.03 - ph / 2 + (i + 0.5) * ph / 7; add(leafGeo(h * 0.05, w * 0.045), [px, y, 0.19], [Math.PI / 2, 0, (i % 2 ? 1 : -1) * 0.6]) } }
+  // ── secondary scrolls curling inside the C-scrolls ──
+  for (const s of [-1, 1]) add(scrollGeo(w * 0.06, 0.03, Math.PI * 1.4), [s * w * 0.2, cy + h * 0.015, 0.26], [0, 0, s > 0 ? -0.5 : Math.PI + 0.5])
   return mergeGeometries(parts, false)
 }
 function baroqueFrame(w, h) { const k = w.toFixed(2) + 'x' + h.toFixed(2); if (!_frameCache[k]) _frameCache[k] = buildBaroqueFrame(w, h); return _frameCache[k] }
