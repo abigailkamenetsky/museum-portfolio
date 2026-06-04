@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useProgress } from '@react-three/drei'
 import { museum, useMuseum, openGuide, closeGuide } from '../../museum/store'
 import { WINGS, wingById } from '../../data/museum'
 
@@ -84,8 +85,16 @@ export default function Guide() {
     if (cp != null) museum.set({ cardPiece: null })
   }, [s.card])
 
+  // LOADING GATE: hold a loading screen until assets finish, THEN show the welcome
+  const { active, progress } = useProgress()
+  const [ready, setReady] = useState(false)
   useEffect(() => {
-    const t = setTimeout(() => { if (museum.get().phase === 'enter') museum.set({ phase: 'welcome' }) }, 2600)
+    if (ready || active || progress < 100) return
+    const t = setTimeout(() => { setReady(true); museum.set({ phase: 'welcome' }) }, 900)  // grace for non-Suspense textures
+    return () => clearTimeout(t)
+  }, [active, progress, ready])
+  useEffect(() => {   // safety: never get stuck on the loader
+    const t = setTimeout(() => setReady(r => { if (!r) museum.set({ phase: 'welcome' }); return true }), 16000)
     return () => clearTimeout(t)
   }, [])
 
@@ -115,6 +124,17 @@ export default function Guide() {
 
   return (
     <>
+      {/* LOADING SCREEN — covers everything until assets are ready */}
+      {!ready && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: '#0a0c08', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: serif }}>
+          <div style={{ color: GOLD, font: `500 13px ${serif}`, letterSpacing: 5, textTransform: 'uppercase', opacity: 0.8 }}>The Museum of Abby</div>
+          <div style={{ color: '#f3ecd9', font: `400 26px ${serif}`, margin: '14px 0 18px' }}>Preparing the gallery…</div>
+          <div style={{ width: 220, height: 3, background: 'rgba(227,194,102,0.2)', borderRadius: 3, overflow: 'hidden' }}>
+            <div style={{ width: `${Math.min(100, Math.round(progress))}%`, height: '100%', background: GOLD, transition: 'width .3s' }} />
+          </div>
+        </div>
+      )}
+
       {/* teleport fade */}
       <div style={{ position: 'fixed', inset: 0, background: '#000', opacity: s.fade, pointerEvents: 'none', transition: 'opacity .42s ease', zIndex: 40 }} />
 

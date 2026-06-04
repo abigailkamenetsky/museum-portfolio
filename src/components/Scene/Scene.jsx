@@ -1094,7 +1094,7 @@ function Character() {
   // a gathered "half-up" cluster at the back crown, and baby-hair wisps in front.
   const rnd = n => (Math.random() - 0.5) * n
   const curlTorus = (x, y, z, r) => {
-    const g = new TorusGeometry(r, r * 0.42, 6, 9)
+    const g = new TorusGeometry(r, r * 0.42, 5, 7)
     g.rotateX(Math.random() * Math.PI); g.rotateY(Math.random() * Math.PI)
     g.translate(x, y, z); return g
   }
@@ -1143,7 +1143,7 @@ function Character() {
         const step = 0.05
         for (let i = 0; i < segs; i++) {
           const sp = 1 + i * 0.07                          // fans OUTWARD horizontally as it falls
-          const g = new TorusGeometry(coilR * (1 + i * 0.05), 0.013, 6, 9)   // curls fatten toward the bottom → volume on the lower half
+          const g = new TorusGeometry(coilR * (1 + i * 0.05), 0.013, 5, 7)   // curls fatten toward the bottom → volume on the lower half
           g.rotateX(Math.PI / 2); g.rotateZ(tilt)
           g.translate(ox * sp + rnd(0.015), -0.02 - i * step, oz * sp + rnd(0.015))
           geos.push(g)
