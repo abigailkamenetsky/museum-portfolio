@@ -1092,12 +1092,12 @@ function Character() {
         const theta = u * Math.PI * 2, phi = Math.acos(2 * v - 1)
         const x = Math.sin(phi) * Math.cos(theta), y = Math.cos(phi), z = Math.sin(phi) * Math.sin(theta)
         if (y < 0.28 && z > -0.25) continue                 // raise the hairline (kills sideburns)
-        if (z > 0.32 && y < 0.6) continue                   // keep the face open
+        if (z > 0.16 && y < 0.74) continue                  // push the front hairline back → clean forehead, no fringe
         geos.push(curlTorus(x * rr * 1.05, 1.65 + y * rr * 1.06 + 0.02, z * rr * 0.9 - 0.012, 0.028 + Math.random() * 0.016))
       }
     }
-    // baby hairs: tiny wisps at the front hairline / temples
-    for (let i = 0; i < 10; i++) { const s = i < 5 ? -1 : 1; geos.push(curlTorus(s * (0.1 + Math.random() * 0.05), 1.71 + rnd(0.05), 0.05 + rnd(0.04), 0.014 + Math.random() * 0.01)) }
+    // just a couple of subtle baby hairs at the temples
+    for (let i = 0; i < 4; i++) { const s = i < 2 ? -1 : 1; geos.push(curlTorus(s * (0.115 + Math.random() * 0.025), 1.64 + rnd(0.04), 0.06 + rnd(0.02), 0.011 + Math.random() * 0.007)) }
     return mergeGeometries(geos, false)
   }, [])
   // ALL-DOWN length split into SECTIONS around the back+sides; each section is a
@@ -1242,13 +1242,14 @@ function Character() {
           <mesh position={[0, 1.39, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.098, 0.09, 0.1, 16]} /></mesh>
           <mesh position={[0, 1.27, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.09, 0.073, 0.16, 16]} /></mesh>
           <mesh position={[0, 1.11, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.073, 0.085, 0.16, 16]} /></mesh>
-          {/* bust (modest) */}
-          <mesh position={[-0.05, 1.31, 0.058]} scale={[1, 0.95, 0.88]} castShadow material={mat.shirt}><sphereGeometry args={[0.066, 14, 12]} /></mesh>
-          <mesh position={[0.05, 1.31, 0.058]} scale={[1, 0.95, 0.88]} castShadow material={mat.shirt}><sphereGeometry args={[0.066, 14, 12]} /></mesh>
-          {/* hips flare back out + glutes (skin) under the skirt → real curves */}
+          {/* bust (small) */}
+          <mesh position={[-0.042, 1.3, 0.045]} scale={[1, 0.9, 0.8]} castShadow material={mat.shirt}><sphereGeometry args={[0.042, 12, 10]} /></mesh>
+          <mesh position={[0.042, 1.3, 0.045]} scale={[1, 0.9, 0.8]} castShadow material={mat.shirt}><sphereGeometry args={[0.042, 12, 10]} /></mesh>
+          {/* hips flare out (skin, covered by skirt) + a subtle CLOTHED butt curve
+              (denim bulges tucked into the back of the skirt — no bare skin) */}
           <mesh position={[0, 0.99, 0]} castShadow material={mat.skin}><cylinderGeometry args={[0.085, 0.105, 0.14, 16]} /></mesh>
-          <mesh position={[-0.052, 0.92, -0.085]} scale={[1, 0.92, 1.05]} castShadow material={mat.skin}><sphereGeometry args={[0.076, 14, 12]} /></mesh>
-          <mesh position={[0.052, 0.92, -0.085]} scale={[1, 0.92, 1.05]} castShadow material={mat.skin}><sphereGeometry args={[0.076, 14, 12]} /></mesh>
+          <mesh position={[-0.05, 0.87, -0.07]} scale={[1, 0.8, 1]} castShadow material={mat.denim}><sphereGeometry args={[0.056, 12, 10]} /></mesh>
+          <mesh position={[0.05, 0.87, -0.07]} scale={[1, 0.8, 1]} castShadow material={mat.denim}><sphereGeometry args={[0.056, 12, 10]} /></mesh>
           {/* neck + head */}
           <mesh position={[0, 1.5, 0]} castShadow material={mat.skin}><cylinderGeometry args={[0.05, 0.06, 0.1, 10]} /></mesh>
           {/* head + smooth scalp cap (so curls never reveal bald gaps) + front face */}
