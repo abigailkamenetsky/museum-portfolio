@@ -1088,15 +1088,16 @@ function Character() {
   }
   const hairCapGeo = useMemo(() => {
     const geos = []
-    for (let layer = 0; layer < 5; layer++) {
-      const rr = 0.146 + layer * 0.017, count = 120 - layer * 12
+    for (let layer = 0; layer < 3; layer++) {
+      const rr = 0.144 + layer * 0.012, count = 80 - layer * 16
       for (let i = 0; i < count; i++) {
         const u = Math.random(), v = Math.random()
         const theta = u * Math.PI * 2, phi = Math.acos(2 * v - 1)
         const x = Math.sin(phi) * Math.cos(theta), y = Math.cos(phi), z = Math.sin(phi) * Math.sin(theta)
         if (y < -0.55) continue                             // cap extends down the back/sides (fills the nape, no gap)
         if (z > 0.3 && y < 0.16) continue                   // open only the face; hairline sits low on the forehead
-        geos.push(curlTorus(x * rr * 1.05, 1.65 + y * rr * 1.06 + 0.02, z * rr * 0.9 - 0.012, 0.028 + Math.random() * 0.016))
+        if (y > 0.7 && Math.random() < 0.6) continue        // thin the very top → flat crown, no poofy mullet
+        geos.push(curlTorus(x * rr * 1.02, 1.63 + y * rr * 0.9 + 0.01, z * rr * 0.88 - 0.012, 0.026 + Math.random() * 0.014))
       }
     }
     // just a couple of subtle baby hairs at the temples
@@ -1112,18 +1113,18 @@ function Character() {
     for (let sec = 0; sec < SECTIONS; sec++) {
       const geos = []
       const center = (-1 + 2 * sec / (SECTIONS - 1)) * 2.55   // wider: reaches around to drape over the shoulders
-      const strandsN = 9
+      const strandsN = 11
       for (let q = 0; q < strandsN; q++) {
-        const ang = center + (q - (strandsN - 1) / 2) * 0.09
+        const ang = center + (q - (strandsN - 1) / 2) * 0.075
         const back = Math.max(0, Math.cos(ang))           // 1 at the back, 0 at the sides
         const ox = Math.sin(ang) * 0.16, oz = -Math.cos(ang) * 0.13 - 0.03 - back * 0.05   // puff the back out
-        const segs = 7 + Math.floor(Math.random() * 3)   // ~3/4 torso length
+        const segs = 8 + Math.floor(Math.random() * 3)   // ~3/4 torso length
         const coilR = 0.03 + Math.random() * 0.016
         const tilt = (Math.random() < 0.5 ? 1 : -1) * (0.35 + Math.random() * 0.35)
-        const step = 0.052
+        const step = 0.05
         for (let i = 0; i < segs; i++) {
-          const sp = 1 + i * 0.06                          // fans OUTWARD horizontally as it falls
-          const g = new TorusGeometry(coilR, 0.013, 6, 9)
+          const sp = 1 + i * 0.07                          // fans OUTWARD horizontally as it falls
+          const g = new TorusGeometry(coilR * (1 + i * 0.05), 0.013, 6, 9)   // curls fatten toward the bottom → volume on the lower half
           g.rotateX(Math.PI / 2); g.rotateZ(tilt)
           g.translate(ox * sp + rnd(0.015), -0.02 - i * step, oz * sp + rnd(0.015))
           geos.push(g)
@@ -1248,7 +1249,7 @@ function Character() {
   // stylized figure (faces +Z): brunette curls, Y2K tee, denim skirt, knee-high boots
   return (
     <group ref={root} position={[0, 0, 8]}>
-      <group ref={modelRef}>
+      <group ref={modelRef} position={[0, 0.07, 0]}>{/* lift so the heeled boots rest on the floor (no clipping) */}
         {/* torso + head + hair + arms + skirt (bobs as one during the walk) */}
         <group ref={body}>
           {/* denim mini — shorter, straight/boxy; flattened front-to-back so it's
