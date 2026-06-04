@@ -216,6 +216,7 @@ export default function Guide() {
         const d = pcs ? (piece != null ? pcs[piece] : null) : ex
         const detail = obj => (
           <>
+            {obj.artwork && <div style={{ color: GOLD, opacity: 0.75, font: `italic 400 13px ${serif}`, marginBottom: 8 }}>{obj.artwork}</div>}
             {obj.blurb && <div style={{ opacity: 0.9, lineHeight: 1.55, marginBottom: 14 }}>{obj.blurb}</div>}
             {obj.images?.length > 0 ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 10, marginBottom: 16 }}>
