@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { museum, useMuseum, openGuide, closeGuide } from '../../museum/store'
-import { WINGS, wingById, ABOUT } from '../../data/museum'
+import { WINGS, wingById } from '../../data/museum'
+
+const ASSET = import.meta.env.BASE_URL + 'assets/'
 
 const GOLD = '#e3c266'
 const INK = 'rgba(14,16,12,0.94)'
@@ -155,20 +157,13 @@ export default function Guide() {
       {s.menu && (
         <div style={dim} onClick={e => { if (e.target === e.currentTarget) closeGuide() }}>
           <Device>
-            {s.menu === 'home' ? (
+            {!cat ? (
               <>
                 <div style={{ color: GOLD, font: `600 12px ${serif}`, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.8 }}>Museum Guide</div>
                 <div style={{ font: `400 18px ${serif}`, margin: '2px 0 10px' }}>How would you like to explore?</div>
-                <button style={row(hover === 'about')} onMouseEnter={() => setHover('about')} onMouseLeave={() => setHover(null)} onClick={() => museum.set({ menu: 'about' })}>About Me</button>
                 {WINGS.map(w => (
                   <button key={w.id} style={row(hover === w.id)} onMouseEnter={() => setHover(w.id)} onMouseLeave={() => setHover(null)} onClick={() => museum.set({ menu: w.id })}>{w.title}</button>
                 ))}
-              </>
-            ) : s.menu === 'about' ? (
-              <>
-                <div style={{ color: GOLD, font: `600 12px ${serif}`, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.8 }}>About</div>
-                <div style={{ font: `400 20px ${serif}`, margin: '2px 0 10px' }}>{ABOUT.title}</div>
-                <div style={{ opacity: 0.9, font: `400 14px/1.6 ${serif}` }}>{ABOUT.bio}</div>
               </>
             ) : (
               <>
@@ -192,6 +187,16 @@ export default function Guide() {
             <div style={{ color: GOLD, font: `600 12px ${serif}`, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.8 }}>{cardWing.wing}</div>
             <div style={{ font: `400 28px ${serif}`, margin: '4px 0 12px' }}>{cardWing.title}</div>
             <div style={{ opacity: 0.9, lineHeight: 1.55, marginBottom: 14 }}>{cardWing.exhibit.blurb}</div>
+            {/* photo gallery */}
+            {cardWing.exhibit.images?.length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 10, marginBottom: 16 }}>
+                {cardWing.exhibit.images.map((src, i) => (
+                  <img key={i} src={ASSET + src} alt="" style={{ width: '100%', height: 150, objectFit: 'cover', borderRadius: 8, border: `1px solid ${GOLD}44` }} />
+                ))}
+              </div>
+            ) : cardWing.id === 'about' && (
+              <div style={{ marginBottom: 16, padding: '22px', textAlign: 'center', border: `1px dashed ${GOLD}44`, borderRadius: 8, opacity: 0.6, font: `400 14px ${serif}` }}>Photos coming soon — add them to <code>public/assets/about/</code></div>
+            )}
             {cardWing.exhibit.items?.length > 0 && <ul style={{ margin: '0 0 14px', paddingLeft: 20, lineHeight: 1.7 }}>{cardWing.exhibit.items.map((it, i) => <li key={i} style={{ opacity: 0.92 }}>{it}</li>)}</ul>}
             {cardWing.exhibit.links?.length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 6 }}>
