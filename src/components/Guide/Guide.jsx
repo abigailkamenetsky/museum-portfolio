@@ -3,25 +3,10 @@ import { museum, useMuseum, openGuide, closeGuide } from '../../museum/store'
 import { WINGS, wingById } from '../../data/museum'
 
 const GOLD = '#e3c266'
-const INK = 'rgba(14,16,12,0.93)'
+const INK = 'rgba(14,16,12,0.94)'
 const serif = 'Georgia, "Times New Roman", serif'
 
-const panel = {
-  position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-  zIndex: 30, background: 'rgba(6,8,6,0.55)', backdropFilter: 'blur(4px)',
-}
-const card = {
-  width: 'min(680px, 92vw)', maxHeight: '86vh', overflowY: 'auto', background: INK,
-  border: `1px solid ${GOLD}55`, borderRadius: 14, padding: '30px 34px', color: '#efe7d6',
-  fontFamily: serif, boxShadow: '0 24px 70px rgba(0,0,0,0.6)',
-}
-const goldBtn = {
-  display: 'block', width: '100%', textAlign: 'left', margin: '8px 0', padding: '14px 18px',
-  background: 'rgba(227,194,102,0.06)', border: `1px solid ${GOLD}44`, borderRadius: 9,
-  color: '#efe7d6', font: `500 17px/1.2 ${serif}`, cursor: 'pointer', letterSpacing: 0.3,
-  transition: 'background .15s, border-color .15s',
-}
-
+/* ── teleport / guide-me actions ─────────────────────────── */
 function teleport(w) {
   closeGuide()
   museum.set({ fade: 1 })
@@ -30,146 +15,187 @@ function teleport(w) {
     setTimeout(() => { if (museum.get().titleCard === w.wing) museum.set({ titleCard: null }) }, 2800)
   }, 430)
 }
+function guideMe(w) { closeGuide(); museum.set({ guide: { id: w.id, pos: w.pos, title: w.wing } }) }
 
-function guideMe(w) {
-  closeGuide()
-  museum.set({ guide: { id: w.id, pos: w.pos, title: w.wing } })
+/* ── the handheld audio-guide device shell ───────────────── */
+function Device({ children, big }) {
+  return (
+    <div style={{
+      width: big ? 300 : 330, background: 'linear-gradient(165deg,#7d1c2c 0%,#5a1019 60%,#4a0d15 100%)',
+      borderRadius: 30, border: '2px solid #2c0a10', padding: '16px 15px 18px',
+      boxShadow: '0 30px 70px rgba(0,0,0,0.6), inset 0 2px 5px rgba(255,255,255,0.12), inset 0 -3px 8px rgba(0,0,0,0.4)',
+      fontFamily: serif,
+    }}>
+      {/* speaker grille + brand */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 4, marginBottom: 10 }}>
+        {[0, 1, 2, 3, 4, 5].map(i => <div key={i} style={{ width: 4, height: 4, borderRadius: 4, background: '#2c0a10' }} />)}
+      </div>
+      <div style={{ textAlign: 'center', color: '#e9c9b0', font: `600 10px ${serif}`, letterSpacing: 3, opacity: 0.7, marginBottom: 8 }}>MUSEUM · AUDIO GUIDE</div>
+      {/* screen */}
+      <div style={{
+        background: '#0f120e', border: `1px solid ${GOLD}55`, borderRadius: 12, padding: '14px 14px',
+        minHeight: 300, maxHeight: 'min(56vh, 360px)', overflowY: 'auto', color: '#efe7d6',
+        boxShadow: 'inset 0 0 20px rgba(0,0,0,0.7)',
+      }}>
+        {children}
+      </div>
+      {/* hardware buttons */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginTop: 14 }}>
+        <DeviceBtn label="‹" title="Back" onClick={() => { const m = museum.get().menu; museum.set({ menu: m && m !== 'home' ? 'home' : null }) }} />
+        <DeviceBtn label="⌂" title="Home" onClick={() => museum.set({ menu: 'home' })} />
+        <DeviceBtn label="✕" title="Close" onClick={closeGuide} />
+      </div>
+    </div>
+  )
 }
+function DeviceBtn({ label, title, onClick }) {
+  const [h, setH] = useState(false)
+  return (
+    <button title={title} onClick={onClick} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)} style={{
+      width: 42, height: 42, borderRadius: 42, cursor: 'pointer',
+      background: h ? 'radial-gradient(#3a0c12,#240709)' : 'radial-gradient(#320b10,#1f0608)',
+      border: `1.5px solid ${GOLD}${h ? 'cc' : '77'}`, color: GOLD, font: `500 18px ${serif}`,
+      boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.4)',
+    }}>{label}</button>
+  )
+}
+
+const row = (active) => ({
+  display: 'block', width: '100%', textAlign: 'left', padding: '9px 10px', margin: '3px 0',
+  background: active ? 'rgba(227,194,102,0.16)' : 'transparent', border: 'none',
+  borderBottom: `1px solid ${GOLD}22`, color: '#efe7d6', font: `500 15px ${serif}`,
+  cursor: 'pointer', borderRadius: 6,
+})
+const pill = (active) => ({
+  display: 'block', width: '100%', textAlign: 'center', padding: '9px 10px', margin: '6px 0',
+  background: active ? 'rgba(227,194,102,0.2)' : 'rgba(227,194,102,0.06)', border: `1px solid ${GOLD}66`,
+  color: GOLD, font: `600 14px ${serif}`, cursor: 'pointer', borderRadius: 8,
+})
 
 export default function Guide() {
   const s = useMuseum()
   const [hover, setHover] = useState(null)
 
-  // welcome appears 3s after entry
   useEffect(() => {
-    const t = setTimeout(() => { if (museum.get().phase === 'enter') museum.set({ phase: 'welcome' }) }, 3000)
+    const t = setTimeout(() => { if (museum.get().phase === 'enter') museum.set({ phase: 'welcome' }) }, 2600)
     return () => clearTimeout(t)
   }, [])
 
-  // global keys: SPACE opens the guide, M toggles it, E opens the nearby exhibit
   useEffect(() => {
     const onKey = e => {
+      const m = museum.get()
       if (e.code === 'Space') {
         e.preventDefault()
-        if (!museum.get().menu && !museum.get().card) { museum.set({ phase: 'explore' }); openGuide() }
+        if (m.phase === 'welcome') museum.set({ phase: 'howto' })
+        else if (m.phase === 'howto') { museum.set({ phase: 'explore' }); openGuide() }
+        else if (!m.menu && !m.card) openGuide()
       } else if (e.code === 'KeyM') {
-        e.preventDefault()
-        museum.set({ phase: 'explore' })
-        museum.get().menu ? closeGuide() : openGuide()
+        e.preventDefault(); museum.set({ phase: 'explore' }); m.menu ? closeGuide() : openGuide()
       } else if (e.code === 'KeyE') {
-        const near = museum.get().near
-        if (near && !museum.get().menu) museum.set({ card: near })
+        if (m.near && !m.menu) museum.set({ card: m.near })
       } else if (e.code === 'Escape') {
-        if (museum.get().card) museum.set({ card: null })
-        else if (museum.get().menu) closeGuide()
+        if (m.card) museum.set({ card: null }); else if (m.menu) closeGuide()
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  const hb = id => ({ ...goldBtn, ...(hover === id ? { background: 'rgba(227,194,102,0.16)', borderColor: `${GOLD}99` } : null) })
   const cat = s.menu && s.menu !== 'home' ? wingById(s.menu) : null
   const cardWing = s.card ? wingById(s.card) : null
+  const dim = { position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 30, background: 'rgba(6,8,6,0.5)', backdropFilter: 'blur(3px)' }
 
   return (
     <>
       {/* teleport fade */}
       <div style={{ position: 'fixed', inset: 0, background: '#000', opacity: s.fade, pointerEvents: 'none', transition: 'opacity .42s ease', zIndex: 40 }} />
 
-      {/* wing title card after teleport */}
+      {/* "Now Entering" title card */}
       {s.titleCard && (
-        <div style={{ position: 'fixed', top: '16%', left: 0, right: 0, textAlign: 'center', zIndex: 35, pointerEvents: 'none', animation: 'fadeIn .7s ease' }}>
-          <div style={{ display: 'inline-block', padding: '14px 30px', background: INK, border: `1px solid ${GOLD}66`, borderRadius: 10 }}>
-            <div style={{ color: GOLD, font: `600 13px ${serif}`, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.8 }}>Now Entering</div>
-            <div style={{ color: '#f3ecd9', font: `400 30px ${serif}`, marginTop: 4 }}>{s.titleCard}</div>
+        <div style={{ position: 'fixed', top: '15%', left: 0, right: 0, textAlign: 'center', zIndex: 35, pointerEvents: 'none', animation: 'fadeIn .7s ease' }}>
+          <div style={{ display: 'inline-block', padding: '12px 28px', background: INK, border: `1px solid ${GOLD}66`, borderRadius: 10 }}>
+            <div style={{ color: GOLD, font: `600 12px ${serif}`, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.8 }}>Now Entering</div>
+            <div style={{ color: '#f3ecd9', font: `400 27px ${serif}`, marginTop: 3 }}>{s.titleCard}</div>
           </div>
         </div>
       )}
 
-      {/* welcome prompt */}
-      {s.phase === 'welcome' && !s.menu && !s.card && (
-        <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 25, pointerEvents: 'none', animation: 'fadeIn 1.4s ease' }}>
-          <div style={{ textAlign: 'center', padding: '34px 46px', background: 'rgba(8,10,8,0.6)', border: `1px solid ${GOLD}44`, borderRadius: 14, backdropFilter: 'blur(3px)' }}>
-            <div style={{ color: GOLD, font: `500 13px ${serif}`, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.85 }}>Welcome to the</div>
-            <div style={{ color: '#f3ecd9', font: `400 38px ${serif}`, margin: '10px 0 4px' }}>Museum of Abigail Kamenetsky</div>
-            <div style={{ color: GOLD, font: `500 16px ${serif}`, marginTop: 18, letterSpacing: 1 }}>Press <b>SPACE</b> to open the Museum Guide</div>
+      {/* STEP 1 — welcome */}
+      {s.phase === 'welcome' && (
+        <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 25, pointerEvents: 'none', animation: 'fadeIn 1.2s ease' }}>
+          <div style={{ textAlign: 'center', maxWidth: 460, padding: '30px 38px', background: 'rgba(8,10,8,0.62)', border: `1px solid ${GOLD}44`, borderRadius: 14, backdropFilter: 'blur(3px)' }}>
+            <div style={{ color: GOLD, font: `500 12px ${serif}`, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.85 }}>Welcome to the</div>
+            <div style={{ color: '#f3ecd9', font: `400 clamp(30px,6vw,40px) ${serif}`, margin: '8px 0 12px' }}>Museum of Abby</div>
+            <div style={{ color: '#e7ddca', font: `400 16px/1.55 ${serif}`, opacity: 0.9 }}>An interactive gallery where each art piece reveals a chapter of my journey — projects, work experience, research, and hobbies.</div>
+            <div style={{ color: GOLD, font: `500 15px ${serif}`, marginTop: 20, letterSpacing: 0.5 }}>Press <b>SPACE</b> to see how it works</div>
           </div>
         </div>
       )}
 
-      {/* guide — home or a category */}
+      {/* STEP 2 — how it works (handheld audio guide) */}
+      {s.phase === 'howto' && (
+        <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 25, pointerEvents: 'none', animation: 'fadeIn .8s ease' }}>
+          <div style={{ textAlign: 'center', maxWidth: 440, padding: '26px 34px', background: 'rgba(8,10,8,0.62)', border: `1px solid ${GOLD}44`, borderRadius: 14, backdropFilter: 'blur(3px)' }}>
+            <div style={{ color: GOLD, font: `500 12px ${serif}`, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.85 }}>Your Audio Guide</div>
+            <div style={{ transform: 'scale(0.62)', transformOrigin: 'top center', height: 280, marginTop: 4 }}>
+              <Device big><div style={{ color: GOLD, font: `600 13px ${serif}`, letterSpacing: 2, textAlign: 'center', opacity: 0.8, marginTop: 6 }}>MUSEUM GUIDE</div><div style={{ textAlign: 'center', font: `400 15px ${serif}`, marginTop: 10, opacity: 0.8 }}>Tap a wing to explore Abby's journey.</div></Device>
+            </div>
+            <div style={{ color: '#e7ddca', font: `400 15px/1.55 ${serif}`, opacity: 0.92, marginTop: 2 }}>Walk up to any piece and press <b>E</b> to learn more — or use your handheld guide to jump to any wing.</div>
+            <div style={{ color: GOLD, font: `500 15px ${serif}`, marginTop: 16 }}>Press <b>SPACE</b> to open the Audio Guide</div>
+          </div>
+        </div>
+      )}
+
+      {/* THE DEVICE — guide menu */}
       {s.menu && (
-        <div style={panel} onClick={e => { if (e.target === e.currentTarget) closeGuide() }}>
-          <div style={card}>
+        <div style={dim} onClick={e => { if (e.target === e.currentTarget) closeGuide() }}>
+          <Device>
             {!cat ? (
               <>
-                <div style={{ color: GOLD, font: `600 13px ${serif}`, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.8 }}>Museum Guide</div>
-                <div style={{ font: `400 26px ${serif}`, margin: '4px 0 18px' }}>How would you like to explore?</div>
+                <div style={{ color: GOLD, font: `600 12px ${serif}`, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.8 }}>Museum Guide</div>
+                <div style={{ font: `400 18px ${serif}`, margin: '2px 0 10px' }}>How would you like to explore?</div>
                 {WINGS.map(w => (
-                  <button key={w.id} style={hb(w.id)} onMouseEnter={() => setHover(w.id)} onMouseLeave={() => setHover(null)} onClick={() => museum.set({ menu: w.id })}>
-                    {w.title}
-                  </button>
+                  <button key={w.id} style={row(hover === w.id)} onMouseEnter={() => setHover(w.id)} onMouseLeave={() => setHover(null)} onClick={() => museum.set({ menu: w.id })}>{w.title}</button>
                 ))}
-                <div style={{ opacity: 0.5, fontSize: 13, marginTop: 16 }}>Press <b>M</b> any time to reopen · click outside to close</div>
               </>
             ) : (
               <>
-                <button style={{ ...goldBtn, width: 'auto', display: 'inline-block', padding: '6px 14px', margin: '0 0 14px' }} onClick={() => museum.set({ menu: 'home' })}>‹ All Wings</button>
-                <div style={{ color: GOLD, font: `600 13px ${serif}`, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.8 }}>{cat.wing}</div>
-                <div style={{ font: `400 28px ${serif}`, margin: '4px 0 10px' }}>{cat.title}</div>
-                <div style={{ opacity: 0.85, lineHeight: 1.5, marginBottom: cat.sub ? 12 : 18 }}>{cat.exhibit.blurb}</div>
-                {cat.sub && (
-                  <div style={{ margin: '0 0 18px' }}>
-                    {cat.sub.map(t => <div key={t} style={{ padding: '6px 0', borderBottom: `1px solid ${GOLD}22`, opacity: 0.9 }}>· {t}</div>)}
-                  </div>
-                )}
-                <div style={{ font: `400 17px ${serif}`, margin: '8px 0 6px', opacity: 0.9 }}>How would you like to visit this exhibit?</div>
-                <button style={hb('gm')} onMouseEnter={() => setHover('gm')} onMouseLeave={() => setHover(null)} onClick={() => guideMe(cat)}>Guide Me — walk there with directions</button>
-                <button style={hb('tp')} onMouseEnter={() => setHover('tp')} onMouseLeave={() => setHover(null)} onClick={() => teleport(cat)}>Teleport — take me straight there</button>
+                <div style={{ color: GOLD, font: `600 11px ${serif}`, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.8 }}>{cat.wing}</div>
+                <div style={{ font: `400 20px ${serif}`, margin: '2px 0 8px' }}>{cat.title}</div>
+                <div style={{ opacity: 0.85, font: `400 14px/1.5 ${serif}`, marginBottom: cat.sub ? 8 : 12 }}>{cat.exhibit.blurb}</div>
+                {cat.sub && cat.sub.map(t => <div key={t} style={{ font: `400 13px ${serif}`, padding: '4px 0', borderBottom: `1px solid ${GOLD}22`, opacity: 0.85 }}>· {t}</div>)}
+                <div style={{ font: `400 14px ${serif}`, margin: '12px 0 4px', opacity: 0.85 }}>Visit this exhibit:</div>
+                <button style={pill(hover === 'gm')} onMouseEnter={() => setHover('gm')} onMouseLeave={() => setHover(null)} onClick={() => guideMe(cat)}>Guide Me</button>
+                <button style={pill(hover === 'tp')} onMouseEnter={() => setHover('tp')} onMouseLeave={() => setHover(null)} onClick={() => teleport(cat)}>Teleport</button>
               </>
             )}
-          </div>
+          </Device>
         </div>
       )}
 
       {/* exhibit card (E) */}
       {cardWing && (
-        <div style={panel} onClick={e => { if (e.target === e.currentTarget) museum.set({ card: null }) }}>
-          <div style={card}>
-            <div style={{ color: GOLD, font: `600 13px ${serif}`, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.8 }}>{cardWing.wing}</div>
-            <div style={{ font: `400 30px ${serif}`, margin: '4px 0 12px' }}>{cardWing.title}</div>
-            <div style={{ opacity: 0.9, lineHeight: 1.55, marginBottom: 16 }}>{cardWing.exhibit.blurb}</div>
-            {cardWing.exhibit.items?.length > 0 && (
-              <ul style={{ margin: '0 0 16px', paddingLeft: 20, lineHeight: 1.7 }}>
-                {cardWing.exhibit.items.map((it, i) => <li key={i} style={{ opacity: 0.92 }}>{it}</li>)}
-              </ul>
-            )}
+        <div style={dim} onClick={e => { if (e.target === e.currentTarget) museum.set({ card: null }) }}>
+          <div style={{ width: 'min(620px,92vw)', maxHeight: '84vh', overflowY: 'auto', background: INK, border: `1px solid ${GOLD}55`, borderRadius: 14, padding: '28px 32px', color: '#efe7d6', fontFamily: serif, boxShadow: '0 24px 70px rgba(0,0,0,0.6)' }}>
+            <div style={{ color: GOLD, font: `600 12px ${serif}`, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.8 }}>{cardWing.wing}</div>
+            <div style={{ font: `400 28px ${serif}`, margin: '4px 0 12px' }}>{cardWing.title}</div>
+            <div style={{ opacity: 0.9, lineHeight: 1.55, marginBottom: 14 }}>{cardWing.exhibit.blurb}</div>
+            {cardWing.exhibit.items?.length > 0 && <ul style={{ margin: '0 0 14px', paddingLeft: 20, lineHeight: 1.7 }}>{cardWing.exhibit.items.map((it, i) => <li key={i} style={{ opacity: 0.92 }}>{it}</li>)}</ul>}
             {cardWing.exhibit.links?.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 8 }}>
-                {cardWing.exhibit.links.map(l => (
-                  <a key={l.label} href={l.url} target="_blank" rel="noreferrer" style={{ padding: '9px 16px', background: 'rgba(227,194,102,0.1)', border: `1px solid ${GOLD}66`, borderRadius: 8, color: GOLD, textDecoration: 'none', font: `500 15px ${serif}` }}>{l.label}</a>
-                ))}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 6 }}>
+                {cardWing.exhibit.links.map(l => <a key={l.label} href={l.url} target="_blank" rel="noreferrer" style={{ padding: '9px 16px', background: 'rgba(227,194,102,0.1)', border: `1px solid ${GOLD}66`, borderRadius: 8, color: GOLD, textDecoration: 'none', font: `500 15px ${serif}` }}>{l.label}</a>)}
               </div>
             )}
-            <button style={{ ...goldBtn, width: 'auto', display: 'inline-block', padding: '8px 18px', marginTop: 18 }} onClick={() => museum.set({ card: null })}>Close</button>
+            <button style={{ marginTop: 18, padding: '8px 18px', background: 'rgba(227,194,102,0.08)', border: `1px solid ${GOLD}66`, borderRadius: 8, color: GOLD, font: `500 15px ${serif}`, cursor: 'pointer' }} onClick={() => museum.set({ card: null })}>Close</button>
           </div>
         </div>
       )}
 
       {/* bottom hints */}
-      {!s.menu && !s.card && (
+      {!s.menu && !s.card && s.phase === 'explore' && (
         <div style={{ position: 'fixed', left: '50%', bottom: 22, transform: 'translateX(-50%)', zIndex: 20, pointerEvents: 'none', textAlign: 'center' }}>
-          {s.near && (
-            <div style={{ marginBottom: 8, display: 'inline-block', padding: '8px 16px', background: INK, border: `1px solid ${GOLD}66`, borderRadius: 8, color: GOLD, font: `500 15px ${serif}`, animation: 'fadeIn .3s ease' }}>
-              Press <b>E</b> to Learn More — {wingById(s.near)?.title}
-            </div>
-          )}
-          {s.phase === 'explore' && (
-            <div style={{ color: '#efe7d6', opacity: 0.55, font: `500 13px ${serif}`, letterSpacing: 0.5 }}>
-              WASD / arrows to move · drag to look · <b>M</b> guide · <b>E</b> exhibit
-            </div>
-          )}
+          {s.near && <div style={{ marginBottom: 8, display: 'inline-block', padding: '8px 16px', background: INK, border: `1px solid ${GOLD}66`, borderRadius: 8, color: GOLD, font: `500 15px ${serif}`, animation: 'fadeIn .3s ease' }}>Press <b>E</b> — {wingById(s.near)?.title}</div>}
+          <div style={{ color: '#efe7d6', opacity: 0.55, font: `500 13px ${serif}` }}>WASD / arrows · drag to look · <b>M</b> audio guide · <b>E</b> exhibit</div>
         </div>
       )}
 
