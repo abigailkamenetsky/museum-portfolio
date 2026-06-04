@@ -1095,7 +1095,7 @@ function Character() {
         const theta = u * Math.PI * 2, phi = Math.acos(2 * v - 1)
         const x = Math.sin(phi) * Math.cos(theta), y = Math.cos(phi), z = Math.sin(phi) * Math.sin(theta)
         if (y < -0.55) continue                             // cap extends down the back/sides (fills the nape, no gap)
-        if (z > 0.3 && y < 0.16) continue                   // open only the face; hairline sits low on the forehead
+        if (z > 0.13 && y < 0.4) continue                   // open the whole front (face + throat) so the choker shows; keeps the forehead hairline
         if (y > 0.7 && Math.random() < 0.6) continue        // thin the very top → flat crown, no poofy mullet
         geos.push(curlTorus(x * rr * 1.02, 1.63 + y * rr * 0.9 + 0.01, z * rr * 0.88 - 0.012, 0.026 + Math.random() * 0.014))
       }
@@ -1117,7 +1117,7 @@ function Character() {
       for (let q = 0; q < strandsN; q++) {
         const ang = center + (q - (strandsN - 1) / 2) * 0.075
         const back = Math.max(0, Math.cos(ang))           // 1 at the back, 0 at the sides
-        const ox = Math.sin(ang) * 0.16, oz = -Math.cos(ang) * 0.13 - 0.03 - back * 0.05   // puff the back out
+        const ox = Math.sin(ang) * 0.16, oz = -Math.cos(ang) * 0.13 - 0.03 - back * 0.03   // gentle back volume (rounded, not bulging)
         const segs = 8 + Math.floor(Math.random() * 3)   // ~3/4 torso length
         const coilR = 0.03 + Math.random() * 0.016
         const tilt = (Math.random() < 0.5 ? 1 : -1) * (0.35 + Math.random() * 0.35)
@@ -1252,30 +1252,29 @@ function Character() {
       <group ref={modelRef} position={[0, 0.07, 0]}>{/* lift so the heeled boots rest on the floor (no clipping) */}
         {/* torso + head + hair + arms + skirt (bobs as one during the walk) */}
         <group ref={body}>
-          {/* denim mini — shorter, straight/boxy; flattened front-to-back so it's
-              not too thick in profile (scaleZ) */}
-          <mesh position={[0, 0.92, 0]} scale={[1, 1, 0.68]} castShadow material={mat.denim}><cylinderGeometry args={[0.172, 0.195, 0.24, 20, 1, true]} /></mesh>
+          {/* denim mini — sits on the hips, flattened front-to-back */}
+          <mesh position={[0, 0.9, 0]} scale={[1, 1, 0.74]} castShadow material={mat.denim}><cylinderGeometry args={[0.128, 0.16, 0.26, 22, 1, true]} /></mesh>
           {/* two front patch pockets */}
-          {[-1, 1].map(s => <mesh key={'pk' + s} position={[s * 0.07, 0.9, 0.118]} castShadow material={mat.denimDark}><boxGeometry args={[0.07, 0.085, 0.012]} /></mesh>)}
-          {/* red belt + gold buckle at the waist */}
-          <mesh position={[0, 1.03, 0]} scale={[1, 1, 0.68]} castShadow material={mat.belt}><cylinderGeometry args={[0.152, 0.158, 0.05, 22]} /></mesh>
-          <mesh position={[0, 1.03, 0.105]} castShadow material={mat.gold}><boxGeometry args={[0.05, 0.042, 0.02]} /></mesh>
-          {/* hourglass tee: shoulders/chest → pinched waist → out toward belt */}
-          <mesh position={[0, 1.39, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.098, 0.09, 0.1, 16]} /></mesh>
-          <mesh position={[0, 1.27, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.09, 0.073, 0.16, 16]} /></mesh>
-          <mesh position={[0, 1.11, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.073, 0.085, 0.16, 16]} /></mesh>
-          {/* hips flare out (skin, covered by skirt) + a subtle CLOTHED butt curve
-              (denim bulges tucked into the back of the skirt — no bare skin) */}
-          <mesh position={[0, 0.99, 0]} castShadow material={mat.skin}><cylinderGeometry args={[0.085, 0.105, 0.14, 16]} /></mesh>
-          <mesh position={[-0.05, 0.87, -0.07]} scale={[1, 0.8, 1]} castShadow material={mat.denim}><sphereGeometry args={[0.056, 12, 10]} /></mesh>
-          <mesh position={[0.05, 0.87, -0.07]} scale={[1, 0.8, 1]} castShadow material={mat.denim}><sphereGeometry args={[0.056, 12, 10]} /></mesh>
+          {[-1, 1].map(s => <mesh key={'pk' + s} position={[s * 0.06, 0.88, 0.108]} castShadow material={mat.denimDark}><boxGeometry args={[0.06, 0.075, 0.012]} /></mesh>)}
+          {/* maroon belt + gold buckle at the waist */}
+          <mesh position={[0, 1.02, 0]} scale={[1, 1, 0.78]} castShadow material={mat.belt}><cylinderGeometry args={[0.122, 0.126, 0.05, 22]} /></mesh>
+          <mesh position={[0, 1.02, 0.094]} castShadow material={mat.gold}><boxGeometry args={[0.05, 0.042, 0.02]} /></mesh>
+          {/* hourglass tee: chest → THIN waist → smoothly flares to the hips  ) . (  */}
+          <mesh position={[0, 1.40, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.1, 0.084, 0.1, 18]} /></mesh>
+          <mesh position={[0, 1.30, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.084, 0.066, 0.12, 18]} /></mesh>
+          <mesh position={[0, 1.19, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.066, 0.072, 0.1, 18]} /></mesh>
+          <mesh position={[0, 1.07, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.072, 0.105, 0.14, 18]} /></mesh>
+          {/* hips (skin, under belt/skirt) + subtle clothed butt curve */}
+          <mesh position={[0, 0.96, 0]} castShadow material={mat.skin}><cylinderGeometry args={[0.105, 0.12, 0.14, 18]} /></mesh>
+          <mesh position={[-0.05, 0.86, -0.075]} scale={[1, 0.8, 1]} castShadow material={mat.denim}><sphereGeometry args={[0.058, 12, 10]} /></mesh>
+          <mesh position={[0.05, 0.86, -0.075]} scale={[1, 0.8, 1]} castShadow material={mat.denim}><sphereGeometry args={[0.058, 12, 10]} /></mesh>
           {/* neck + head */}
           <mesh position={[0, 1.5, 0]} castShadow material={mat.skin}><cylinderGeometry args={[0.05, 0.06, 0.1, 10]} /></mesh>
           {/* head + smooth scalp cap (so curls never reveal bald gaps) + front face */}
           <mesh position={[0, 1.62, 0]} castShadow material={mat.skin}><sphereGeometry args={[0.135, 18, 16]} /></mesh>
           {/* rounded hair-colored scalp (fully covers cranium → no bald gaps) + occiput bulge */}
           <mesh position={[0, 1.64, -0.02]} castShadow material={mat.hair}><sphereGeometry args={[0.153, 20, 18]} /></mesh>
-          <mesh position={[0, 1.585, -0.085]} castShadow material={mat.hair}><sphereGeometry args={[0.125, 16, 14]} /></mesh>
+          <mesh position={[0, 1.6, -0.055]} castShadow material={mat.hair}><sphereGeometry args={[0.135, 18, 16]} /></mesh>
           {/* front face */}
           <mesh position={[0, 1.6, 0.08]} castShadow material={mat.skin}><sphereGeometry args={[0.118, 16, 14]} /></mesh>
           {/* ears + gold medium hoop earrings */}
