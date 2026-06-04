@@ -1091,8 +1091,8 @@ function Character() {
         const u = Math.random(), v = Math.random()
         const theta = u * Math.PI * 2, phi = Math.acos(2 * v - 1)
         const x = Math.sin(phi) * Math.cos(theta), y = Math.cos(phi), z = Math.sin(phi) * Math.sin(theta)
-        if (y < 0.28 && z > -0.25) continue                 // raise the hairline (kills sideburns)
-        if (z > 0.22 && y < 0.42) continue                  // hairline comes down naturally over the forehead
+        if (y < -0.35) continue                             // keep the cap on the cranium
+        if (z > 0.28 && y < 0.32) continue                  // open the face; hairline sits low on the forehead
         geos.push(curlTorus(x * rr * 1.05, 1.65 + y * rr * 1.06 + 0.02, z * rr * 0.9 - 0.012, 0.028 + Math.random() * 0.016))
       }
     }
@@ -1113,7 +1113,7 @@ function Character() {
       for (let q = 0; q < strandsN; q++) {
         const ang = center + (q - (strandsN - 1) / 2) * 0.13
         const ox = Math.sin(ang) * 0.15, oz = -Math.cos(ang) * 0.12 - 0.02
-        const segs = 6 + Math.floor(Math.random() * 3)   // shorter → mid-torso length
+        const segs = 7 + Math.floor(Math.random() * 3)   // ~3/4 torso length
         const coilR = 0.03 + Math.random() * 0.016
         const tilt = (Math.random() < 0.5 ? 1 : -1) * (0.35 + Math.random() * 0.35)
         const step = 0.052
@@ -1242,9 +1242,9 @@ function Character() {
           <mesh position={[0, 1.39, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.098, 0.09, 0.1, 16]} /></mesh>
           <mesh position={[0, 1.27, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.09, 0.073, 0.16, 16]} /></mesh>
           <mesh position={[0, 1.11, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.073, 0.085, 0.16, 16]} /></mesh>
-          {/* bust (small) */}
-          <mesh position={[-0.042, 1.3, 0.045]} scale={[1, 0.9, 0.8]} castShadow material={mat.shirt}><sphereGeometry args={[0.042, 12, 10]} /></mesh>
-          <mesh position={[0.042, 1.3, 0.045]} scale={[1, 0.9, 0.8]} castShadow material={mat.shirt}><sphereGeometry args={[0.042, 12, 10]} /></mesh>
+          {/* bust (natural) */}
+          <mesh position={[-0.046, 1.305, 0.05]} scale={[1, 1.05, 0.82]} castShadow material={mat.shirt}><sphereGeometry args={[0.05, 14, 12]} /></mesh>
+          <mesh position={[0.046, 1.305, 0.05]} scale={[1, 1.05, 0.82]} castShadow material={mat.shirt}><sphereGeometry args={[0.05, 14, 12]} /></mesh>
           {/* hips flare out (skin, covered by skirt) + a subtle CLOTHED butt curve
               (denim bulges tucked into the back of the skirt — no bare skin) */}
           <mesh position={[0, 0.99, 0]} castShadow material={mat.skin}><cylinderGeometry args={[0.085, 0.105, 0.14, 16]} /></mesh>
@@ -1254,8 +1254,11 @@ function Character() {
           <mesh position={[0, 1.5, 0]} castShadow material={mat.skin}><cylinderGeometry args={[0.05, 0.06, 0.1, 10]} /></mesh>
           {/* head + smooth scalp cap (so curls never reveal bald gaps) + front face */}
           <mesh position={[0, 1.62, 0]} castShadow material={mat.skin}><sphereGeometry args={[0.135, 18, 16]} /></mesh>
-          <mesh position={[0, 1.675, -0.03]} castShadow material={mat.hair}><sphereGeometry args={[0.14, 18, 16]} /></mesh>
-          <mesh position={[0, 1.6, 0.075]} castShadow material={mat.skin}><sphereGeometry args={[0.115, 16, 14]} /></mesh>
+          {/* rounded hair-colored scalp (fully covers cranium → no bald gaps) + occiput bulge */}
+          <mesh position={[0, 1.64, -0.02]} castShadow material={mat.hair}><sphereGeometry args={[0.153, 20, 18]} /></mesh>
+          <mesh position={[0, 1.585, -0.085]} castShadow material={mat.hair}><sphereGeometry args={[0.125, 16, 14]} /></mesh>
+          {/* front face */}
+          <mesh position={[0, 1.6, 0.08]} castShadow material={mat.skin}><sphereGeometry args={[0.118, 16, 14]} /></mesh>
           {/* ears */}
           <mesh position={[-0.132, 1.605, 0.025]} rotation={[0, -0.35, 0]} scale={[0.45, 1, 0.85]} castShadow material={mat.skin}><sphereGeometry args={[0.04, 10, 10]} /></mesh>
           <mesh position={[0.132, 1.605, 0.025]} rotation={[0, 0.35, 0]} scale={[0.45, 1, 0.85]} castShadow material={mat.skin}><sphereGeometry args={[0.04, 10, 10]} /></mesh>
