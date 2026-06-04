@@ -1500,7 +1500,8 @@ function Gallery() {
   // WING-DRIVEN HANG (from shared PAINTINGS): single-piece wings = one painting;
   // multi-piece wings = an organic salon COLLAGE, each painting → one piece.
   const items = useMemo(() => PAINTINGS.map((p, i) => ({
-    key: p.wingId + i, pos: p.pos, rot: [0, p.ry, 0], mw: p.w, mh: p.h, art: pick(i), cls: p.cls, wingId: p.wingId, piece: p.piece,
+    key: p.wingId + i, pos: p.pos, rot: [0, p.ry, 0], mw: p.w, mh: p.h,
+    art: p.art ? { file: p.art, aspect: p.artAspect } : pick(i), cls: p.cls, wingId: p.wingId, piece: p.piece,
   })), [])
 
   return (

@@ -12,6 +12,7 @@ export const WINGS = [
   {
     id: 'about', title: 'About Me', wing: 'About Abby',
     pos: [L, 34], yaw: YAW_L, sub: null,
+    art: 'eldersister.jpg', artAspect: 1.35,   // Bouguereau, The Elder Sister
     exhibit: {
       blurb: 'Hi, I’m Abby — BA Economics + BS Computer Science at the University of Chicago (2025–2029). This museum is a walkable portrait of my journey, the work I’ve built, and the people and places that made me.',
       items: [],
@@ -155,6 +156,8 @@ export const PAINTINGS = (() => {
       piece: w.exhibit.pieces ? j : null,
       title: w.exhibit.pieces ? w.exhibit.pieces[j].title : w.title,
       pos: [wallX, PY + p.dy, w.pos[1] + p.dz], ry, w: p.w, h: p.h, cls: p.cls,
+      art: w.exhibit.pieces ? (w.exhibit.pieces[j].art || null) : (w.art || null),
+      artAspect: w.exhibit.pieces ? (w.exhibit.pieces[j].artAspect || 1) : (w.artAspect || 1),
     }))
   }
   return out
