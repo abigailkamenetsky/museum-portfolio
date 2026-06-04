@@ -69,7 +69,7 @@ function Env() {
         if (!active) return
         tex.mapping = EquirectangularReflectionMapping
         scene.environment = tex
-        if ('environmentIntensity' in scene) scene.environmentIntensity = 0.12
+        if ('environmentIntensity' in scene) scene.environmentIntensity = 0.32
         console.log('[hdri] ok', HDRI)
       },
       undefined,
@@ -795,7 +795,7 @@ function MuseumWindow({ w, h, m }) {
     const t = forest.clone(); t.needsUpdate = true
     t.colorSpace = SRGBColorSpace; t.wrapS = t.wrapT = RepeatWrapping
     t.repeat.set(0.18, 0.55); t.offset.set(Math.random() * 0.75, 0.42)   // higher crop: trees + sky, no dirt
-    return new MeshBasicMaterial({ map: t, color: '#bcbcbc' })   // slight dim so sky doesn't blow
+    return new MeshBasicMaterial({ map: t, color: '#e6e6e6' })   // bright daytime — windows feel brighter than the room
   }, [forest])
   const tw = Math.min(0.42, w * 0.12)              // trim width
   const iw = w - 2 * tw, ih = h - 2 * tw           // arched opening (glass)
@@ -989,7 +989,7 @@ export default function Scene() {
       shadows={false}
       dpr={[1, 1.5]}
       camera={{ position: [0, 2.8, 12], fov: 68 }}
-      gl={{ toneMapping: ACESFilmicToneMapping, toneMappingExposure: 0.8, antialias: true, powerPreference: 'high-performance' }}
+      gl={{ toneMapping: ACESFilmicToneMapping, toneMappingExposure: 0.98, antialias: true, powerPreference: 'high-performance' }}
       onCreated={() => console.log('[Scene] Canvas created, renderer ready')}
       style={{ width: '100vw', height: '100vh', display: 'block' }}
     >
@@ -1001,22 +1001,29 @@ export default function Scene() {
           the window wall. Walls keep their green material; only light increases. */}
       {/* RESET: no directional daylight at all — pure soft museum ambient.
           Room lit by ambient + hemisphere + ceiling keys + picture spots. */}
-      {/* overcast-daylight museum lighting — soft, ambient, no beams/patches.
-          Low warm ambient + a gentle (low) hemisphere for soft gradients. */}
-      <ambientLight intensity={0.32} color="#e7ddca" />
-      <hemisphereLight intensity={0.3} color="#dfe3ea" groundColor="#14110a" />
+      {/* GRAND OVERCAST SKYLIGHT — bright diffuse daylight, no beams/patches.
+          Strong warm-neutral ambient lifts the whole room (walls stay dark green
+          via their material; ambient just makes them readable). */}
+      <ambientLight intensity={0.95} color="#ede6d6" />
+      <hemisphereLight intensity={0.55} color="#e8ecf2" groundColor="#1c160d" />
       {/* soft grazing fill on the centerpiece bay to reveal carving depth */}
-      <pointLight position={[-4, CEIL - 2.4, 0]} intensity={6} distance={11} decay={2} color="#f3e0a8" />
-      <pointLight position={[4, CEIL - 2.4, 0]} intensity={6} distance={11} decay={2} color="#f3e0a8" />
-      {/* warm keys at the hall ends — light the ceiling/room (ceiling reads brighter than floor) */}
+      <pointLight position={[-4, CEIL - 2.4, 0]} intensity={8} distance={12} decay={2} color="#f3e0a8" />
+      <pointLight position={[4, CEIL - 2.4, 0]} intensity={8} distance={12} decay={2} color="#f3e0a8" />
+      {/* CEILING WASH — the ceiling is the brightest architectural element.
+          A row of soft warm fills just below the ceiling along the whole hall
+          so coffers/carving read from anywhere; light points up into the plaster. */}
+      {[-28, -14, 0, 14, 28].map((z, i) => (
+        <pointLight key={'cw' + i} position={[0, CEIL - 1.6, z]} intensity={9} distance={16} decay={2} color="#f7e6b0" />
+      ))}
+      {/* warm keys at the hall ends — fill the room volume */}
       {[-26, 26].map((z, i) => (
-        <pointLight key={i} position={[0, CEIL - 4.0, z]} intensity={18} distance={46} color="#f6dd84" />
+        <pointLight key={i} position={[0, CEIL - 4.0, z]} intensity={20} distance={48} color="#f6dd84" />
       ))}
       {/* soft cool OVERCAST DAYLIGHT fills high near the window walls — large,
           gentle, set high so they wash the upper walls + ceiling, not the floor;
           point lights = smooth round gradients, never rectangles/beams */}
       {[-16, 16].flatMap(z => [-1, 1].map(s => (
-        <pointLight key={'dl' + s + z} position={[s * (W / 2 - 1.0), 8.6, z]} intensity={2.4} distance={17} decay={2} color="#dde4ee" />
+        <pointLight key={'dl' + s + z} position={[s * (W / 2 - 1.0), 8.6, z]} intensity={4.0} distance={19} decay={2} color="#dde4ee" />
       )))}
 
       <Gallery />
@@ -1024,13 +1031,13 @@ export default function Scene() {
 
       <EffectComposer>
         {/* AO at junctions — half-res + modest radius to stay cheap */}
-        <N8AO halfRes aoRadius={1.1} intensity={2.3} />
+        <N8AO halfRes aoRadius={1.1} intensity={1.35} />
         {/* bloom only on the lamp lenses */}
         <Bloom intensity={0.08} luminanceThreshold={1.1} luminanceSmoothing={0.2} mipmapBlur />
-        {/* cinematic grade: lower brightness, more contrast, desaturate slightly */}
-        <HueSaturation saturation={-0.10} />
-        <BrightnessContrast brightness={-0.03} contrast={0.12} />
-        <Vignette offset={0.24} darkness={0.5} blendFunction={BlendFunction.NORMAL} />
+        {/* airy daylight grade: lifted shadows, compressed contrast, slight desat */}
+        <HueSaturation saturation={-0.08} />
+        <BrightnessContrast brightness={0.04} contrast={0.02} />
+        <Vignette offset={0.3} darkness={0.28} blendFunction={BlendFunction.NORMAL} />
       </EffectComposer>
     </Canvas>
   )
