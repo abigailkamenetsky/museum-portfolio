@@ -1275,20 +1275,20 @@ function Character() {
       <group ref={modelRef} position={[0, 0.07, 0]}>{/* lift so the heeled boots rest on the floor (no clipping) */}
         {/* torso + head + hair + arms + skirt (bobs as one during the walk) */}
         <group ref={body}>
-          {/* denim mini — ROUND so it fully encloses the hips (no skin poke-through) */}
-          <mesh position={[0, 0.9, 0]} castShadow material={mat.denim}><cylinderGeometry args={[0.142, 0.166, 0.26, 24, 1, true]} /></mesh>
+          {/* denim mini — ROUND + taller so it fully covers the hips (no skin showing) */}
+          <mesh position={[0, 0.93, 0]} castShadow material={mat.denim}><cylinderGeometry args={[0.128, 0.166, 0.32, 24, 1, true]} /></mesh>
           {/* two front patch pockets */}
-          {[-1, 1].map(s => <mesh key={'pk' + s} position={[s * 0.06, 0.88, 0.138]} castShadow material={mat.denimDark}><boxGeometry args={[0.06, 0.075, 0.012]} /></mesh>)}
-          {/* maroon belt + gold buckle at the waist */}
-          <mesh position={[0, 1.02, 0]} castShadow material={mat.belt}><cylinderGeometry args={[0.13, 0.134, 0.05, 24]} /></mesh>
-          <mesh position={[0, 1.02, 0.128]} castShadow material={mat.gold}><boxGeometry args={[0.05, 0.042, 0.02]} /></mesh>
+          {[-1, 1].map(s => <mesh key={'pk' + s} position={[s * 0.06, 0.9, 0.14]} castShadow material={mat.denimDark}><boxGeometry args={[0.06, 0.075, 0.012]} /></mesh>)}
+          {/* maroon belt + gold buckle at the waistband */}
+          <mesh position={[0, 1.06, 0]} castShadow material={mat.belt}><cylinderGeometry args={[0.128, 0.132, 0.05, 24]} /></mesh>
+          <mesh position={[0, 1.06, 0.126]} castShadow material={mat.gold}><boxGeometry args={[0.05, 0.042, 0.02]} /></mesh>
           {/* hourglass tee: chest → THIN waist → smoothly flares to the hips  ) . (  */}
           <mesh position={[0, 1.40, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.1, 0.084, 0.1, 18]} /></mesh>
           <mesh position={[0, 1.30, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.084, 0.066, 0.12, 18]} /></mesh>
           <mesh position={[0, 1.19, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.066, 0.072, 0.1, 18]} /></mesh>
           <mesh position={[0, 1.07, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.072, 0.105, 0.14, 18]} /></mesh>
-          {/* hips (skin, under belt/skirt) + subtle clothed butt curve */}
-          <mesh position={[0, 0.96, 0]} castShadow material={mat.skin}><cylinderGeometry args={[0.105, 0.12, 0.14, 18]} /></mesh>
+          {/* hips (skin, fully under the taller skirt) + subtle clothed butt curve */}
+          <mesh position={[0, 0.95, 0]} castShadow material={mat.skin}><cylinderGeometry args={[0.1, 0.115, 0.16, 18]} /></mesh>
           <mesh position={[-0.05, 0.86, -0.075]} scale={[1, 0.8, 1]} castShadow material={mat.denim}><sphereGeometry args={[0.058, 12, 10]} /></mesh>
           <mesh position={[0.05, 0.86, -0.075]} scale={[1, 0.8, 1]} castShadow material={mat.denim}><sphereGeometry args={[0.058, 12, 10]} /></mesh>
           {/* neck + head */}
@@ -1324,14 +1324,14 @@ function Character() {
           ))}
           {/* dark-burgundy lace ribbon bow — protrudes from the curls but a connector
               behind it reaches into the hair so there's no sideways gap */}
-          <group position={[0, 1.59, -0.18]} rotation={[0.25, 0, 0]}>
+          <group position={[0, 1.62, -0.225]} rotation={[0.3, 0, 0]}>
             {/* two triangular loops, apex meeting at the centre */}
             <mesh position={[-0.08, 0.01, 0]} rotation={[0, 0, -Math.PI / 2]} scale={[1, 1, 0.4]} castShadow material={bowMat}><coneGeometry args={[0.065, 0.17, 4]} /></mesh>
             <mesh position={[0.08, 0.01, 0]} rotation={[0, 0, Math.PI / 2]} scale={[1, 1, 0.4]} castShadow material={bowMat}><coneGeometry args={[0.065, 0.17, 4]} /></mesh>
             {/* centre knot */}
             <mesh scale={[1, 1, 0.7]} castShadow material={bowMat}><boxGeometry args={[0.045, 0.055, 0.06]} /></mesh>
-            {/* connector into the hair (kills the sideways gap) */}
-            <mesh position={[0, 0, 0.06]} material={bowMat}><boxGeometry args={[0.036, 0.045, 0.12]} /></mesh>
+            {/* long connector reaching into the hair (sits proud, no sideways gap) */}
+            <mesh position={[0, 0, 0.11]} material={bowMat}><boxGeometry args={[0.034, 0.042, 0.22]} /></mesh>
             {/* ribbon tails */}
             <mesh position={[-0.035, -0.11, 0]} rotation={[0, 0, 0.22]} scale={[1, 1, 0.4]} castShadow material={bowMat}><coneGeometry args={[0.04, 0.16, 4]} /></mesh>
             <mesh position={[0.035, -0.11, 0]} rotation={[0, 0, -0.22]} scale={[1, 1, 0.4]} castShadow material={bowMat}><coneGeometry args={[0.04, 0.16, 4]} /></mesh>
