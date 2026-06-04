@@ -20,10 +20,10 @@ export const WINGS = [
     },
   },
   {
-    id: 'professional', title: 'Professional Experience', wing: 'Professional Experience Wing',
-    pos: [R, 34], yaw: YAW_R, sub: ['Current Internship', 'Past Internships'],
+    id: 'professional', title: 'Internships', wing: 'Internships Wing',
+    pos: [R, 34], yaw: YAW_R, sub: null,
     exhibit: {
-      blurb: 'Internships and roles — each painting in this wing is one chapter of the work.',
+      blurb: 'Each painting in this collage is one internship. Look at any one and press E.',
       images: [], links: [],
       pieces: [
         { title: 'Current Internship — Company', blurb: 'Role · dates. What you’re building and the impact.', items: [], images: [], links: [] },
@@ -38,7 +38,7 @@ export const WINGS = [
     id: 'projects', title: 'Projects', wing: 'Projects Hall',
     pos: [L, 20.25], yaw: YAW_L, sub: ['Current Projects', 'Past Projects'],
     exhibit: {
-      blurb: 'Things built — each painting is one project.',
+      blurb: 'Each painting here is one project.',
       images: [], links: [],
       pieces: [
         { title: 'Current Project — Name', blurb: 'What it is, the stack, and where it’s headed.', items: [], images: [], links: [] },
@@ -51,7 +51,7 @@ export const WINGS = [
     id: 'research', title: 'Research Experience', wing: 'Research Gallery',
     pos: [R, 20.25], yaw: YAW_R, sub: ['Current Research', 'Past Research'],
     exhibit: {
-      blurb: 'Questions pursued — each painting is one research project.',
+      blurb: 'Each painting here is one research project.',
       images: [], links: [],
       pieces: [
         { title: 'Current Research — Lab / Topic', blurb: 'Question, methods, progress.', items: [], images: [], links: [] },
@@ -112,30 +112,33 @@ export const wingById = id => WINGS.find(w => w.id === id)
 // Single-piece wings → one painting. Multi-piece wings → an organic salon COLLAGE
 // (varied sizes, staggered) where each painting maps to one piece (internship/project).
 const HW = 8.88, PY = 3.6   // wall x-offset and painting centre height
+// TIGHT salon collage — frames packed close together (varied sizes), centred on the
+// wing's spot so the whole cluster reads as one gallery wall. cls 0 = plain baroque
+// frame (no crest) so they pack cleanly like a real collage.
 function cluster(n) {
-  if (n <= 1) return [{ dz: 0, dy: 0, w: 2.5, h: 3.4, cls: 1 }]
+  if (n <= 1) return [{ dz: 0, dy: 0, w: 2.4, h: 3.3, cls: 1 }]
   if (n === 2) return [
-    { dz: -1.6, dy: 0.55, w: 1.8, h: 1.35, cls: 0 },
-    { dz: 1.25, dy: -0.5, w: 1.5, h: 2.0, cls: 1 },
+    { dz: -1.05, dy: 0.35, w: 1.5, h: 1.85, cls: 0 },
+    { dz: 1.15, dy: -0.2, w: 1.6, h: 1.45, cls: 0 },
   ]
   if (n === 3) return [
-    { dz: -2.4, dy: 0.4, w: 1.5, h: 1.9, cls: 0 },
-    { dz: -0.15, dy: -0.65, w: 1.95, h: 1.45, cls: 2 },
-    { dz: 2.35, dy: 0.7, w: 1.4, h: 1.7, cls: 0 },
+    { dz: -1.55, dy: 0.5, w: 1.25, h: 1.2, cls: 0 },
+    { dz: 0.0, dy: -0.2, w: 1.55, h: 1.95, cls: 0 },
+    { dz: 1.55, dy: 0.55, w: 1.2, h: 1.4, cls: 0 },
   ]
   if (n === 4) return [
-    { dz: -2.7, dy: 0.6, w: 1.5, h: 1.3, cls: 0 },
-    { dz: -0.9, dy: -0.7, w: 1.4, h: 1.8, cls: 0 },
-    { dz: 1.0, dy: 0.8, w: 1.6, h: 1.5, cls: 2 },
-    { dz: 2.7, dy: -0.5, w: 1.5, h: 1.7, cls: 0 },
+    { dz: -1.55, dy: 0.6, w: 1.2, h: 1.0, cls: 0 },
+    { dz: -1.35, dy: -0.75, w: 1.05, h: 1.45, cls: 0 },
+    { dz: 0.95, dy: 0.55, w: 1.45, h: 1.2, cls: 0 },
+    { dz: 1.45, dy: -0.7, w: 1.1, h: 1.55, cls: 0 },
   ]
-  // organic salon collage (5+)
+  // tight collage (5)
   return [
-    { dz: -3.0, dy: 0.55, w: 1.7, h: 1.3, cls: 0 },
-    { dz: -1.15, dy: -1.15, w: 1.3, h: 1.75, cls: 0 },
-    { dz: 0.45, dy: 0.95, w: 1.45, h: 1.85, cls: 2 },
-    { dz: 1.95, dy: -0.6, w: 1.8, h: 1.4, cls: 0 },
-    { dz: 3.05, dy: 0.85, w: 1.2, h: 1.5, cls: 0 },
+    { dz: -1.75, dy: 0.7, w: 1.15, h: 0.92, cls: 0 },
+    { dz: -1.5, dy: -0.7, w: 1.05, h: 1.4, cls: 0 },
+    { dz: 0.05, dy: 0.2, w: 1.5, h: 1.8, cls: 0 },
+    { dz: 1.55, dy: 0.8, w: 1.2, h: 1.0, cls: 0 },
+    { dz: 1.5, dy: -0.75, w: 1.1, h: 1.25, cls: 0 },
   ]
 }
 

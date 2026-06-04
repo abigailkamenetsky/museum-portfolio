@@ -134,7 +134,7 @@ export default function Guide() {
           <div style={{ textAlign: 'center', maxWidth: 460, padding: '30px 38px', background: 'rgba(8,10,8,0.62)', border: `1px solid ${GOLD}44`, borderRadius: 14, backdropFilter: 'blur(3px)' }}>
             <div style={{ color: GOLD, font: `500 12px ${serif}`, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.85 }}>Welcome to the</div>
             <div style={{ color: '#f3ecd9', font: `400 clamp(30px,6vw,40px) ${serif}`, margin: '8px 0 12px' }}>Museum of Abby</div>
-            <div style={{ color: '#e7ddca', font: `400 16px/1.55 ${serif}`, opacity: 0.9 }}>An interactive gallery where each art piece reveals a chapter of my journey — projects, work experience, research, and hobbies.</div>
+            <div style={{ color: '#e7ddca', font: `400 16px/1.55 ${serif}`, opacity: 0.9 }}>An interactive gallery where each art piece reveals a chapter of my journey: projects, internships, research, and hobbies.</div>
             <div style={{ color: GOLD, font: `500 15px ${serif}`, marginTop: 20, letterSpacing: 0.5 }}>Press <b>SPACE</b> to see how it works</div>
           </div>
         </div>
@@ -153,7 +153,7 @@ export default function Guide() {
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 7 }}>{[0, 1, 2].map(i => <div key={i} style={{ width: 9, height: 9, borderRadius: 9, border: `1px solid ${GOLD}88` }} />)}</div>
               </div>
             </div>
-            <div style={{ color: '#e7ddca', font: `400 15px/1.55 ${serif}`, opacity: 0.92, marginTop: 2 }}>Walk up to any piece and press <b>E</b> to learn more — or use your handheld guide to jump to any wing.</div>
+            <div style={{ color: '#e7ddca', font: `400 15px/1.55 ${serif}`, opacity: 0.92, marginTop: 2 }}>Walk up to any piece and press <b>E</b> to learn more, or use your handheld guide to jump to any wing.</div>
             <div style={{ color: GOLD, font: `500 15px ${serif}`, marginTop: 16 }}>Press <b>SPACE</b> to open the Audio Guide</div>
           </div>
         </div>
