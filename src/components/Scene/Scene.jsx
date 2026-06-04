@@ -1057,7 +1057,8 @@ function Character() {
   const modelRef = useRef()   // inner figure, rotates to face travel direction
   const body = useRef()       // torso+arms+head group (for the walk bob)
   const thighL = useRef(), thighR = useRef(), shinL = useRef(), shinR = useRef()
-  const armL = useRef(), armR = useRef(), hairRef = useRef()
+  const armL = useRef(), armR = useRef()
+  const hairRefs = useRef([])   // per-section hair groups (each sways individually)
   const keys = useRef({})
   const st = useRef({ yaw: 0, pitch: 0.12, vel: new Vector3(), face: 0, phase: 0, t: 0 })
   const mat = useMemo(() => ({
@@ -1084,44 +1085,49 @@ function Character() {
   }
   const hairCapGeo = useMemo(() => {
     const geos = []
-    for (let layer = 0; layer < 3; layer++) {
-      const rr = 0.15 + layer * 0.02, count = 64 - layer * 12
+    for (let layer = 0; layer < 4; layer++) {
+      const rr = 0.148 + layer * 0.018, count = 95 - layer * 14
       for (let i = 0; i < count; i++) {
         const u = Math.random(), v = Math.random()
         const theta = u * Math.PI * 2, phi = Math.acos(2 * v - 1)
         const x = Math.sin(phi) * Math.cos(theta), y = Math.cos(phi), z = Math.sin(phi) * Math.sin(theta)
         if (y < 0.28 && z > -0.25) continue                 // raise the hairline (kills sideburns)
         if (z > 0.32 && y < 0.6) continue                   // keep the face open
-        geos.push(curlTorus(x * rr * 1.05, 1.65 + y * rr * 1.06 + 0.02, z * rr * 0.9 - 0.012, 0.03 + Math.random() * 0.016))
+        geos.push(curlTorus(x * rr * 1.05, 1.65 + y * rr * 1.06 + 0.02, z * rr * 0.9 - 0.012, 0.028 + Math.random() * 0.016))
       }
     }
-    // half-up gather: a bunched cluster of curls high at the back crown
-    for (let i = 0; i < 24; i++) geos.push(curlTorus(rnd(0.13), 1.6 + Math.random() * 0.1, -0.12 - Math.random() * 0.05, 0.028 + Math.random() * 0.016))
     // baby hairs: tiny wisps at the front hairline / temples
     for (let i = 0; i < 10; i++) { const s = i < 5 ? -1 : 1; geos.push(curlTorus(s * (0.1 + Math.random() * 0.05), 1.71 + rnd(0.05), 0.05 + rnd(0.04), 0.014 + Math.random() * 0.01)) }
     return mergeGeometries(geos, false)
   }, [])
-  // length = individual RINGLET COILS (stacked torus rings → corkscrew curls),
-  // half-down: flows from the back crown to about the belt. Sways while walking.
-  const hairLengthGeo = useMemo(() => {
-    const geos = []; const strands = 17
-    for (let s = 0; s < strands; s++) {
-      const ang = (-0.5 + s / (strands - 1)) * Math.PI * 1.2
-      const ox = Math.sin(ang) * 0.14
-      const oz = -Math.abs(Math.cos(ang)) * 0.1 - 0.04
-      const segs = 8 + Math.floor(Math.random() * 3)
-      const coilR = 0.032 + Math.random() * 0.016
-      const tilt = (Math.random() < 0.5 ? 1 : -1) * (0.4 + Math.random() * 0.3)
-      const step = 0.055
-      for (let i = 0; i < segs; i++) {
-        const sp = 1 + i * 0.03
-        const g = new TorusGeometry(coilR, 0.014, 6, 9)
-        g.rotateX(Math.PI / 2); g.rotateZ(tilt)
-        g.translate(ox * sp + rnd(0.01), -0.02 - i * step, oz * sp + rnd(0.01))
-        geos.push(g)
+  // ALL-DOWN length split into SECTIONS around the back+sides; each section is a
+  // bundle of individual ringlet coils and gets its OWN sway phase → curls appear
+  // to move independently. Tons of coils = full voluminous head.
+  const SECTIONS = 8
+  const hairSectionGeos = useMemo(() => {
+    const out = []
+    for (let sec = 0; sec < SECTIONS; sec++) {
+      const geos = []
+      const center = (-1 + 2 * sec / (SECTIONS - 1)) * 2.0   // -2.0..2.0 rad (back→sides, face open)
+      const strandsN = 5
+      for (let q = 0; q < strandsN; q++) {
+        const ang = center + (q - (strandsN - 1) / 2) * 0.13
+        const ox = Math.sin(ang) * 0.15, oz = -Math.cos(ang) * 0.12 - 0.02
+        const segs = 8 + Math.floor(Math.random() * 4)
+        const coilR = 0.03 + Math.random() * 0.016
+        const tilt = (Math.random() < 0.5 ? 1 : -1) * (0.35 + Math.random() * 0.35)
+        const step = 0.052
+        for (let i = 0; i < segs; i++) {
+          const sp = 1 + i * 0.03
+          const g = new TorusGeometry(coilR, 0.013, 6, 9)
+          g.rotateX(Math.PI / 2); g.rotateZ(tilt)
+          g.translate(ox * sp + rnd(0.015), -0.02 - i * step, oz * sp + rnd(0.015))
+          geos.push(g)
+        }
       }
+      out.push(mergeGeometries(geos, false))
     }
-    return mergeGeometries(geos, false)
+    return out
   }, [])
 
   useEffect(() => {
@@ -1193,9 +1199,14 @@ function Character() {
       const bob = walkAmt > 0.05 ? Math.abs(Math.sin(s.phase)) * 0.05 * walkAmt : Math.sin(s.t * 1.6) * 0.012
       body.current.position.y += (bob - body.current.position.y) * Math.min(1, 10 * d)
     }
-    if (hairRef.current) {   // hair sways with each step + a faint idle drift
-      const sway = (walkAmt > 0.05 ? Math.sin(s.phase) * 0.14 * walkAmt : 0) + Math.sin(s.t * 1.2) * 0.02
-      hairRef.current.rotation.x += (sway - hairRef.current.rotation.x) * Math.min(1, 6 * d)
+    // each hair section sways with its own phase offset → curls move independently
+    for (let i = 0; i < hairRefs.current.length; i++) {
+      const g = hairRefs.current[i]; if (!g) continue
+      const off = i * 0.8
+      const sx = (walkAmt > 0.05 ? Math.sin(s.phase + off) * 0.13 * walkAmt : 0) + Math.sin(s.t * 1.1 + off) * 0.02
+      const sz = (walkAmt > 0.05 ? Math.cos(s.phase * 0.7 + off) * 0.05 * walkAmt : 0) + Math.sin(s.t * 0.9 + off) * 0.012
+      g.rotation.x += (sx - g.rotation.x) * Math.min(1, 6 * d)
+      g.rotation.z += (sz - g.rotation.z) * Math.min(1, 6 * d)
     }
 
     // third-person orbit camera
@@ -1227,10 +1238,17 @@ function Character() {
           {/* red belt + gold buckle at the waist */}
           <mesh position={[0, 1.03, 0]} scale={[1, 1, 0.68]} castShadow material={mat.belt}><cylinderGeometry args={[0.152, 0.158, 0.05, 22]} /></mesh>
           <mesh position={[0, 1.03, 0.105]} castShadow material={mat.gold}><boxGeometry args={[0.05, 0.042, 0.02]} /></mesh>
-          {/* dark-blue Y2K tee (fitted) + bust (DD) */}
-          <mesh position={[0, 1.2, 0]} castShadow material={mat.shirt}><capsuleGeometry args={[0.112, 0.3, 6, 14]} /></mesh>
-          <mesh position={[-0.062, 1.3, 0.082]} scale={[1, 1, 0.95]} castShadow material={mat.shirt}><sphereGeometry args={[0.095, 14, 12]} /></mesh>
-          <mesh position={[0.062, 1.3, 0.082]} scale={[1, 1, 0.95]} castShadow material={mat.shirt}><sphereGeometry args={[0.095, 14, 12]} /></mesh>
+          {/* hourglass tee: shoulders/chest → pinched waist → out toward belt */}
+          <mesh position={[0, 1.39, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.098, 0.09, 0.1, 16]} /></mesh>
+          <mesh position={[0, 1.27, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.09, 0.073, 0.16, 16]} /></mesh>
+          <mesh position={[0, 1.11, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.073, 0.085, 0.16, 16]} /></mesh>
+          {/* bust (modest) */}
+          <mesh position={[-0.05, 1.31, 0.058]} scale={[1, 0.95, 0.88]} castShadow material={mat.shirt}><sphereGeometry args={[0.066, 14, 12]} /></mesh>
+          <mesh position={[0.05, 1.31, 0.058]} scale={[1, 0.95, 0.88]} castShadow material={mat.shirt}><sphereGeometry args={[0.066, 14, 12]} /></mesh>
+          {/* hips flare back out + glutes (skin) under the skirt → real curves */}
+          <mesh position={[0, 0.99, 0]} castShadow material={mat.skin}><cylinderGeometry args={[0.085, 0.105, 0.14, 16]} /></mesh>
+          <mesh position={[-0.052, 0.92, -0.085]} scale={[1, 0.92, 1.05]} castShadow material={mat.skin}><sphereGeometry args={[0.076, 14, 12]} /></mesh>
+          <mesh position={[0.052, 0.92, -0.085]} scale={[1, 0.92, 1.05]} castShadow material={mat.skin}><sphereGeometry args={[0.076, 14, 12]} /></mesh>
           {/* neck + head */}
           <mesh position={[0, 1.5, 0]} castShadow material={mat.skin}><cylinderGeometry args={[0.05, 0.06, 0.1, 10]} /></mesh>
           {/* head + smooth scalp cap (so curls never reveal bald gaps) + front face */}
@@ -1248,10 +1266,12 @@ function Character() {
           </group>
           {/* dense curly cap (merged) */}
           <mesh geometry={hairCapGeo} castShadow material={mat.hair} />
-          {/* long defined ringlets down the back (merged) — sways while walking */}
-          <group ref={hairRef} position={[0, 1.6, -0.12]}>
-            <mesh geometry={hairLengthGeo} castShadow material={mat.hair} />
-          </group>
+          {/* all-down ringlet sections — each pivots at the crown and sways on its own */}
+          {hairSectionGeos.map((geo, i) => (
+            <group key={'hs' + i} ref={el => (hairRefs.current[i] = el)} position={[0, 1.6, -0.05]}>
+              <mesh geometry={geo} castShadow material={mat.hair} />
+            </group>
+          ))}
           {/* shoulders pivot; short sleeve cap + bare arm */}
           <group ref={armL} position={[-0.17, 1.43, 0]}>
             <mesh position={[0, -0.05, 0]} castShadow material={mat.shirt}><sphereGeometry args={[0.07, 10, 8]} /></mesh>
