@@ -608,10 +608,11 @@ function useGoldFrame() {
     // keep the baked baseColor/normal/roughness maps (gives real gold-leaf wear),
     // but tint to warm antique gold and calm the metalness so it isn't cartoon-bright
     const mat = mt.clone()
-    mat.color.set('#9a7b32')
-    mat.metalness = 0.86
-    if (mat.roughness === undefined || mat.roughness < 0.38) mat.roughness = 0.44
-    mat.envMapIntensity = 0.5
+    mat.color.set('#cda545')           // warm gold tint (baked maps still carry the rustic wear/scratches)
+    mat.metalness = 0.9
+    if (mat.roughness === undefined || mat.roughness < 0.34) mat.roughness = 0.4
+    mat.envMapIntensity = 0.7
+    if (mat.emissive) { mat.emissive.set('#3a2c0a'); mat.emissiveIntensity = 0.12 }   // faint warm glow so the gold reads gold even in shadow
     if (mat.emissive) mat.emissiveIntensity = 0
     mat.needsUpdate = true
     return { geo, mat, nw, nh, nd }
