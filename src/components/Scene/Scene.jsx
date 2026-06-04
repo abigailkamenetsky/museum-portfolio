@@ -22,6 +22,8 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 import { makeLandscapeTexture } from './textures'
 import { ARTWORKS, ART_BASE } from '../../data/artworks'
+import { museum } from '../../museum/store'
+import { WINGS } from '../../data/museum'
 
 /* ── DIMENSIONS — long rectangular palace gallery (~2:1) ────── */
 const W = 18, H = 13.5, D = 78
@@ -1061,8 +1063,9 @@ function Character() {
   const thighL = useRef(), thighR = useRef(), shinL = useRef(), shinR = useRef()
   const armL = useRef(), armR = useRef()
   const hairRefs = useRef([])   // per-section hair groups (each sways individually)
+  const arrowRef = useRef()     // "Guide Me" floor arrow
   const keys = useRef({})
-  const st = useRef({ yaw: 0, yawT: 0, pitch: 0.12, pitchT: 0.12, vel: new Vector3(), face: 0, phase: 0, t: 0, dist: 6.2, dragging: false })
+  const st = useRef({ yaw: Math.PI, yawT: Math.PI, pitch: 0.12, pitchT: 0.12, vel: new Vector3(), face: Math.PI, phase: 0, t: 0, dist: 6.2, dragging: false })
   const mat = useMemo(() => ({
     skin: new MeshStandardMaterial({ color: '#c8996f', roughness: 0.72, metalness: 0 }),
     hair: new MeshStandardMaterial({ color: '#211008', roughness: 0.85, metalness: 0 }),   // dark brunette
@@ -1207,18 +1210,29 @@ function Character() {
   useFrame(({ camera }, delta) => {
     if (!root.current) return
     const s = st.current, k = keys.current, d = Math.min(delta, 0.05)
+    const mu = museum.get()
+    // consume a teleport command from the guide
+    if (mu.teleport) {
+      root.current.position.x = mu.teleport.x
+      root.current.position.z = mu.teleport.z
+      s.yaw = s.yawT = s.face = mu.teleport.yaw
+      s.vel.set(0, 0, 0)
+      museum.set({ teleport: null })
+    }
+    const locked = !!(mu.menu || mu.card)   // guide/exhibit open → pause walking
+
     // smooth the look angles toward their targets (shortest-arc yaw → no spin), elegant
     let dyaw = s.yawT - s.yaw; dyaw = Math.atan2(Math.sin(dyaw), Math.cos(dyaw))
     s.yaw += dyaw * Math.min(1, 11 * d)
     s.pitch += (s.pitchT - s.pitch) * Math.min(1, 11 * d)
     // camera-relative input
-    const fwd = (k['KeyW'] || k['ArrowUp'] ? 1 : 0) - (k['KeyS'] || k['ArrowDown'] ? 1 : 0)
-    const strafe = (k['KeyD'] || k['ArrowRight'] ? 1 : 0) - (k['KeyA'] || k['ArrowLeft'] ? 1 : 0)
-    const run = k['ShiftLeft'] || k['ShiftRight']
+    const fwd = locked ? 0 : (k['KeyW'] || k['ArrowUp'] ? 1 : 0) - (k['KeyS'] || k['ArrowDown'] ? 1 : 0)
+    const strafe = locked ? 0 : (k['KeyD'] || k['ArrowRight'] ? 1 : 0) - (k['KeyA'] || k['ArrowLeft'] ? 1 : 0)
+    const run = !locked && (k['ShiftLeft'] || k['ShiftRight'])
     const sin = Math.sin(s.yaw), cos = Math.cos(s.yaw)
     const moveDir = _v3.set(0, 0, 0)
       .addScaledVector(_v1.set(sin, 0, cos), fwd)        // forward (look dir, horizontal)
-      .addScaledVector(_v2.set(cos, 0, -sin), strafe)    // right
+      .addScaledVector(_v2.set(-cos, 0, sin), strafe)    // right = screen-right (Left key → left, Right key → right)
     const moving = moveDir.lengthSq() > 1e-4
     if (moving) moveDir.normalize()
     const desired = _v4.copy(moveDir).multiplyScalar(moving ? (run ? RUN_SPEED : WALK_SPEED) : 0)
@@ -1289,11 +1303,35 @@ function Character() {
     camera.position.lerp(cam, Math.min(1, 9 * d))
     _v5.set(ch.position.x, HEAD_Y + 0.4 + s.pitch * 7.0, ch.position.z)   // aim swings floor → ahead → ceiling
     camera.lookAt(_v5)
+
+    // nearest wing → "Press E to Learn More"
+    let near = null, best = 3.8
+    for (const w of WINGS) {
+      const dd = Math.hypot(ch.position.x - w.pos[0], ch.position.z - w.pos[1])
+      if (dd < best) { best = dd; near = w.id }
+    }
+    if (mu.near !== near) museum.set({ near })
+
+    // "Guide Me" floor arrow: point toward the target; clear it on arrival
+    if (mu.guide && arrowRef.current) {
+      const gx = mu.guide.pos[0] - ch.position.x, gz = mu.guide.pos[1] - ch.position.z
+      if (Math.hypot(gx, gz) < 2.6) museum.set({ guide: null })
+      else { arrowRef.current.visible = true; arrowRef.current.rotation.y = Math.atan2(gx, gz) }
+    } else if (arrowRef.current && arrowRef.current.visible) {
+      arrowRef.current.visible = false
+    }
   })
 
   // stylized figure (faces +Z): brunette curls, Y2K tee, denim skirt, knee-high boots
   return (
-    <group ref={root} position={[0, 0, 8]}>
+    <group ref={root} position={[0, 0, 34]}>{/* spawn just inside the entrance, facing into the gallery */}
+      {/* "Guide Me" gold floor arrow (steered toward the target in useFrame) */}
+      <group ref={arrowRef} visible={false}>
+        <mesh position={[0, 0.05, 0.8]} rotation={[-Math.PI / 2, 0, 0]}>
+          <coneGeometry args={[0.16, 0.46, 3]} />
+          <meshStandardMaterial color="#e3c266" emissive="#5a4410" emissiveIntensity={0.6} roughness={0.45} metalness={0.7} />
+        </mesh>
+      </group>
       <group ref={modelRef} position={[0, 0.07, 0]}>{/* lift so the heeled boots rest on the floor (no clipping) */}
         {/* torso + head + hair + arms + skirt (bobs as one during the walk) */}
         <group ref={body}>

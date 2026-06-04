@@ -1,0 +1,34 @@
+import { useSyncExternalStore } from 'react'
+
+// Shared state between the 3D scene (Scene.jsx) and the DOM guide UI (Guide.jsx).
+// Mutated in place; a version counter drives React re-renders via useSyncExternalStore.
+const state = {
+  phase: 'enter',      // 'enter' → 'welcome' → 'explore'
+  menu: null,          // null | 'home' | <categoryId>  (which guide screen is open)
+  visitCat: null,      // category id awaiting "Guide Me / Teleport" choice
+  card: null,          // category id whose exhibit card is open
+  near: null,          // category id the player is standing near (for "Press E")
+  guide: null,         // active "Guide Me" target: { id, pos:[x,z], title }
+  teleport: null,      // command consumed by the scene: { x, z, yaw, title }
+  titleCard: null,     // wing title shown briefly after a teleport
+  fade: 0,             // black overlay opacity 0..1 (teleport transitions)
+}
+
+let version = 0
+const listeners = new Set()
+
+export const museum = {
+  get: () => state,
+  set(patch) { Object.assign(state, patch); version++; listeners.forEach(l => l()) },
+  subscribe(l) { listeners.add(l); return () => listeners.delete(l) },
+  snap: () => version,
+}
+
+export function useMuseum() {
+  useSyncExternalStore(museum.subscribe, museum.snap, museum.snap)
+  return state
+}
+
+// open/close helpers
+export const openGuide = () => museum.set({ menu: 'home', visitCat: null, card: null })
+export const closeGuide = () => museum.set({ menu: null, visitCat: null })
