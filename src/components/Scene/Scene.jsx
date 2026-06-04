@@ -1094,7 +1094,7 @@ function Character() {
         const u = Math.random(), v = Math.random()
         const theta = u * Math.PI * 2, phi = Math.acos(2 * v - 1)
         const x = Math.sin(phi) * Math.cos(theta), y = Math.cos(phi), z = Math.sin(phi) * Math.sin(theta)
-        if (y < -0.35) continue                             // keep the cap on the cranium
+        if (y < -0.55) continue                             // cap extends down the back/sides (fills the nape, no gap)
         if (z > 0.3 && y < 0.16) continue                   // open only the face; hairline sits low on the forehead
         geos.push(curlTorus(x * rr * 1.05, 1.65 + y * rr * 1.06 + 0.02, z * rr * 0.9 - 0.012, 0.028 + Math.random() * 0.016))
       }
@@ -1111,18 +1111,18 @@ function Character() {
     const out = []
     for (let sec = 0; sec < SECTIONS; sec++) {
       const geos = []
-      const center = (-1 + 2 * sec / (SECTIONS - 1)) * 2.0   // -2.0..2.0 rad (back→sides, face open)
+      const center = (-1 + 2 * sec / (SECTIONS - 1)) * 2.55   // wider: reaches around to drape over the shoulders
       const strandsN = 7
       for (let q = 0; q < strandsN; q++) {
         const ang = center + (q - (strandsN - 1) / 2) * 0.11
         const back = Math.max(0, Math.cos(ang))           // 1 at the back, 0 at the sides
-        const ox = Math.sin(ang) * 0.15, oz = -Math.cos(ang) * 0.13 - 0.03 - back * 0.05   // puff the back out
+        const ox = Math.sin(ang) * 0.16, oz = -Math.cos(ang) * 0.13 - 0.03 - back * 0.05   // puff the back out
         const segs = 7 + Math.floor(Math.random() * 3)   // ~3/4 torso length
         const coilR = 0.03 + Math.random() * 0.016
         const tilt = (Math.random() < 0.5 ? 1 : -1) * (0.35 + Math.random() * 0.35)
         const step = 0.052
         for (let i = 0; i < segs; i++) {
-          const sp = 1 + i * 0.03
+          const sp = 1 + i * 0.06                          // fans OUTWARD horizontally as it falls
           const g = new TorusGeometry(coilR, 0.013, 6, 9)
           g.rotateX(Math.PI / 2); g.rotateZ(tilt)
           g.translate(ox * sp + rnd(0.015), -0.02 - i * step, oz * sp + rnd(0.015))
@@ -1305,14 +1305,14 @@ function Character() {
           <mesh geometry={hairCapGeo} castShadow material={mat.hair} />
           {/* all-down ringlet sections (curl volume + hair cards), each sways on its own */}
           {hairSectionGeos.map((geo, i) => {
-            const ang = (-1 + 2 * i / (SECTIONS - 1)) * 2.0
+            const ang = (-1 + 2 * i / (SECTIONS - 1)) * 2.55
             return (
               <group key={'hs' + i} ref={el => (hairRefs.current[i] = el)} position={[0, 1.6, -0.05]}>
                 <mesh geometry={geo} castShadow material={mat.hair} />
                 {[-0.14, 0, 0.14].map((o, j) => {
                   const a = ang + o
                   const back = Math.max(0, Math.cos(a))
-                  return <mesh key={j} geometry={cardGeo} material={hairCardMat} position={[Math.sin(a) * 0.14, 0.05, -Math.cos(a) * 0.13 - 0.02 - back * 0.04]} rotation={[0.15, a + Math.PI, 0]} />
+                  return <mesh key={j} geometry={cardGeo} material={hairCardMat} position={[Math.sin(a) * 0.16, 0.05, -Math.cos(a) * 0.13 - 0.02 - back * 0.04]} rotation={[0.12, a + Math.PI, 0]} />
                 })}
               </group>
             )
@@ -1331,29 +1331,30 @@ function Character() {
         <group ref={thighL} position={[-0.1, 0.94, 0]}>
           <mesh position={[0, -0.22, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.062, 0.34, 6, 12]} /></mesh>
           <group ref={shinL} position={[0, -0.48, 0]}>
-            <mesh position={[0, -0.03, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.05, 0.14, 5, 10]} /></mesh>
-            <mesh position={[0, -0.08, 0]} castShadow material={mat.sock}><cylinderGeometry args={[0.062, 0.062, 0.06, 12]} /></mesh>
-            <mesh position={[0, -0.27, 0]} castShadow material={mat.boot}><capsuleGeometry args={[0.057, 0.34, 6, 12]} /></mesh>
-            {/* boot: narrow toe in front, chunky block heel ONLY at the back */}
-            <mesh position={[0, -0.435, 0.055]} castShadow material={mat.boot}><boxGeometry args={[0.074, 0.07, 0.2]} /></mesh>
-            <mesh position={[0, -0.45, 0.14]} castShadow material={mat.boot}><boxGeometry args={[0.06, 0.05, 0.06]} /></mesh>
-            <mesh position={[0, -0.405, -0.06]} castShadow material={mat.boot}><boxGeometry args={[0.08, 0.13, 0.085]} /></mesh>
-            {/* gold COACH label on the outer side, just below the sock */}
-            <mesh material={coachMat} position={[-0.062, -0.125, 0.01]} rotation={[0, -Math.PI / 2, 0]}><planeGeometry args={[0.07, 0.018]} /></mesh>
+            {/* small bare bit at the knee + thin sock cuff at the boot top */}
+            <mesh position={[0, -0.03, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.048, 0.05, 5, 10]} /></mesh>
+            <mesh position={[0, -0.072, 0]} castShadow material={mat.sock}><cylinderGeometry args={[0.06, 0.06, 0.035, 14]} /></mesh>
+            {/* tall slim knee-high riding-boot shaft (tapered) */}
+            <mesh position={[0, -0.27, 0]} castShadow material={mat.boot}><cylinderGeometry args={[0.058, 0.046, 0.38, 16]} /></mesh>
+            {/* instep + pointed toe + small block heel */}
+            <mesh position={[0, -0.45, 0.0]} castShadow material={mat.boot}><boxGeometry args={[0.052, 0.06, 0.1]} /></mesh>
+            <mesh position={[0, -0.47, 0.12]} rotation={[Math.PI / 2, 0, 0]} castShadow material={mat.boot}><coneGeometry args={[0.04, 0.13, 12]} /></mesh>
+            <mesh position={[0, -0.495, -0.05]} castShadow material={mat.boot}><boxGeometry args={[0.05, 0.07, 0.06]} /></mesh>
+            {/* gold COACH label at the TOP of the shaft, outer side */}
+            <mesh material={coachMat} position={[-0.061, -0.12, 0.0]} rotation={[0, -Math.PI / 2, 0]}><planeGeometry args={[0.085, 0.022]} /></mesh>
           </group>
         </group>
         <group ref={thighR} position={[0.1, 0.94, 0]}>
           <mesh position={[0, -0.22, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.062, 0.34, 6, 12]} /></mesh>
           <group ref={shinR} position={[0, -0.48, 0]}>
-            <mesh position={[0, -0.03, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.05, 0.14, 5, 10]} /></mesh>
-            <mesh position={[0, -0.08, 0]} castShadow material={mat.sock}><cylinderGeometry args={[0.062, 0.062, 0.06, 12]} /></mesh>
-            <mesh position={[0, -0.27, 0]} castShadow material={mat.boot}><capsuleGeometry args={[0.057, 0.34, 6, 12]} /></mesh>
-            {/* boot: narrow toe in front, chunky block heel ONLY at the back */}
-            <mesh position={[0, -0.435, 0.055]} castShadow material={mat.boot}><boxGeometry args={[0.074, 0.07, 0.2]} /></mesh>
-            <mesh position={[0, -0.45, 0.14]} castShadow material={mat.boot}><boxGeometry args={[0.06, 0.05, 0.06]} /></mesh>
-            <mesh position={[0, -0.405, -0.06]} castShadow material={mat.boot}><boxGeometry args={[0.08, 0.13, 0.085]} /></mesh>
-            {/* gold COACH label on the outer side, just below the sock */}
-            <mesh material={coachMat} position={[0.062, -0.125, 0.01]} rotation={[0, Math.PI / 2, 0]}><planeGeometry args={[0.07, 0.018]} /></mesh>
+            <mesh position={[0, -0.03, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.048, 0.05, 5, 10]} /></mesh>
+            <mesh position={[0, -0.072, 0]} castShadow material={mat.sock}><cylinderGeometry args={[0.06, 0.06, 0.035, 14]} /></mesh>
+            <mesh position={[0, -0.27, 0]} castShadow material={mat.boot}><cylinderGeometry args={[0.058, 0.046, 0.38, 16]} /></mesh>
+            <mesh position={[0, -0.45, 0.0]} castShadow material={mat.boot}><boxGeometry args={[0.052, 0.06, 0.1]} /></mesh>
+            <mesh position={[0, -0.47, 0.12]} rotation={[Math.PI / 2, 0, 0]} castShadow material={mat.boot}><coneGeometry args={[0.04, 0.13, 12]} /></mesh>
+            <mesh position={[0, -0.495, -0.05]} castShadow material={mat.boot}><boxGeometry args={[0.05, 0.07, 0.06]} /></mesh>
+            {/* gold COACH label at the TOP of the shaft, outer side */}
+            <mesh material={coachMat} position={[0.061, -0.12, 0.0]} rotation={[0, Math.PI / 2, 0]}><planeGeometry args={[0.085, 0.022]} /></mesh>
           </group>
         </group>
       </group>
