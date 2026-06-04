@@ -42,6 +42,8 @@ const CEILP = TEX + 'ceilingplaster/Plaster001_1K-JPG_'   // ceiling plaster PBR
 const HDRI = BASE + 'assets/hdri/gallery.hdr'
 const FRAME_URL = BASE + 'assets/models/frame_gold.glb'   // optimized ornate gold vintage frame
 useGLTF.preload(FRAME_URL)
+const STAINED_URL = BASE + 'assets/models/stained_glass.glb'   // gothic window with painted glass
+useGLTF.preload(STAINED_URL)
 
 /* ── helpers ──────────────────────────────────────────────── */
 function configure(t, rep, srgb) {
@@ -939,11 +941,56 @@ function MuseumWindow({ w, h, m }) {
   )
 }
 
-/* far-wall monumental Gothic window */
+/* far-wall monumental window — the downloaded gothic painted-glass model, set into
+ * the masonry opening with a plaster reveal and backlit so the stained glass glows. */
 function GothicFeature({ m }) {
+  const { scene } = useGLTF(STAINED_URL)
+  const inst = useMemo(() => {
+    const c = scene.clone(true)
+    c.traverse(o => {
+      if (!o.isMesh) return
+      o.castShadow = false; o.receiveShadow = false
+      const mat = o.material
+      if (!mat) return
+      // the painted-glass panes: make them glow like they're backlit by daylight
+      if (mat.emissiveMap || /colou?r|glass|paint|stain/i.test(o.name) || /colou?r|glass|paint|stain/i.test(mat.name || '')) {
+        if (mat.emissive) mat.emissiveIntensity = 2.4
+        mat.transparent = true; mat.opacity = 0.97; mat.envMapIntensity = 0.2
+        mat.needsUpdate = true
+      }
+    })
+    const box = new Box3().setFromObject(c)
+    const size = new Vector3(); box.getSize(size)
+    const ctr = new Vector3(); box.getCenter(ctr)
+    return { c, size, ctr }
+  }, [scene])
+
+  const RECESS = WALL_T
+  const S = (FEAT_H * 0.99) / inst.size.y          // fill the opening height
+  const winZ = -0.26                                // set the window back into the reveal
   return (
     <group position={[0, FEAT_CY, -D / 2 + WALL_T]}>
-      <MuseumWindow w={FEAT_W} h={FEAT_H} m={m} />
+      {/* plaster reveal lining the opening (jambs / head / sill) — built-in look */}
+      {[-1, 1].map(s => (
+        <mesh key={'fj' + s} position={[s * (FEAT_W / 2 + 0.01), 0, -RECESS / 2]} receiveShadow material={m.revealPlaster}>
+          <boxGeometry args={[0.14, FEAT_H + 0.26, RECESS]} />
+        </mesh>
+      ))}
+      <mesh position={[0, FEAT_H / 2 + 0.02, -RECESS / 2]} receiveShadow material={m.revealPlaster}><boxGeometry args={[FEAT_W + 0.12, 0.14, RECESS]} /></mesh>
+      <mesh position={[0, -FEAT_H / 2 - 0.02, -RECESS / 2]} receiveShadow material={m.revealPlaster}><boxGeometry args={[FEAT_W + 0.12, 0.14, RECESS]} /></mesh>
+
+      {/* projecting stone sill */}
+      <mesh position={[0, -FEAT_H / 2 - 0.06, (0.24 - RECESS) / 2]} castShadow receiveShadow material={m.sillStone}>
+        <boxGeometry args={[FEAT_W + 0.8, 0.2, RECESS + 0.24]} />
+      </mesh>
+
+      {/* backlight behind the glass so the painted panes read as daylight-lit */}
+      <mesh position={[0, 0, -(RECESS + 0.25)]}><planeGeometry args={[FEAT_W * 1.3, FEAT_H * 1.1]} /><meshBasicMaterial color="#f3ead2" /></mesh>
+      <pointLight position={[0, 1.5, -(RECESS + 0.6)]} intensity={26} distance={14} decay={2} color="#fff3d6" />
+      <pointLight position={[0, 0.5, 1.6]} intensity={6} distance={9} decay={2} color="#ffe9c2" />
+
+      {/* the gothic painted-glass window itself, scaled to fill the opening */}
+      <primitive object={inst.c} position={[-inst.ctr.x * S, -inst.ctr.y * S, winZ]} scale={S} />
     </group>
   )
 }
