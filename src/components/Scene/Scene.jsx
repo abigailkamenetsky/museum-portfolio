@@ -1053,7 +1053,22 @@ function Character() {
   const armL = useRef(), armR = useRef()
   const keys = useRef({})
   const st = useRef({ yaw: 0, pitch: 0.12, vel: new Vector3(), face: 0, phase: 0, t: 0 })
-  const blk = useMemo(() => new MeshStandardMaterial({ color: '#070709', roughness: 0.55, metalness: 0, envMapIntensity: 0.22 }), [])
+  const mat = useMemo(() => ({
+    skin: new MeshStandardMaterial({ color: '#c8996f', roughness: 0.72, metalness: 0 }),
+    hair: new MeshStandardMaterial({ color: '#2c1a10', roughness: 0.86, metalness: 0 }),   // brunette
+    shirt: new MeshStandardMaterial({ color: '#1b2750', roughness: 0.62, metalness: 0.06 }), // dark-blue Y2K tee
+    denim: new MeshStandardMaterial({ color: '#3f5f86', roughness: 0.9, metalness: 0 }),     // denim skirt
+    boot: new MeshStandardMaterial({ color: '#171311', roughness: 0.42, metalness: 0.18 }),  // knee-high boots
+    sock: new MeshStandardMaterial({ color: '#ece6d6', roughness: 0.9, metalness: 0 }),       // sock peek
+  }), [])
+  // curly brunette hair: a cap of curls + length flowing down to mid-back + face-framing curls
+  const hairCurls = useMemo(() => {
+    const a = []; const rnd = n => (Math.random() - 0.5) * n
+    for (let i = 0; i < 16; i++) { const t = i / 16 * Math.PI * 2; a.push({ p: [Math.cos(t) * 0.13, 1.67 + Math.random() * 0.05, Math.sin(t) * 0.11 - 0.02], r: 0.07 + Math.random() * 0.03 }) }
+    for (let row = 0; row < 10; row++) { const y = 1.62 - row * 0.064; const n = row < 6 ? 4 : 3; for (let j = 0; j < n; j++) { const x = (-(n - 1) / 2 + j) * 0.1 + rnd(0.05); a.push({ p: [x, y, -0.12 + rnd(0.05)], r: 0.058 + Math.random() * 0.035 }) } }
+    for (const s of [-1, 1]) for (let i = 0; i < 3; i++) a.push({ p: [s * (0.13 + rnd(0.03)), 1.52 - i * 0.1, 0.02 + rnd(0.03)], r: 0.055 + Math.random() * 0.025 })
+    return a
+  }, [])
 
   useEffect(() => {
     const dn = e => { keys.current[e.code] = true; if (e.code.startsWith('Arrow')) e.preventDefault() }
@@ -1140,36 +1155,49 @@ function Character() {
     camera.lookAt(target.x, target.y, target.z)
   })
 
-  // slim, elegant human figure (faces +Z); limb groups pivot for the walk cycle
+  // stylized figure (faces +Z): brunette curls, Y2K tee, denim skirt, knee-high boots
   return (
     <group ref={root} position={[0, 0, 8]}>
       <group ref={modelRef}>
-        {/* torso + head + arms (bobs as one during the walk) */}
+        {/* torso + head + hair + arms + skirt (bobs as one during the walk) */}
         <group ref={body}>
-          <mesh position={[0, 1.18, 0]} castShadow material={blk}><capsuleGeometry args={[0.135, 0.4, 6, 12]} /></mesh>
-          <mesh position={[0, 0.94, 0]} castShadow material={blk}><sphereGeometry args={[0.15, 14, 12]} /></mesh>
-          <mesh position={[0, 1.62, 0]} castShadow material={blk}><sphereGeometry args={[0.135, 16, 14]} /></mesh>
-          {/* shoulders pivot at the top; arm hangs down from the pivot */}
-          <group ref={armL} position={[-0.205, 1.44, 0]}>
-            <mesh position={[0, -0.26, 0]} castShadow material={blk}><capsuleGeometry args={[0.052, 0.46, 5, 10]} /></mesh>
+          {/* denim A-line skirt + waistband */}
+          <mesh position={[0, 0.87, 0]} castShadow material={mat.denim}><cylinderGeometry args={[0.15, 0.29, 0.34, 18, 1, true]} /></mesh>
+          <mesh position={[0, 1.02, 0]} castShadow material={mat.denim}><cylinderGeometry args={[0.135, 0.15, 0.08, 16]} /></mesh>
+          {/* dark-blue Y2K tee (fitted) */}
+          <mesh position={[0, 1.2, 0]} castShadow material={mat.shirt}><capsuleGeometry args={[0.115, 0.3, 6, 14]} /></mesh>
+          {/* neck + head */}
+          <mesh position={[0, 1.5, 0]} castShadow material={mat.skin}><cylinderGeometry args={[0.05, 0.06, 0.1, 10]} /></mesh>
+          <mesh position={[0, 1.62, 0]} castShadow material={mat.skin}><sphereGeometry args={[0.135, 18, 16]} /></mesh>
+          {/* curly brunette hair, mid-back length */}
+          {hairCurls.map((c, i) => <mesh key={i} position={c.p} castShadow material={mat.hair}><sphereGeometry args={[c.r, 8, 8]} /></mesh>)}
+          {/* shoulders pivot; short sleeve cap + bare arm */}
+          <group ref={armL} position={[-0.17, 1.43, 0]}>
+            <mesh position={[0, -0.05, 0]} castShadow material={mat.shirt}><sphereGeometry args={[0.072, 10, 8]} /></mesh>
+            <mesh position={[0, -0.26, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.046, 0.4, 5, 10]} /></mesh>
           </group>
-          <group ref={armR} position={[0.205, 1.44, 0]}>
-            <mesh position={[0, -0.26, 0]} castShadow material={blk}><capsuleGeometry args={[0.052, 0.46, 5, 10]} /></mesh>
+          <group ref={armR} position={[0.17, 1.43, 0]}>
+            <mesh position={[0, -0.05, 0]} castShadow material={mat.shirt}><sphereGeometry args={[0.072, 10, 8]} /></mesh>
+            <mesh position={[0, -0.26, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.046, 0.4, 5, 10]} /></mesh>
           </group>
         </group>
-        {/* legs: hip pivot → thigh, knee pivot → shin + foot */}
+        {/* legs: bare upper leg below the skirt → sock peek → knee-high boot */}
         <group ref={thighL} position={[-0.1, 0.92, 0]}>
-          <mesh position={[0, -0.21, 0]} castShadow material={blk}><capsuleGeometry args={[0.068, 0.34, 5, 10]} /></mesh>
+          <mesh position={[0, -0.2, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.072, 0.3, 5, 10]} /></mesh>
           <group ref={shinL} position={[0, -0.44, 0]}>
-            <mesh position={[0, -0.21, 0]} castShadow material={blk}><capsuleGeometry args={[0.06, 0.34, 5, 10]} /></mesh>
-            <mesh position={[0, -0.45, 0.06]} castShadow material={blk}><boxGeometry args={[0.11, 0.07, 0.22]} /></mesh>
+            <mesh position={[0, -0.02, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.06, 0.12, 5, 10]} /></mesh>
+            <mesh position={[0, -0.05, 0]} castShadow material={mat.sock}><cylinderGeometry args={[0.082, 0.082, 0.06, 12]} /></mesh>
+            <mesh position={[0, -0.24, 0]} castShadow material={mat.boot}><capsuleGeometry args={[0.078, 0.3, 6, 12]} /></mesh>
+            <mesh position={[0, -0.45, 0.06]} castShadow material={mat.boot}><boxGeometry args={[0.12, 0.1, 0.25]} /></mesh>
           </group>
         </group>
         <group ref={thighR} position={[0.1, 0.92, 0]}>
-          <mesh position={[0, -0.21, 0]} castShadow material={blk}><capsuleGeometry args={[0.068, 0.34, 5, 10]} /></mesh>
+          <mesh position={[0, -0.2, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.072, 0.3, 5, 10]} /></mesh>
           <group ref={shinR} position={[0, -0.44, 0]}>
-            <mesh position={[0, -0.21, 0]} castShadow material={blk}><capsuleGeometry args={[0.06, 0.34, 5, 10]} /></mesh>
-            <mesh position={[0, -0.45, 0.06]} castShadow material={blk}><boxGeometry args={[0.11, 0.07, 0.22]} /></mesh>
+            <mesh position={[0, -0.02, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.06, 0.12, 5, 10]} /></mesh>
+            <mesh position={[0, -0.05, 0]} castShadow material={mat.sock}><cylinderGeometry args={[0.082, 0.082, 0.06, 12]} /></mesh>
+            <mesh position={[0, -0.24, 0]} castShadow material={mat.boot}><capsuleGeometry args={[0.078, 0.3, 6, 12]} /></mesh>
+            <mesh position={[0, -0.45, 0.06]} castShadow material={mat.boot}><boxGeometry args={[0.12, 0.1, 0.25]} /></mesh>
           </group>
         </group>
       </group>
