@@ -91,7 +91,7 @@ function useMaterials() {
     }),
     wallSide: new MeshStandardMaterial({
       color: '#ffffff', roughness: 0.82, metalness: 0,
-      normalScale: new Vector2(1.0, 1.0), envMapIntensity: 0.18,
+      normalScale: new Vector2(1.0, 1.0), envMapIntensity: 0.18, side: DoubleSide,
     }),
     // espresso/smoked walnut — far less red, nearly black in shadow, polished oil luster
     floor: new MeshPhysicalMaterial({
@@ -142,12 +142,14 @@ function Room({ m }) {
     // WALLS: real plaster scan, tinted deep green
     // WALLS: dark-green baroque damask wallpaper. ~1.9 m motif → repeat tuned
     // per wall so front/back (W=34) and sides (D=64) match in scale.
-    const wpFront = { x: Math.round(W / 1.9), y: Math.round(H / 1.9) }   // ~18 x 7
-    const wpSide = { x: Math.round(D / 1.9), y: Math.round(H / 1.9) }    // ~34 x 7
+    // front wall = single plane (0..1 UV). side/back walls = holed ExtrudeGeometry
+    // whose cap UVs are in METRES, so the side texture tiles per metre (continuous).
+    const wpFront = { x: Math.round(W / 1.9), y: Math.round(H / 1.9) }
+    const perM = 1 / 1.9
     const loadWall = (file, srgb, assign) => loadInto(loader, WALLP + file, t => {
       const front = t, side = t.clone()
       configure(front, 1, 1, srgb); front.repeat.set(wpFront.x, wpFront.y)
-      configure(side, 1, 1, srgb); side.repeat.set(wpSide.x, wpSide.y)
+      configure(side, 1, 1, srgb); side.repeat.set(perM, perM)
       assign(front, side)
     })
     loadWall('BaseColor.jpg', true, (f, s) => { m.wall.map = f; m.wallSide.map = s; m.wall.needsUpdate = m.wallSide.needsUpdate = true })
@@ -188,22 +190,12 @@ function Room({ m }) {
   return (
     <group>
       <mesh geometry={floorGeo} rotation={[-Math.PI / 2, 0, 0]} receiveShadow material={m.floor} />
-      {/* FAR WALL with a true central opening for the Gothic feature window */}
-      {(() => {
-        const side = (W - FEAT_W) / 2, zb = -D / 2
-        const fb = FEAT_CY - FEAT_H / 2, ft = FEAT_CY + FEAT_H / 2
-        return (
-          <group>
-            <mesh position={[0, fb / 2, zb]} receiveShadow material={m.wall}><planeGeometry args={[W, fb]} /></mesh>
-            <mesh position={[0, (ft + H) / 2, zb]} receiveShadow material={m.wall}><planeGeometry args={[W, H - ft]} /></mesh>
-            <mesh position={[-(FEAT_W / 2 + side / 2), FEAT_CY, zb]} receiveShadow material={m.wall}><planeGeometry args={[side, FEAT_H]} /></mesh>
-            <mesh position={[(FEAT_W / 2 + side / 2), FEAT_CY, zb]} receiveShadow material={m.wall}><planeGeometry args={[side, FEAT_H]} /></mesh>
-          </group>
-        )
-      })()}
-      <mesh geometry={wallWide} position={[0, H / 2, D / 2]} rotation={[0, Math.PI, 0]} material={m.wall} />
+      {/* far + side walls = single continuous holed surfaces (no seam bands) */}
+      <BackWall m={m} />
       <SideWall side={-1} m={m} />
       <SideWall side={1} m={m} />
+      {/* entrance (front) wall = plain continuous plane */}
+      <mesh geometry={wallWide} position={[0, H / 2, D / 2]} rotation={[0, Math.PI, 0]} material={m.wall} />
     </group>
   )
 }
@@ -639,31 +631,35 @@ function Door({ m }) {
   )
 }
 
-/* a long side wall built as a THICK wall with real recessed openings.
- * Boxes (thickness WALL_T) give the openings genuine depth + jambs/sill/header. */
-function SideWall({ side, m }) {
-  // wall slab sits just outside the room boundary, inner face at x = side*W/2
-  const cx = side * (W / 2 + WALL_T / 2)
-  const midY = WIN_CY, openH = WIN_OPEN_H
-  const bottom = WIN_CY - WIN_OPEN_H / 2, top = WIN_CY + WIN_OPEN_H / 2
-  const zs = [...WIN_Z].sort((a, b) => a - b)
-  const segs = []
-  let cursor = -D / 2
-  for (const wz of zs) {
-    const l = wz - WIN_OPEN_W / 2
-    if (l > cursor + 0.02) segs.push([(cursor + l) / 2, l - cursor])
-    cursor = wz + WIN_OPEN_W / 2
+/* helper: a holed wall as ONE extruded surface (continuous wallpaper UVs).
+ * Shape is built in (u = along-wall, v = height) metres; holes are rectangles. */
+function holedWallGeo(uLen, holes) {
+  const s = new Shape()
+  s.moveTo(-uLen / 2, 0); s.lineTo(uLen / 2, 0); s.lineTo(uLen / 2, H); s.lineTo(-uLen / 2, H); s.lineTo(-uLen / 2, 0)
+  for (const [u, w, y0, y1] of holes) {
+    const p = new Path()
+    p.moveTo(u - w / 2, y0); p.lineTo(u + w / 2, y0); p.lineTo(u + w / 2, y1); p.lineTo(u - w / 2, y1); p.lineTo(u - w / 2, y0)
+    s.holes.push(p)
   }
-  if (D / 2 > cursor + 0.02) segs.push([(cursor + D / 2) / 2, D / 2 - cursor])
-  const slab = (h, y, len, z) => (
-    <mesh position={[cx, y, z]} receiveShadow material={m.wallSide}><boxGeometry args={[WALL_T, h, len]} /></mesh>
-  )
+  return new ExtrudeGeometry(s, { depth: WALL_T, bevelEnabled: false })
+}
+
+/* a long side wall: ONE continuous holed surface (no banding), real openings */
+function SideWall({ side, m }) {
+  const y0 = WIN_CY - WIN_OPEN_H / 2, y1 = WIN_CY + WIN_OPEN_H / 2
+  const geo = useMemo(() => holedWallGeo(D, WIN_Z.map(z => [z, WIN_OPEN_W, y0, y1])), [])
+  // shape(u,v) plane → rotate so u→world Z, v→world Y, extrude→world ±X
   return (
-    <group>
-      {slab(bottom, bottom / 2, D, 0)}
-      {slab(H - top, (top + H) / 2, D, 0)}
-      {segs.map(([cz, len], i) => <group key={i}>{slab(openH, midY, len, cz)}</group>)}
-    </group>
+    <mesh geometry={geo} position={[side * (W / 2), 0, 0]} rotation={[0, side > 0 ? Math.PI / 2 : -Math.PI / 2, 0]} receiveShadow material={m.wallSide} />
+  )
+}
+
+/* far wall: ONE continuous holed surface with the central feature opening */
+function BackWall({ m }) {
+  const y0 = FEAT_CY - FEAT_H / 2, y1 = FEAT_CY + FEAT_H / 2
+  const geo = useMemo(() => holedWallGeo(W, [[0, FEAT_W, y0, y1]]), [])
+  return (
+    <mesh geometry={geo} position={[0, 0, -D / 2]} rotation={[0, 0, 0]} receiveShadow material={m.wallSide} />
   )
 }
 
