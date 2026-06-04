@@ -95,9 +95,10 @@ function useMaterials() {
       emissive: '#0c1408', emissiveIntensity: 0.4,
       normalScale: new Vector2(1.0, 1.0), envMapIntensity: 0, side: DoubleSide,
     }),
-    // plaster lining the window recess (jambs / head / sill reveal) — a muted
-    // green plaster a touch lighter than the walls so the depth reads in shadow
-    revealPlaster: new MeshStandardMaterial({ color: '#5f6a48', roughness: 0.96, metalness: 0, envMapIntensity: 0, side: DoubleSide }),
+    // pale plaster lining the window recess (jambs / head / sill reveal). NOT green
+    // (green here read as a wallpaper outline); warm off-white plaster like the trim,
+    // a touch darker so the splayed depth still reads in shadow.
+    revealPlaster: new MeshStandardMaterial({ color: '#b9af97', roughness: 0.96, metalness: 0, envMapIntensity: 0, side: DoubleSide }),
     // pale museum stone sill (projects into the room, catches light, casts shadow)
     sillStone: new MeshStandardMaterial({ color: '#c9c2af', roughness: 0.82, metalness: 0, envMapIntensity: 0.08 }),
     // hazy distant sky layer seen far beyond the trees
@@ -821,8 +822,11 @@ function MuseumWindow({ w, h, m }) {
   const frameGeo = useMemo(() => baroqueFrame(w, h), [w, h])   // cached + reused across windows
 
   // depths (local +Z faces the room; the recess runs back to -RECESS)
-  const frameZ = -(RECESS - 0.10)                  // carved surround sits INSIDE the opening, recessed
-  const glassZ = -(RECESS - 0.04)                  // glazing near the back of the reveal
+  // The architrave sits at the wall FACE so its moldings (wider than the opening)
+  // overlap and fully cover the cut edge — no wall/wallpaper perimeter shows.
+  // Depth comes from the deep glazing + splayed reveal seen THROUGH the arch.
+  const frameZ = -0.05                             // surround proud of the wall face, covering the opening edge
+  const glassZ = -(RECESS - 0.04)                  // glazing deep at the back of the reveal
   const mullZ = glassZ + 0.03
   const jambT = 0.14                               // plaster reveal thickness shown
 
