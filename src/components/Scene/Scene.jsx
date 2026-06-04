@@ -817,32 +817,31 @@ function pointedArch(w, h, spring = 0.6) {
 function MuseumWindow({ w, h, m }) {
   // ── layered exterior scenery (aerial perspective: near darker, far hazier) ──
   const forest = useTexture(FOREST_URL)
-  const mkScenery = (rep, off, color) => {
+  const mkScenery = (rep, voff, color) => {
     const t = forest.clone(); t.needsUpdate = true
     t.colorSpace = SRGBColorSpace; t.wrapS = t.wrapT = RepeatWrapping
-    t.repeat.set(rep[0], rep[1]); t.offset.set(off, 0.42)
+    t.repeat.set(rep[0], rep[1]); t.offset.set(seedRef, voff)
     return new MeshBasicMaterial({ map: t, color })
   }
-  const seed = useMemo(() => Math.random() * 0.75, [])
-  const treelineMat = useMemo(() => mkScenery([0.18, 0.55], seed, '#f2f0e8'), [forest, seed])      // mid: tree line (bright daylight)
-  const nearMat = useMemo(() => mkScenery([0.11, 0.42], seed + 0.05, '#cdd0c2'), [forest, seed])    // near foliage (slightly darker)
+  const seedRef = useMemo(() => Math.random() * 0.75, [])
+  const treelineMat = useMemo(() => mkScenery([0.2, 0.62], 0.3, '#d8d8ce'), [forest, seedRef])     // full backdrop: trees + soft sky
+  const nearMat = useMemo(() => mkScenery([0.13, 0.34], 0.18, '#c2c6b6'), [forest, seedRef])        // nearer foliage (lower, slightly darker)
 
   const RECESS = WALL_T                            // reveal depth = full wall thickness (~24in)
-  const tw = Math.min(0.58, w * 0.16)              // trim width
+  const tw = Math.min(0.34, w * 0.105)             // trim width — MUST match buildBaroqueFrame so glass fills the hole
   const iw = w - 2 * tw, ih = h - 2 * tw           // arched opening (glass)
   const spring = 0.6
   const H2 = ih / 2, W2 = iw / 2, sy = -H2 + spring * ih   // arch spring line
   const mull = 0.055
 
-  const glassGeo = useMemo(() => new ShapeGeometry(pointedArch(iw * 0.99, ih * 0.99, spring)), [iw, ih])
+  // glass fills the frame hole exactly (frame inner hole = iw+0.10 → glass slightly larger so no edge gap)
+  const glassGeo = useMemo(() => new ShapeGeometry(pointedArch(iw + 0.10, ih + 0.10, spring)), [iw, ih])
   const frameGeo = useMemo(() => baroqueFrame(w, h), [w, h])   // cached + reused across windows
 
-  // depths (local +Z faces the room; the recess runs back to -RECESS)
-  // The architrave sits at the wall FACE so its moldings (wider than the opening)
-  // overlap and fully cover the cut edge — no wall/wallpaper perimeter shows.
-  // Depth comes from the deep glazing + splayed reveal seen THROUGH the arch.
+  // depths (local +Z faces the room). Keep the glazing + scenery just behind the
+  // frame so the view fills the opening with no parallax gap at the edges.
   const frameZ = -0.05                             // surround proud of the wall face, covering the opening edge
-  const glassZ = -(RECESS - 0.04)                  // glazing deep at the back of the reveal
+  const glassZ = -0.16                             // glazing right behind the frame opening
   const mullZ = glassZ + 0.03
   const jambT = 0.14                               // plaster reveal thickness shown
 
@@ -852,11 +851,12 @@ function MuseumWindow({ w, h, m }) {
   const arcR = (H2 - sy) * 0.30
   return (
     <group>
-      {/* ── EXTERIOR DEPTH LAYERS (behind the glazing) ──
-          far hazy sky → tree line → near foliage, separated in Z for parallax */}
-      <mesh position={[0, 0, -(RECESS + 2.6)]} material={m.skyHaze}><planeGeometry args={[w * 3.2, h * 2.4]} /></mesh>
-      <mesh position={[0, 0, -(RECESS + 1.35)]} material={treelineMat}><planeGeometry args={[w * 1.7, h * 1.4]} /></mesh>
-      <mesh position={[0, -h * 0.12, -(RECESS + 0.55)]} material={nearMat}><planeGeometry args={[w * 1.35, h * 1.2]} /></mesh>
+      {/* ── EXTERIOR GROUNDS just behind the glazing — a forest backdrop that
+          FULLY fills the opening (covers the arch top), with a nearer foliage
+          band low for a touch of depth. No separate sky plane (it read as a
+          white blob); the backdrop's own soft sky shows at the top. */}
+      <mesh position={[0, 0, glassZ - 0.22]} material={treelineMat}><planeGeometry args={[w * 1.5, h * 1.4]} /></mesh>
+      <mesh position={[0, -h * 0.22, glassZ - 0.12]} material={nearMat}><planeGeometry args={[w * 1.5, h * 0.72]} /></mesh>
 
       {/* ── DEEP PLASTER REVEAL lining the opening (jambs / head / sill bed) ──
           turns the cut hole into a real architectural recess that catches shadow */}
