@@ -1062,7 +1062,7 @@ function Character() {
   const armL = useRef(), armR = useRef()
   const hairRefs = useRef([])   // per-section hair groups (each sways individually)
   const keys = useRef({})
-  const st = useRef({ yaw: 0, yawT: 0, pitch: 0.12, pitchT: 0.12, vel: new Vector3(), face: 0, phase: 0, t: 0, dist: 6.2 })
+  const st = useRef({ yaw: 0, yawT: 0, pitch: 0.12, pitchT: 0.12, vel: new Vector3(), face: 0, phase: 0, t: 0, dist: 6.2, dragging: false })
   const mat = useMemo(() => ({
     skin: new MeshStandardMaterial({ color: '#c8996f', roughness: 0.72, metalness: 0 }),
     hair: new MeshStandardMaterial({ color: '#211008', roughness: 0.85, metalness: 0 }),   // dark brunette
@@ -1180,15 +1180,15 @@ function Character() {
     const canvas = document.querySelector('canvas')
     // DRAG-TO-LOOK: hold and drag to orbit; release stops. No pointer lock, no Esc.
     let dragging = false, lx = 0, ly = 0
-    const down = e => { dragging = true; lx = e.clientX; ly = e.clientY }
+    const down = e => { dragging = true; st.current.dragging = true; lx = e.clientX; ly = e.clientY }
     const move = e => {
       if (!dragging) return
       const s = st.current
       s.yawT -= (e.clientX - lx) * DRAG_SENS                                   // horizontal → orbit left/right
-      s.pitchT = MathUtils.clamp(s.pitchT - (e.clientY - ly) * DRAG_SENS, -1.4, 1.4)  // vertical → tilt (±~80°)
+      s.pitchT = MathUtils.clamp(s.pitchT - (e.clientY - ly) * DRAG_SENS, -1.48, 1.48)  // vertical → tilt (±~85°)
       lx = e.clientX; ly = e.clientY
     }
-    const end = () => { dragging = false }
+    const end = () => { dragging = false; st.current.dragging = false }
     const wheel = e => { e.preventDefault(); st.current.dist = MathUtils.clamp(st.current.dist + e.deltaY * 0.004, 3.5, 9) }
     window.addEventListener('keydown', dn); window.addEventListener('keyup', up)
     canvas && canvas.addEventListener('pointerdown', down)
@@ -1207,9 +1207,10 @@ function Character() {
   useFrame(({ camera }, delta) => {
     if (!root.current) return
     const s = st.current, k = keys.current, d = Math.min(delta, 0.05)
-    // smooth the look angles toward their drag targets (elegant, not jerky)
-    s.yaw += (s.yawT - s.yaw) * Math.min(1, 12 * d)
-    s.pitch += (s.pitchT - s.pitch) * Math.min(1, 12 * d)
+    // smooth the look angles toward their targets (shortest-arc yaw → no spin), elegant
+    let dyaw = s.yawT - s.yaw; dyaw = Math.atan2(Math.sin(dyaw), Math.cos(dyaw))
+    s.yaw += dyaw * Math.min(1, 11 * d)
+    s.pitch += (s.pitchT - s.pitch) * Math.min(1, 11 * d)
     // camera-relative input
     const fwd = (k['KeyW'] || k['ArrowUp'] ? 1 : 0) - (k['KeyS'] || k['ArrowDown'] ? 1 : 0)
     const strafe = (k['KeyD'] || k['ArrowRight'] ? 1 : 0) - (k['KeyA'] || k['ArrowLeft'] ? 1 : 0)
@@ -1238,6 +1239,13 @@ function Character() {
     }
     if (modelRef.current) modelRef.current.rotation.y = s.face
 
+    // chase-camera realign: while moving (and not actively dragging), ease the camera
+    // back behind the character so you keep seeing its back / where you're going
+    if (spd > 0.5 && !s.dragging) {
+      let dre = s.face - s.yawT; dre = Math.atan2(Math.sin(dre), Math.cos(dre))
+      s.yawT += dre * Math.min(1, 2.2 * d)
+    }
+
     // ── procedural locomotion ──
     s.t += d
     const walkAmt = MathUtils.clamp(spd / 1.6, 0, 1)          // 0 idle → 1 full stride
@@ -1265,20 +1273,21 @@ function Character() {
       g.rotation.z += (sz - g.rotation.z) * Math.min(1, 6 * d)
     }
 
-    // third-person orbit: camera circles behind the character (yaw); pitch tilts the
-    // AIM up/down so you can look from the floor, straight ahead, up to the ceiling —
-    // without the camera ever dropping below the floor.
-    const dist = s.dist
+    // CHASE CAMERA: always behind the character (yaw). Pitch tilts the AIM from the
+    // floor → straight ahead → ceiling; when looking up the camera pulls in/over so the
+    // whole ceiling is visible. Never drops below the floor.
+    const up = Math.max(0, s.pitch) / 1.48
+    const horiz = s.dist * (1 - 0.62 * up)
     const cam = _v6.set(
-      ch.position.x - sin * dist,
-      HEAD_Y + 1.7 + s.pitch * 1.1,
-      ch.position.z - cos * dist,
+      ch.position.x - sin * horiz,
+      HEAD_Y + 1.95 + s.pitch * 1.15,
+      ch.position.z - cos * horiz,
     )
-    cam.x = MathUtils.clamp(cam.x, -W / 2 + 0.4, W / 2 - 0.4)
+    cam.x = MathUtils.clamp(cam.x, -W / 2 + 0.4, W / 2 - 0.4)   // camera collision: stay inside the room
     cam.z = MathUtils.clamp(cam.z, -D / 2 + 0.4, D / 2 - 0.4)
     cam.y = MathUtils.clamp(cam.y, 0.8, CEIL - 0.4)
     camera.position.lerp(cam, Math.min(1, 9 * d))
-    _v5.set(ch.position.x, HEAD_Y + 0.6 + s.pitch * 5.5, ch.position.z)   // aim swings floor→ahead→ceiling
+    _v5.set(ch.position.x, HEAD_Y + 0.4 + s.pitch * 7.0, ch.position.z)   // aim swings floor → ahead → ceiling
     camera.lookAt(_v5)
   })
 
