@@ -1062,18 +1062,24 @@ function Gallery() {
   // procession gallery: central Gothic feature window flanked by paintings on
   // the far wall; Gothic windows on BOTH long walls with paintings between them
   // (WINDOW / PAINTING / WINDOW ... rhythm).
-  const back = [-6, 6]                                  // flank the feature window
   const art = [34, 20.25, 6.75, -6.75, -20.25, -34]     // between the window bays
 
-  let k = 0
-  const items = []
-  // hierarchy: back-wall pair flanking the feature window = MASTERPIECE frames;
-  // a couple of side paintings = IMPORTANT; the rest = SECONDARY (still ornate).
-  // back-wall paintings sit on the INTERIOR wall face (wall is WALL_T thick now);
-  // the old -hd+0.12 buried them inside the thicker wall (only crest/apron poked out)
-  back.forEach((x, i) => items.push({ key: 'b' + i, pos: [x, PY, -hd + WALL_T + 0.06], rot: [0, 0, 0], mw: 2.9, mh: 4.0, art: pick(k++), cls: 2 }))
-  art.forEach((z, i) => items.push({ key: 'la' + i, pos: [-hw + 0.12, PY, z], rot: [0, Math.PI / 2, 0], mw: 2.5, mh: 3.5, art: pick(k++), cls: i === 2 ? 1 : 0 }))
-  art.forEach((z, i) => items.push({ key: 'ra' + i, pos: [hw - 0.12, PY, z], rot: [0, -Math.PI / 2, 0], mw: 2.5, mh: 3.5, art: pick(k++), cls: i === 3 ? 1 : 0 }))
+  // No paintings on the centre-window wall. Side paintings get the crested
+  // "masterpiece" frame SPORADICALLY (≈38% each), so the row varies for realism.
+  // Built once (useMemo) so the random assignment is stable across re-renders.
+  const items = useMemo(() => {
+    let k = 0
+    const out = []
+    const sideCls = () => (Math.random() < 0.38 ? 2 : 0)   // crested vs plain ornate
+    const push = (key, x, z, ry) => {
+      const cls = sideCls()
+      const mw = cls === 2 ? 2.6 : 2.5, mh = cls === 2 ? 3.7 : 3.5
+      out.push({ key, pos: [x, PY, z], rot: [0, ry, 0], mw, mh, art: pick(k++), cls })
+    }
+    art.forEach((z, i) => push('la' + i, -hw + 0.12, z, Math.PI / 2))
+    art.forEach((z, i) => push('ra' + i, hw - 0.12, z, -Math.PI / 2))
+    return out
+  }, [])
 
   return (
     <group>
@@ -1091,8 +1097,6 @@ function Gallery() {
       <Suspense fallback={null}><Paintings items={items} m={m} /></Suspense>
       {/* curated warm wall-wash spots (kept few for performance) */}
       {[
-        { pos: [-6, H - 1.4, -hd + 1.0], tgt: [-6, PY, -hd + 0.1], ry: 0 },
-        { pos: [6, H - 1.4, -hd + 1.0], tgt: [6, PY, -hd + 0.1], ry: 0 },
         { pos: [-hw + 1.0, H - 1.4, 18], tgt: [-hw + 0.1, PY, 18], ry: Math.PI / 2 },
         { pos: [hw - 1.0, H - 1.4, 22], tgt: [hw - 0.1, PY, 22], ry: -Math.PI / 2 },
         { pos: [hw - 1.0, H - 1.4, -6], tgt: [hw - 0.1, PY, -6], ry: -Math.PI / 2 },
