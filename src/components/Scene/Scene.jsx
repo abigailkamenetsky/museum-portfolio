@@ -670,7 +670,7 @@ function buildCorner(w) {
 }
 function corner(w) { const k = w.toFixed(2); if (!_cornerCache[k]) _cornerCache[k] = buildCorner(w); return _cornerCache[k] }
 
-function Painting({ position, rotation = [0, 0, 0], maxW, maxH, art, cls = 1, frame, m }) {
+function Painting({ position, rotation = [0, 0, 0], maxW, maxH, art, cls = 1, wingId, piece, frame, m }) {
   // frame outer fills the wall slot; painting sits inside a dark mat
   const big = cls === 2 ? 1 : cls === 1 ? 0.55 : 0.15     // crest drama by class
   const outerScale = cls === 2 ? 1.06 : cls === 1 ? 1.0 : 0.92
@@ -697,8 +697,15 @@ function Painting({ position, rotation = [0, 0, 0], maxW, maxH, art, cls = 1, fr
   }, [art, artMat, rx, ry, ox, oy])
 
   const FZ = 0.13   // frame front-relief origin off the wall
+  const open = e => {
+    e.stopPropagation()
+    const mu = museum.get()
+    if (wingId && !mu.menu && !mu.card) museum.set({ card: wingId, cardPiece: piece })
+  }
   return (
-    <group position={position} rotation={rotation}>
+    <group position={position} rotation={rotation} onClick={open}
+      onPointerOver={() => { document.body.style.cursor = 'pointer' }}
+      onPointerOut={() => { document.body.style.cursor = '' }}>
       {/* soft drop shadow on the wall behind the frame */}
       <mesh position={[0, -0.08, -0.02]}>
         <planeGeometry args={[outerW + 0.4, outerH + 0.5]} />
@@ -1476,7 +1483,7 @@ function Logger() {
 function Paintings({ items, m }) {
   const frame = useGoldFrame()
   return items.map(it => (
-    <Painting key={it.key} position={it.pos} rotation={it.rot} maxW={it.mw} maxH={it.mh} art={it.art} cls={it.cls} frame={frame} m={m} />
+    <Painting key={it.key} position={it.pos} rotation={it.rot} maxW={it.mw} maxH={it.mh} art={it.art} cls={it.cls} wingId={it.wingId} piece={it.piece} frame={frame} m={m} />
   ))
 }
 
@@ -1490,7 +1497,7 @@ function Gallery() {
   // WING-DRIVEN HANG (from shared PAINTINGS): single-piece wings = one painting;
   // multi-piece wings = an organic salon COLLAGE, each painting → one piece.
   const items = useMemo(() => PAINTINGS.map((p, i) => ({
-    key: p.wingId + i, pos: p.pos, rot: [0, p.ry, 0], mw: p.w, mh: p.h, art: pick(i), cls: p.cls,
+    key: p.wingId + i, pos: p.pos, rot: [0, p.ry, 0], mw: p.w, mh: p.h, art: pick(i), cls: p.cls, wingId: p.wingId, piece: p.piece,
   })), [])
 
   return (

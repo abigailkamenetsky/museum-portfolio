@@ -132,13 +132,13 @@ function cluster(n) {
     { dz: 0.95, dy: 0.55, w: 1.45, h: 1.2, cls: 0 },
     { dz: 1.45, dy: -0.7, w: 1.1, h: 1.55, cls: 0 },
   ]
-  // tight collage (5)
+  // balanced collage (5): even column spacing (left pair · centre · right pair)
   return [
-    { dz: -1.75, dy: 0.7, w: 1.15, h: 0.92, cls: 0 },
-    { dz: -1.5, dy: -0.7, w: 1.05, h: 1.4, cls: 0 },
-    { dz: 0.05, dy: 0.2, w: 1.5, h: 1.8, cls: 0 },
-    { dz: 1.55, dy: 0.8, w: 1.2, h: 1.0, cls: 0 },
-    { dz: 1.5, dy: -0.75, w: 1.1, h: 1.25, cls: 0 },
+    { dz: -1.7, dy: 0.78, w: 1.25, h: 1.0, cls: 0 },
+    { dz: -1.7, dy: -0.78, w: 1.25, h: 1.5, cls: 0 },
+    { dz: 0.0, dy: 0.0, w: 1.5, h: 1.85, cls: 0 },
+    { dz: 1.7, dy: 0.78, w: 1.25, h: 1.0, cls: 0 },
+    { dz: 1.7, dy: -0.78, w: 1.25, h: 1.5, cls: 0 },
   ]
 }
 
