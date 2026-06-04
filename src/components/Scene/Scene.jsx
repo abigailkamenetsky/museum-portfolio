@@ -16,7 +16,7 @@ import {
   PlaneGeometry, BufferAttribute, TextureLoader, RepeatWrapping, SRGBColorSpace,
   EquirectangularReflectionMapping, Object3D, TorusGeometry, CylinderGeometry,
   SphereGeometry, ConeGeometry, BoxGeometry, Matrix4, DoubleSide, Box3,
-  Vector3, Euler, MathUtils, ACESFilmicToneMapping, PCFSoftShadowMap,
+  Vector3, Euler, MathUtils, ACESFilmicToneMapping, PCFSoftShadowMap, ClampToEdgeWrapping,
 } from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
@@ -40,6 +40,9 @@ const WALNUT = TEX + 'walnut/'   // real CC0 scanned dark walnut (Artaley3D)
 const WALLP = TEX + 'wallpaper/'   // dark-green baroque damask (from GLB)
 const CEILP = TEX + 'ceilingplaster/Plaster001_1K-JPG_'   // ceiling plaster PBR
 const HDRI = BASE + 'assets/hdri/gallery.hdr'
+const DENIM_TEX = TEX + 'denim/'           // real denim fabric (skirt)
+const LEATHER_TEX = TEX + 'leather/'       // brown leather (boots)
+const HAIR_ALPHA_URL = TEX + 'hair/alpha.png'   // hair-card strand alpha
 const FRAME_URL = BASE + 'assets/models/frame_gold.glb'   // optimized ornate gold vintage frame
 useGLTF.preload(FRAME_URL)
 const STAINED_URL = BASE + 'assets/models/stained_glass.glb'   // gothic window with painted glass
@@ -1130,6 +1133,23 @@ function Character() {
     return out
   }, [])
 
+  // hair CARDS — curved alpha-mapped strips (real strand detail) layered over the curls
+  const hairCardMat = useMemo(() => new MeshStandardMaterial({ color: '#241208', roughness: 0.78, metalness: 0, side: DoubleSide, alphaTest: 0.5 }), [])
+  const cardGeo = useMemo(() => {
+    const g = new PlaneGeometry(0.18, 0.6, 1, 8); const pos = g.attributes.position
+    for (let i = 0; i < pos.count; i++) { const y = pos.getY(i); const t = (0.3 - y) / 0.6; pos.setZ(i, pos.getZ(i) - Math.sin(t * Math.PI) * 0.04 - t * 0.05); pos.setX(i, pos.getX(i) * (1 - t * 0.32)) }
+    pos.needsUpdate = true; g.computeVertexNormals(); g.translate(0, -0.3, 0); return g
+  }, [])
+
+  // load fabric textures (skirt denim, brown leather boots) + the hair-card alpha
+  useEffect(() => {
+    const L = new TextureLoader()
+    L.load(DENIM_TEX + 'diff.jpg', t => { t.colorSpace = SRGBColorSpace; t.wrapS = t.wrapT = RepeatWrapping; t.repeat.set(3, 2); t.anisotropy = 8; mat.denim.map = t; mat.denim.color.set('#ffffff'); mat.denim.needsUpdate = true; mat.denimDark.map = t; mat.denimDark.color.set('#b9c2cf'); mat.denimDark.needsUpdate = true })
+    L.load(DENIM_TEX + 'disp.jpg', t => { t.wrapS = t.wrapT = RepeatWrapping; t.repeat.set(3, 2); mat.denim.bumpMap = t; mat.denim.bumpScale = 0.02; mat.denim.needsUpdate = true })
+    L.load(LEATHER_TEX + 'diff.jpg', t => { t.colorSpace = SRGBColorSpace; t.wrapS = t.wrapT = RepeatWrapping; t.repeat.set(2, 2); t.anisotropy = 8; mat.boot.map = t; mat.boot.bumpMap = t; mat.boot.bumpScale = 0.015; mat.boot.color.set('#ffffff'); mat.boot.roughness = 0.55; mat.boot.metalness = 0.05; mat.boot.needsUpdate = true })
+    L.load(HAIR_ALPHA_URL, t => { t.wrapS = t.wrapT = ClampToEdgeWrapping; t.repeat.set(0.22, 1); t.offset.set(0.012, 0); hairCardMat.alphaMap = t; hairCardMat.needsUpdate = true })
+  }, [mat, hairCardMat])
+
   useEffect(() => {
     const dn = e => { keys.current[e.code] = true; if (e.code.startsWith('Arrow')) e.preventDefault() }
     const up = e => { keys.current[e.code] = false }
@@ -1273,12 +1293,19 @@ function Character() {
           </group>
           {/* dense curly cap (merged) */}
           <mesh geometry={hairCapGeo} castShadow material={mat.hair} />
-          {/* all-down ringlet sections — each pivots at the crown and sways on its own */}
-          {hairSectionGeos.map((geo, i) => (
-            <group key={'hs' + i} ref={el => (hairRefs.current[i] = el)} position={[0, 1.6, -0.05]}>
-              <mesh geometry={geo} castShadow material={mat.hair} />
-            </group>
-          ))}
+          {/* all-down ringlet sections (curl volume + hair cards), each sways on its own */}
+          {hairSectionGeos.map((geo, i) => {
+            const ang = (-1 + 2 * i / (SECTIONS - 1)) * 2.0
+            return (
+              <group key={'hs' + i} ref={el => (hairRefs.current[i] = el)} position={[0, 1.6, -0.05]}>
+                <mesh geometry={geo} castShadow material={mat.hair} />
+                {[-0.12, 0.12].map((o, j) => {
+                  const a = ang + o
+                  return <mesh key={j} geometry={cardGeo} material={hairCardMat} position={[Math.sin(a) * 0.13, 0.05, -Math.cos(a) * 0.12 - 0.02]} rotation={[0.15, a + Math.PI, 0]} />
+                })}
+              </group>
+            )
+          })}
           {/* shoulders pivot; short sleeve cap + bare arm */}
           <group ref={armL} position={[-0.17, 1.43, 0]}>
             <mesh position={[0, -0.05, 0]} castShadow material={mat.shirt}><sphereGeometry args={[0.07, 10, 8]} /></mesh>
