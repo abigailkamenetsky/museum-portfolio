@@ -69,7 +69,7 @@ function Env() {
         if (!active) return
         tex.mapping = EquirectangularReflectionMapping
         scene.environment = tex
-        if ('environmentIntensity' in scene) scene.environmentIntensity = 0.8
+        if ('environmentIntensity' in scene) scene.environmentIntensity = 0.35
         console.log('[hdri] ok', HDRI)
       },
       undefined,
@@ -95,10 +95,10 @@ function useMaterials() {
     }),
     // espresso/smoked walnut — far less red, nearly black in shadow, polished oil luster
     floor: new MeshPhysicalMaterial({
-      color: '#241710', roughness: 0.55, metalness: 0,
-      clearcoat: 0.08, clearcoatRoughness: 0.7,
-      normalScale: new Vector2(1.0, 1.0), envMapIntensity: 0.22, aoMapIntensity: 1.4,
-      anisotropy: 0.4, anisotropyRotation: Math.PI / 2,   // subtle luster along planks
+      color: '#241710', roughness: 0.66, metalness: 0,
+      clearcoat: 0.0, clearcoatRoughness: 0.8,
+      normalScale: new Vector2(1.0, 1.0), envMapIntensity: 0.05, aoMapIntensity: 1.4,
+      anisotropy: 0.2, anisotropyRotation: Math.PI / 2,   // barely-there luster, no mirror
     }),
     ceiling: new MeshStandardMaterial({ color: '#ddd5c6', roughness: 0.92, metalness: 0 }),
     trim: new MeshStandardMaterial({ color: '#e2dccd', roughness: 0.84, metalness: 0 }),
@@ -115,7 +115,7 @@ function useMaterials() {
     lens: new MeshStandardMaterial({ color: '#fff3c0', emissive: '#fff3c0', emissiveIntensity: 4, roughness: 0.4 }),
     // tall museum windows
     // real glass: transparent, faintly reflective, NOT emissive / not white
-    glass: new MeshStandardMaterial({ color: '#aebccb', roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.30, envMapIntensity: 0.9 }),
+    glass: new MeshStandardMaterial({ color: '#aebccb', roughness: 0.2, metalness: 0.05, transparent: true, opacity: 0.28, envMapIntensity: 0.12 }),
     sky: new MeshStandardMaterial({ color: '#9fb2c6', roughness: 1, metalness: 0 }),   // muted daylight behind glass
     // estate grounds seen through windows — dimmed so windows read as daylight,
     // not glowing light-cards (color multiplies the map down)
@@ -920,7 +920,7 @@ export default function Scene() {
       shadows={false}
       dpr={[1, 1.5]}
       camera={{ position: [0, 2.8, 12], fov: 68 }}
-      gl={{ toneMapping: ACESFilmicToneMapping, toneMappingExposure: 0.82, antialias: true, powerPreference: 'high-performance' }}
+      gl={{ toneMapping: ACESFilmicToneMapping, toneMappingExposure: 0.92, antialias: true, powerPreference: 'high-performance' }}
       onCreated={() => console.log('[Scene] Canvas created, renderer ready')}
       style={{ width: '100vw', height: '100vh', display: 'block' }}
     >
@@ -930,14 +930,10 @@ export default function Scene() {
           Picture spots create the hierarchy; HDRI + soft fills give bounce. */}
       {/* brighter, balanced fill — daylight via hemisphere + a directional from
           the window wall. Walls keep their green material; only light increases. */}
-      <ambientLight intensity={0.34} color="#f0d884" />
-      <hemisphereLight intensity={0.48} color="#dfe6f0" groundColor="#1a130c" />
-      {/* soft daylight from both window walls + the far feature (dialed down) */}
-      <directionalLight position={[-W, H * 0.7, 14]} intensity={0.55} color="#fbeed2" />
-      <directionalLight position={[-W, H * 0.7, -14]} intensity={0.5} color="#fbeed2" />
-      <directionalLight position={[W, H * 0.7, 14]} intensity={0.55} color="#fbeed2" />
-      <directionalLight position={[W, H * 0.7, -14]} intensity={0.5} color="#fbeed2" />
-      <directionalLight position={[0, H * 0.55, -D]} intensity={0.5} color="#e6ecf6" />
+      {/* RESET: no directional daylight at all — pure soft museum ambient.
+          Room lit by ambient + hemisphere + ceiling keys + picture spots. */}
+      <ambientLight intensity={0.5} color="#f0d884" />
+      <hemisphereLight intensity={0.66} color="#dfe6f0" groundColor="#1a130c" />
       {/* soft grazing fill on the centerpiece bay to reveal carving depth
           (distance-limited so it does not wash the rest of the ceiling) */}
       <pointLight position={[-4, CEIL - 2.4, 0]} intensity={7} distance={11} decay={2} color="#f3e0a8" />
