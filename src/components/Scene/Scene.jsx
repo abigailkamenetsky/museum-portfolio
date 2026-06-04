@@ -1482,25 +1482,40 @@ function Gallery() {
   const A = ARTWORKS
   const pick = i => A[((i % A.length) + A.length) % A.length]
 
-  // procession gallery: central Gothic feature window flanked by paintings on
-  // the far wall; Gothic windows on BOTH long walls with paintings between them
-  // (WINDOW / PAINTING / WINDOW ... rhythm).
-  const art = [34, 20.25, 6.75, -6.75, -20.25, -34]     // between the window bays
-
-  // No paintings on the centre-window wall. Side paintings get the crested
-  // "masterpiece" frame SPORADICALLY (≈38% each), so the row varies for realism.
-  // Built once (useMemo) so the random assignment is stable across re-renders.
+  // WING-DRIVEN HANG: each wing owns a wall section between the windows. Single-piece
+  // wings get one painting; multi-piece wings (Professional 5, Projects 3, Research 2)
+  // get a SALON CLUSTER of varied-size baroque frames in that section.
   const items = useMemo(() => {
     let k = 0
     const out = []
-    const sideCls = () => (Math.random() < 0.38 ? 2 : 0)   // crested vs plain ornate
-    const push = (key, x, z, ry) => {
-      const cls = sideCls()
-      const mw = cls === 2 ? 2.6 : 2.5, mh = cls === 2 ? 3.7 : 3.5
-      out.push({ key, pos: [x, PY, z], rot: [0, ry, 0], mw, mh, art: pick(k++), cls })
+    const cluster = n => {
+      if (n <= 1) return [{ dz: 0, dy: 0, w: 2.5, h: 3.4, cls: 1 }]
+      if (n === 2) return [
+        { dz: -1.85, dy: 0.15, w: 1.9, h: 2.4, cls: 1 },
+        { dz: 1.85, dy: -0.05, w: 1.8, h: 2.2, cls: 0 },
+      ]
+      if (n === 3) return [
+        { dz: 0, dy: 0.45, w: 2.0, h: 2.5, cls: 2 },
+        { dz: -2.55, dy: -0.35, w: 1.5, h: 1.9, cls: 0 },
+        { dz: 2.55, dy: -0.1, w: 1.6, h: 2.0, cls: 0 },
+      ]
+      return [ // salon hang for 5 — a larger centre flanked by varied smaller frames
+        { dz: 0, dy: 0.05, w: 2.0, h: 2.6, cls: 2 },
+        { dz: -2.75, dy: 1.3, w: 1.4, h: 1.65, cls: 0 },
+        { dz: -2.55, dy: -1.5, w: 1.6, h: 1.35, cls: 0 },
+        { dz: 2.75, dy: 1.2, w: 1.5, h: 1.5, cls: 0 },
+        { dz: 2.6, dy: -1.45, w: 1.35, h: 1.85, cls: 0 },
+      ]
     }
-    art.forEach((z, i) => push('la' + i, -hw + 0.12, z, Math.PI / 2))
-    art.forEach((z, i) => push('ra' + i, hw - 0.12, z, -Math.PI / 2))
+    for (const w of WINGS) {
+      if (w.id === 'contact') continue   // back wall = stained-glass centrepiece (no paintings)
+      const side = w.pos[0] < 0 ? -1 : 1
+      const wallX = side * (hw - 0.12)
+      const ry = side < 0 ? Math.PI / 2 : -Math.PI / 2
+      cluster(w.pieces?.length || 1).forEach((p, j) => {
+        out.push({ key: w.id + j, pos: [wallX, PY + p.dy, w.pos[1] + p.dz], rot: [0, ry, 0], mw: p.w, mh: p.h, art: pick(k++), cls: p.cls })
+      })
+    }
     return out
   }, [])
 
