@@ -707,7 +707,7 @@ function rosetteMerge(d) {
 
 const _frameCache = {}
 function buildBaroqueFrame(w, h) {
-  const tw = Math.min(0.58, w * 0.16)              // heavier surround → reads as architecture, not a picture frame
+  const tw = Math.min(0.34, w * 0.105)             // slimmer surround → detail carries it, not bulk
   const iw = w - 2 * tw, ih = h - 2 * tw            // arched glass opening
   const parts = []
   const add = (geo, pos = [0, 0, 0], rot = [0, 0, 0], scl = [1, 1, 1]) => {
@@ -716,21 +716,21 @@ function buildBaroqueFrame(w, h) {
   }
   const A2 = ih / 2, sy = -A2 + 0.6 * ih            // arch spring (local y)
   // ── moldings: backing fills the wall opening + hugs the arched glass ──
-  add(rectArchRing(w, h, iw * 0.96, ih * 0.96, 0.06))                          // backing plate (fills corners)
-  add(rectArchRing(w + 0.9, h + 0.8, iw + 0.10, ih + 0.10, 0.16), [0, 0, 0.05]) // main body — heavier
-  add(archBand(iw + 0.18, ih + 0.18, iw, ih, 0.15), [0, 0, 0.07])              // inner bead molding (arched)
-  add(rectArchRing(w + 1.4, h + 1.3, w + 0.78, h + 0.66, 0.11), [0, 0, 0.18])  // outer molding — heavier
-  // ── side pilasters with capital/base + carved bits ──
-  const pw = w * 0.20, ph = h * 0.82
+  add(rectArchRing(w, h, iw * 0.97, ih * 0.97, 0.05))                          // backing plate (fills corners)
+  add(rectArchRing(w + 0.5, h + 0.46, iw + 0.07, ih + 0.07, 0.09), [0, 0, 0.05]) // main body — slim
+  add(archBand(iw + 0.12, ih + 0.12, iw, ih, 0.12), [0, 0, 0.07])              // inner bead molding (arched)
+  add(rectArchRing(w + 0.84, h + 0.78, w + 0.46, h + 0.42, 0.06), [0, 0, 0.15]) // outer molding — slim
+  // ── slim side pilasters with capital/base + carved bits ──
+  const pw = w * 0.115, ph = h * 0.82
   for (const s of [-1, 1]) {
-    const px = s * (w / 2 + 0.16)
-    add(new BoxGeometry(pw, ph, 0.18), [px, -h * 0.03, 0.07])
-    add(new BoxGeometry(0.05, ph, 0.2), [px - pw / 2 + 0.03, -h * 0.03, 0.16])   // raised inner edge
-    add(new BoxGeometry(0.05, ph, 0.2), [px + pw / 2 - 0.03, -h * 0.03, 0.16])   // raised outer edge
-    add(new BoxGeometry(pw + 0.14, 0.16, 0.22), [px, ph / 2 - h * 0.03, 0.18])   // capital
-    add(new BoxGeometry(pw + 0.16, 0.16, 0.22), [px, -ph / 2 - h * 0.03, 0.18])  // base
-    for (let i = 0; i < 5; i++) { const y = -h * 0.03 - ph / 2 + (i + 0.6) * ph / 5; add(rosetteMerge(0.16), [px, y, 0.2]) }
-    for (let i = 0; i < 2; i++) { const y = -h * 0.03 + (i ? ph * 0.22 : -ph * 0.22); add(scrollGeo(0.16, 0.03, Math.PI * 1.5), [px, y, 0.22], [0, 0, s > 0 ? 0 : Math.PI]) }
+    const px = s * (w / 2 + 0.10)
+    add(new BoxGeometry(pw, ph, 0.10), [px, -h * 0.03, 0.06])
+    add(new BoxGeometry(0.04, ph, 0.14), [px - pw / 2 + 0.02, -h * 0.03, 0.13])   // raised inner edge
+    add(new BoxGeometry(0.04, ph, 0.14), [px + pw / 2 - 0.02, -h * 0.03, 0.13])   // raised outer edge
+    add(new BoxGeometry(pw + 0.12, 0.13, 0.16), [px, ph / 2 - h * 0.03, 0.14])   // capital
+    add(new BoxGeometry(pw + 0.14, 0.13, 0.16), [px, -ph / 2 - h * 0.03, 0.14])  // base
+    for (let i = 0; i < 5; i++) { const y = -h * 0.03 - ph / 2 + (i + 0.6) * ph / 5; add(rosetteMerge(0.12), [px, y, 0.17]) }
+    for (let i = 0; i < 2; i++) { const y = -h * 0.03 + (i ? ph * 0.22 : -ph * 0.22); add(scrollGeo(0.13, 0.03, Math.PI * 1.5), [px, y, 0.19], [0, 0, s > 0 ? 0 : Math.PI]) }
   }
   // ── arch bands over the top (egg-and-dart approximated by ovoids on an arc) ──
   add(archBand(iw + 0.6, ih + 0.6, iw + 0.30, ih + 0.30, 0.16), [0, 0, 0.2])
@@ -778,6 +778,22 @@ function buildBaroqueFrame(w, h) {
   for (const s of [-1, 1]) { const px = s * (w / 2 + 0.16); for (let i = 0; i < 7; i++) { const y = -h * 0.03 - ph / 2 + (i + 0.5) * ph / 7; add(leafGeo(h * 0.05, w * 0.045), [px, y, 0.19], [Math.PI / 2, 0, (i % 2 ? 1 : -1) * 0.6]) } }
   // ── secondary scrolls curling inside the C-scrolls ──
   for (const s of [-1, 1]) add(scrollGeo(w * 0.06, 0.03, Math.PI * 1.4), [s * w * 0.2, cy + h * 0.015, 0.26], [0, 0, s > 0 ? -0.5 : Math.PI + 0.5])
+  // ── PROTRUDING BAROQUE VINE climbing each outer edge: alternating C-scrolls +
+  //    leaf tips that project forward, breaking up the flat square silhouette ──
+  for (const s of [-1, 1]) {
+    const ox = s * (w / 2 + 0.30)
+    for (let i = 0; i < 7; i++) {
+      const y = -h * 0.03 - ph / 2 + (i + 0.5) * ph / 7
+      const dir = i % 2 ? 1 : -1
+      add(scrollGeo(0.10, 0.026, Math.PI * 1.55), [ox, y, 0.20 + (i % 2) * 0.05], [0, 0, s > 0 ? dir * 0.5 : Math.PI - dir * 0.5])
+      add(leafGeo(h * 0.05, w * 0.042), [ox + s * 0.05, y + 0.10, 0.18], [Math.PI / 2, 0, s * (0.7 + dir * 0.3)])
+    }
+  }
+  // ── projecting corner volutes (curl outward, softening the square corners) ──
+  for (const sx of [-1, 1]) for (const sy2 of [-1, 1]) {
+    add(scrollGeo(w * 0.085, 0.038, Math.PI * 1.6), [sx * (w / 2 + 0.30), sy2 * (h / 2 - h * 0.02) - h * 0.03, 0.24], [0, 0, sx > 0 ? -0.6 : Math.PI + 0.6])
+    add(leafGeo(h * 0.06, w * 0.05), [sx * (w / 2 + 0.24), sy2 * (h / 2 - h * 0.05) - h * 0.03, 0.20], [Math.PI / 2, 0, sx * sy2 * 0.9])
+  }
   return mergeGeometries(parts, false)
 }
 function baroqueFrame(w, h) { const k = w.toFixed(2) + 'x' + h.toFixed(2); if (!_frameCache[k]) _frameCache[k] = buildBaroqueFrame(w, h); return _frameCache[k] }
