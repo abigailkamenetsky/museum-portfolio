@@ -661,10 +661,11 @@ function Painting({ position, rotation = [0, 0, 0], maxW, maxH, art, cls = 1, fr
   const outerScale = cls === 2 ? 1.06 : cls === 1 ? 1.0 : 0.92
   const outerW = maxW * outerScale, outerH = maxH * outerScale
   const ar = art.aspect
-  // aperture ~62% of the outer; fit the artwork inside it preserving aspect
-  const apW = outerW * 0.62, apH = outerH * 0.66
+  // the gold frame's aperture. COVER-fit the artwork so it FILLS the opening and
+  // its edges tuck under the gold rim — no dark mat border shows.
+  const apW = outerW * 0.66, apH = outerH * 0.70
   let pw = apW, ph = apW * ar
-  if (ph > apH) { ph = apH; pw = apH / ar }
+  if (ph < apH) { ph = apH; pw = apH / ar }   // cover: grow to fill the shorter axis too
 
   const sx = outerW / frame.nw, sy = outerH / frame.nh, sz = 0.24 / frame.nd
   const crestW = outerW
@@ -686,10 +687,10 @@ function Painting({ position, rotation = [0, 0, 0], maxW, maxH, art, cls = 1, fr
         <planeGeometry args={[outerW + 0.4, outerH + 0.5]} />
         <meshBasicMaterial color="#000000" transparent opacity={0.32} depthWrite={false} />
       </mesh>
-      {/* dark mat board (shows between art and the frame's aperture) */}
-      <mesh position={[0, 0, FZ - 0.06]} material={m.woodDark}><boxGeometry args={[outerW * 0.78, outerH * 0.82, 0.04]} /></mesh>
-      {/* the artwork */}
-      <mesh position={[0, 0, FZ - 0.03]} material={artMat}><planeGeometry args={[pw, ph]} /></mesh>
+      {/* thin dark liner directly behind the art (only a sliver ever shows) */}
+      <mesh position={[0, 0, FZ - 0.04]} material={m.woodDark}><boxGeometry args={[pw + 0.04, ph + 0.04, 0.04]} /></mesh>
+      {/* the artwork — fills the aperture, edges tuck under the gold rim */}
+      <mesh position={[0, 0, FZ - 0.01]} material={artMat}><planeGeometry args={[pw, ph]} /></mesh>
       {/* carved gold frame (shared GLB geometry, scaled to this opening) */}
       <mesh geometry={frame.geo} material={frame.mat} position={[0, 0, FZ]} scale={[sx, sy, sz]} castShadow receiveShadow />
       {/* procedural crest above + apron below (apron = crest mirrored) */}
@@ -814,8 +815,8 @@ function buildBaroqueFrame(w, h) {
     add(new BoxGeometry(0.04, ph, 0.14), [px + pw / 2 - 0.02, -h * 0.03, 0.13])   // raised outer edge
     add(new BoxGeometry(pw + 0.12, 0.13, 0.16), [px, ph / 2 - h * 0.03, 0.14])   // capital
     add(new BoxGeometry(pw + 0.14, 0.13, 0.16), [px, -ph / 2 - h * 0.03, 0.14])  // base
-    for (let i = 0; i < 5; i++) { const y = -h * 0.03 - ph / 2 + (i + 0.6) * ph / 5; add(rosetteMerge(0.12), [px, y, 0.17]) }
-    for (let i = 0; i < 2; i++) { const y = -h * 0.03 + (i ? ph * 0.22 : -ph * 0.22); add(scrollGeo(0.13, 0.03, Math.PI * 1.5), [px, y, 0.19], [0, 0, s > 0 ? 0 : Math.PI]) }
+    // flush recessed panel line on the pilaster (no projecting nubs)
+    add(new BoxGeometry(pw * 0.5, ph * 0.9, 0.03), [px, -h * 0.03, 0.12])
   }
   // ── arch bands over the top (egg-and-dart approximated by ovoids on an arc) ──
   add(archBand(iw + 0.6, ih + 0.6, iw + 0.30, ih + 0.30, 0.16), [0, 0, 0.2])
@@ -828,57 +829,15 @@ function buildBaroqueFrame(w, h) {
   for (const s of [-1, 1]) for (let i = 0; i < 3; i++) add(leafGeo(h * 0.09, w * 0.06), [s * (w * 0.1 + i * w * 0.09), cy - h * 0.02, 0.2], [Math.PI * 0.5, 0, s * (0.5 + i * 0.35)])
   add(rosetteMerge(w * 0.12), [0, cy + h * 0.07, 0.25])                          // floral crest
   add(new SphereGeometry(w * 0.1, 12, 6, 0, Math.PI), [0, cy - h * 0.04, 0.2], [Math.PI / 2, 0, 0], [1, 0.5, 1])  // shell
-  // ── corner leaf clusters ──
-  for (const sx of [-1, 1]) for (const syc of [-1, 1]) {
-    const cxp = sx * (w / 2 + 0.12), cyp = syc * (h / 2) - h * 0.03
-    for (let i = 0; i < 2; i++) add(leafGeo(h * 0.075, w * 0.05), [cxp, cyp, 0.2], [Math.PI * 0.5, 0, sx * (0.6 + i * 0.4)])
-    add(scrollGeo(0.12, 0.03, Math.PI * 1.5), [cxp, cyp, 0.22], [0, 0, sx > 0 ? 0 : Math.PI])
-  }
-  // ── shoulder + center rosettes ──
-  for (const s of [-1, 1]) add(rosetteMerge(w * 0.05), [s * w * 0.46, sy, 0.22])
-  // ── projecting sill + brackets ──
+  // ── projecting stone sill + brackets (clean blocks, no spikes) ──
   const sillW = (w + 1.0) * 0.95
   add(new BoxGeometry(sillW, h * 0.05, 0.3), [0, -h / 2 - 0.08, 0.2])
   for (const s of [-1, 1]) add(new BoxGeometry(0.12, 0.26, 0.2), [s * sillW * 0.4, -h / 2 - 0.24, 0.16])
-  // ── lower apron: panel + shell + scrolls + leaves ──
+  // ── lower apron: clean panel + central shell + flanking C-scrolls ──
   const apronW = (w + 1.0) * 0.75, ay = -h / 2 - h * 0.12
   add(new BoxGeometry(apronW, h * 0.13, 0.08), [0, ay, 0.04])
-  add(new SphereGeometry(w * 0.1, 12, 6, 0, Math.PI), [0, ay, 0.14], [-Math.PI / 2, 0, 0], [1, 0.5, 1])
-  for (const s of [-1, 1]) add(scrollGeo(w * 0.1, 0.035, Math.PI * 1.4), [s * apronW * 0.3, ay, 0.16], [0, 0, s > 0 ? Math.PI : 0])
-  for (const s of [-1, 1]) add(leafGeo(h * 0.06, w * 0.05), [s * apronW * 0.42, ay, 0.14], [Math.PI * 0.5, 0, s * 0.6])
-  // ── beadwork along the jambs ──
-  for (const s of [-1, 1]) for (let i = 0; i < 6; i++) { const y = -h * 0.03 - ih * 0.45 + (i + 0.5) * ih * 0.9 / 6; add(new SphereGeometry(w * 0.013, 6, 6), [s * (iw / 2 + 0.06), y, 0.14]) }
-  // ── floral garlands (under the cartouche + across the apron) ──
-  const garland = (gx0, gy0, span, sag, z) => {
-    const n = 8
-    for (let i = 0; i <= n; i++) {
-      const t = i / n, gx = gx0 - span / 2 + t * span, gy = gy0 - Math.sin(Math.PI * t) * sag
-      add(new SphereGeometry(w * 0.013, 6, 6), [gx, gy, z])
-      if (i % 2 === 0) add(leafGeo(h * 0.04, w * 0.03), [gx, gy - 0.04, z], [Math.PI / 2, 0, (t - 0.5) * 1.2])
-    }
-  }
-  garland(0, cy - h * 0.06, w * 0.55, h * 0.05, 0.23)
-  garland(0, ay + h * 0.05, apronW * 0.55, h * 0.04, 0.16)
-  // ── climbing vine of alternating leaves up each pilaster ──
-  for (const s of [-1, 1]) { const px = s * (w / 2 + 0.16); for (let i = 0; i < 7; i++) { const y = -h * 0.03 - ph / 2 + (i + 0.5) * ph / 7; add(leafGeo(h * 0.05, w * 0.045), [px, y, 0.19], [Math.PI / 2, 0, (i % 2 ? 1 : -1) * 0.6]) } }
-  // ── secondary scrolls curling inside the C-scrolls ──
-  for (const s of [-1, 1]) add(scrollGeo(w * 0.06, 0.03, Math.PI * 1.4), [s * w * 0.2, cy + h * 0.015, 0.26], [0, 0, s > 0 ? -0.5 : Math.PI + 0.5])
-  // ── PROTRUDING BAROQUE VINE climbing each outer edge: alternating C-scrolls +
-  //    leaf tips that project forward, breaking up the flat square silhouette ──
-  for (const s of [-1, 1]) {
-    const ox = s * (w / 2 + 0.30)
-    for (let i = 0; i < 7; i++) {
-      const y = -h * 0.03 - ph / 2 + (i + 0.5) * ph / 7
-      const dir = i % 2 ? 1 : -1
-      add(scrollGeo(0.10, 0.026, Math.PI * 1.55), [ox, y, 0.20 + (i % 2) * 0.05], [0, 0, s > 0 ? dir * 0.5 : Math.PI - dir * 0.5])
-      add(leafGeo(h * 0.05, w * 0.042), [ox + s * 0.05, y + 0.10, 0.18], [Math.PI / 2, 0, s * (0.7 + dir * 0.3)])
-    }
-  }
-  // ── projecting corner volutes (curl outward, softening the square corners) ──
-  for (const sx of [-1, 1]) for (const sy2 of [-1, 1]) {
-    add(scrollGeo(w * 0.085, 0.038, Math.PI * 1.6), [sx * (w / 2 + 0.30), sy2 * (h / 2 - h * 0.02) - h * 0.03, 0.24], [0, 0, sx > 0 ? -0.6 : Math.PI + 0.6])
-    add(leafGeo(h * 0.06, w * 0.05), [sx * (w / 2 + 0.24), sy2 * (h / 2 - h * 0.05) - h * 0.03, 0.20], [Math.PI / 2, 0, sx * sy2 * 0.9])
-  }
+  add(new SphereGeometry(w * 0.1, 14, 8, 0, Math.PI), [0, ay, 0.14], [-Math.PI / 2, 0, 0], [1, 0.5, 1])
+  for (const s of [-1, 1]) add(scrollGeo(w * 0.1, 0.04, Math.PI * 1.4), [s * apronW * 0.3, ay, 0.14], [0, 0, s > 0 ? Math.PI : 0])
   return mergeGeometries(parts, false)
 }
 function baroqueFrame(w, h) { const k = w.toFixed(2) + 'x' + h.toFixed(2); if (!_frameCache[k]) _frameCache[k] = buildBaroqueFrame(w, h); return _frameCache[k] }
@@ -1135,7 +1094,9 @@ function Gallery() {
         { pos: [hw - 1.0, H - 1.4, -26], tgt: [hw - 0.1, PY, -26], ry: -Math.PI / 2 },
       ].map((l, i) => <PictureLight key={'L' + i} pos={l.pos} target={l.tgt} rotY={l.ry} m={m} />)}
 
-      <ContactShadows position={[0, 0.012, 0]} scale={Math.max(W, D) * 0.6} resolution={1024} far={6} blur={2.4} opacity={0.55} color="#000000" />
+      {/* ContactShadows removed: its finite plane boundary drew a line across the
+          longer floor as you moved. Contact darkening now comes from N8AO (covers
+          the whole floor uniformly, no boundary/seam). */}
     </group>
   )
 }
