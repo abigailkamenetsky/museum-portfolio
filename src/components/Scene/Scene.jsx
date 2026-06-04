@@ -1068,7 +1068,7 @@ function Character() {
     skin: new MeshStandardMaterial({ color: '#c8996f', roughness: 0.72, metalness: 0 }),
     hair: new MeshStandardMaterial({ color: '#211008', roughness: 0.85, metalness: 0 }),   // dark brunette
     shirt: new MeshStandardMaterial({ color: '#1b2750', roughness: 0.62, metalness: 0.06 }), // dark-blue Y2K tee
-    denim: new MeshStandardMaterial({ color: '#3f5f86', roughness: 0.9, metalness: 0 }),     // denim skirt
+    denim: new MeshStandardMaterial({ color: '#3f5f86', roughness: 0.9, metalness: 0, side: DoubleSide }),  // denim skirt (DoubleSide so the open skirt never renders see-through)
     denimDark: new MeshStandardMaterial({ color: '#324d6c', roughness: 0.92, metalness: 0 }), // pocket contrast
     boot: new MeshStandardMaterial({ color: '#171311', roughness: 0.42, metalness: 0.18 }),  // knee-high boots
     sock: new MeshStandardMaterial({ color: '#ece6d6', roughness: 0.9, metalness: 0 }),       // sock peek
