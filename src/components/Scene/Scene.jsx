@@ -125,7 +125,7 @@ function useMaterials() {
     lens: new MeshStandardMaterial({ color: '#fff3c0', emissive: '#fff3c0', emissiveIntensity: 4, roughness: 0.4 }),
     // tall museum windows
     // real glass: transparent, faintly reflective, NOT emissive / not white
-    glass: new MeshStandardMaterial({ color: '#aebccb', roughness: 0.2, metalness: 0.05, transparent: true, opacity: 0.28, envMapIntensity: 0.12 }),
+    glass: new MeshStandardMaterial({ color: '#dfe7ec', roughness: 0.08, metalness: 0, transparent: true, opacity: 0.1, envMapIntensity: 0.05 }),
     sky: new MeshStandardMaterial({ color: '#9fb2c6', roughness: 1, metalness: 0 }),   // muted daylight behind glass
     // estate grounds seen through windows — dimmed so windows read as daylight,
     // not glowing light-cards (color multiplies the map down)
@@ -824,8 +824,8 @@ function MuseumWindow({ w, h, m }) {
     return new MeshBasicMaterial({ map: t, color })
   }
   const seed = useMemo(() => Math.random() * 0.75, [])
-  const treelineMat = useMemo(() => mkScenery([0.18, 0.55], seed, '#e2e2dc'), [forest, seed])      // mid: tree line
-  const nearMat = useMemo(() => mkScenery([0.11, 0.42], seed + 0.05, '#bcc1b2'), [forest, seed])    // near foliage (darker)
+  const treelineMat = useMemo(() => mkScenery([0.18, 0.55], seed, '#f2f0e8'), [forest, seed])      // mid: tree line (bright daylight)
+  const nearMat = useMemo(() => mkScenery([0.11, 0.42], seed + 0.05, '#cdd0c2'), [forest, seed])    // near foliage (slightly darker)
 
   const RECESS = WALL_T                            // reveal depth = full wall thickness (~24in)
   const tw = Math.min(0.58, w * 0.16)              // trim width
@@ -876,9 +876,8 @@ function MuseumWindow({ w, h, m }) {
         <boxGeometry args={[w + 0.7, 0.07, 0.1]} />
       </mesh>
 
-      {/* ── GLAZING (two offset panes → reads as thick glass, not a plane) ── */}
+      {/* ── GLAZING — single near-clear pane (you can see the grounds clearly) ── */}
       <mesh geometry={glassGeo} position={[0, 0, glassZ]} material={m.glass} />
-      <mesh geometry={glassGeo} position={[0, 0, glassZ - 0.05]} material={m.glass} />
       {/* mullions: 2 verticals up to the spring, sash transoms, central mullion into
           the arch, two Y-tracery bars, and an oculus — all inside the glass */}
       {vx.map((x, i) => <mesh key={'v' + i} position={[x, (-H2 + sy) / 2, mullZ]} material={m.trimWhite}><boxGeometry args={[mull, straightH, 0.05]} /></mesh>)}
