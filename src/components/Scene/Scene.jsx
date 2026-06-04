@@ -1088,8 +1088,8 @@ function Character() {
   }
   const hairCapGeo = useMemo(() => {
     const geos = []
-    for (let layer = 0; layer < 4; layer++) {
-      const rr = 0.148 + layer * 0.018, count = 95 - layer * 14
+    for (let layer = 0; layer < 5; layer++) {
+      const rr = 0.146 + layer * 0.017, count = 120 - layer * 12
       for (let i = 0; i < count; i++) {
         const u = Math.random(), v = Math.random()
         const theta = u * Math.PI * 2, phi = Math.acos(2 * v - 1)
@@ -1106,15 +1106,15 @@ function Character() {
   // ALL-DOWN length split into SECTIONS around the back+sides; each section is a
   // bundle of individual ringlet coils and gets its OWN sway phase → curls appear
   // to move independently. Tons of coils = full voluminous head.
-  const SECTIONS = 8
+  const SECTIONS = 10
   const hairSectionGeos = useMemo(() => {
     const out = []
     for (let sec = 0; sec < SECTIONS; sec++) {
       const geos = []
       const center = (-1 + 2 * sec / (SECTIONS - 1)) * 2.55   // wider: reaches around to drape over the shoulders
-      const strandsN = 7
+      const strandsN = 9
       for (let q = 0; q < strandsN; q++) {
-        const ang = center + (q - (strandsN - 1) / 2) * 0.11
+        const ang = center + (q - (strandsN - 1) / 2) * 0.09
         const back = Math.max(0, Math.cos(ang))           // 1 at the back, 0 at the sides
         const ox = Math.sin(ang) * 0.16, oz = -Math.cos(ang) * 0.13 - 0.03 - back * 0.05   // puff the back out
         const segs = 7 + Math.floor(Math.random() * 3)   // ~3/4 torso length
@@ -1143,22 +1143,13 @@ function Character() {
     const t = new CanvasTexture(c); t.colorSpace = SRGBColorSpace; t.anisotropy = 8
     return new MeshBasicMaterial({ map: t, transparent: true, alphaTest: 0.3, toneMapped: false })
   }, [])
-  // hair CARDS — curved alpha-mapped strips (real strand detail) layered over the curls
-  const hairCardMat = useMemo(() => new MeshStandardMaterial({ color: '#241208', roughness: 0.78, metalness: 0, side: DoubleSide, alphaTest: 0.5 }), [])
-  const cardGeo = useMemo(() => {
-    const g = new PlaneGeometry(0.18, 0.6, 1, 8); const pos = g.attributes.position
-    for (let i = 0; i < pos.count; i++) { const y = pos.getY(i); const t = (0.3 - y) / 0.6; pos.setZ(i, pos.getZ(i) - Math.sin(t * Math.PI) * 0.04 - t * 0.05); pos.setX(i, pos.getX(i) * (1 - t * 0.32)) }
-    pos.needsUpdate = true; g.computeVertexNormals(); g.translate(0, -0.3, 0); return g
-  }, [])
-
-  // load fabric textures (skirt denim, brown leather boots) + the hair-card alpha
+  // load fabric textures: skirt denim + brown leather boots (hair stays pure curls)
   useEffect(() => {
     const L = new TextureLoader()
     L.load(DENIM_TEX + 'diff.jpg', t => { t.colorSpace = SRGBColorSpace; t.wrapS = t.wrapT = RepeatWrapping; t.repeat.set(3, 2); t.anisotropy = 8; mat.denim.map = t; mat.denim.color.set('#ffffff'); mat.denim.needsUpdate = true; mat.denimDark.map = t; mat.denimDark.color.set('#b9c2cf'); mat.denimDark.needsUpdate = true })
     L.load(DENIM_TEX + 'disp.jpg', t => { t.wrapS = t.wrapT = RepeatWrapping; t.repeat.set(3, 2); mat.denim.bumpMap = t; mat.denim.bumpScale = 0.02; mat.denim.needsUpdate = true })
     L.load(LEATHER_TEX + 'diff.jpg', t => { t.colorSpace = SRGBColorSpace; t.wrapS = t.wrapT = RepeatWrapping; t.repeat.set(2, 2); t.anisotropy = 8; mat.boot.map = t; mat.boot.bumpMap = t; mat.boot.bumpScale = 0.015; mat.boot.color.set('#ffffff'); mat.boot.roughness = 0.55; mat.boot.metalness = 0.05; mat.boot.needsUpdate = true })
-    L.load(HAIR_ALPHA_URL, t => { t.wrapS = t.wrapT = ClampToEdgeWrapping; t.repeat.set(0.22, 1); t.offset.set(0.012, 0); hairCardMat.alphaMap = t; hairCardMat.needsUpdate = true })
-  }, [mat, hairCardMat])
+  }, [mat])
 
   useEffect(() => {
     const dn = e => { keys.current[e.code] = true; if (e.code.startsWith('Arrow')) e.preventDefault() }
@@ -1272,9 +1263,6 @@ function Character() {
           <mesh position={[0, 1.39, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.098, 0.09, 0.1, 16]} /></mesh>
           <mesh position={[0, 1.27, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.09, 0.073, 0.16, 16]} /></mesh>
           <mesh position={[0, 1.11, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.073, 0.085, 0.16, 16]} /></mesh>
-          {/* bust (natural) */}
-          <mesh position={[-0.046, 1.305, 0.05]} scale={[1, 1.05, 0.82]} castShadow material={mat.shirt}><sphereGeometry args={[0.05, 14, 12]} /></mesh>
-          <mesh position={[0.046, 1.305, 0.05]} scale={[1, 1.05, 0.82]} castShadow material={mat.shirt}><sphereGeometry args={[0.05, 14, 12]} /></mesh>
           {/* hips flare out (skin, covered by skirt) + a subtle CLOTHED butt curve
               (denim bulges tucked into the back of the skirt — no bare skin) */}
           <mesh position={[0, 0.99, 0]} castShadow material={mat.skin}><cylinderGeometry args={[0.085, 0.105, 0.14, 16]} /></mesh>
@@ -1289,13 +1277,15 @@ function Character() {
           <mesh position={[0, 1.585, -0.085]} castShadow material={mat.hair}><sphereGeometry args={[0.125, 16, 14]} /></mesh>
           {/* front face */}
           <mesh position={[0, 1.6, 0.08]} castShadow material={mat.skin}><sphereGeometry args={[0.118, 16, 14]} /></mesh>
-          {/* ears */}
+          {/* ears + gold medium hoop earrings */}
           <mesh position={[-0.132, 1.605, 0.025]} rotation={[0, -0.35, 0]} scale={[0.45, 1, 0.85]} castShadow material={mat.skin}><sphereGeometry args={[0.04, 10, 10]} /></mesh>
           <mesh position={[0.132, 1.605, 0.025]} rotation={[0, 0.35, 0]} scale={[0.45, 1, 0.85]} castShadow material={mat.skin}><sphereGeometry args={[0.04, 10, 10]} /></mesh>
-          {/* dainty thin gold necklace + evil-eye pendant on the tee */}
-          <mesh position={[0, 1.45, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow material={mat.gold}><torusGeometry args={[0.072, 0.005, 6, 28]} /></mesh>
-          <mesh position={[0, 1.40, 0.085]} castShadow material={mat.gold}><cylinderGeometry args={[0.004, 0.004, 0.085, 6]} /></mesh>
-          <group position={[0, 1.355, 0.12]} rotation={[Math.PI / 2, 0, 0]}>
+          <mesh position={[-0.138, 1.566, 0.022]} rotation={[0, Math.PI / 2, 0]} castShadow material={mat.gold}><torusGeometry args={[0.026, 0.004, 6, 20]} /></mesh>
+          <mesh position={[0.138, 1.566, 0.022]} rotation={[0, Math.PI / 2, 0]} castShadow material={mat.gold}><torusGeometry args={[0.026, 0.004, 6, 20]} /></mesh>
+          {/* dainty gold choker that HUGS the neck + evil-eye pendant resting on the chest */}
+          <mesh position={[0, 1.47, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow material={mat.gold}><torusGeometry args={[0.056, 0.005, 6, 28]} /></mesh>
+          <mesh position={[0, 1.435, 0.06]} rotation={[0.5, 0, 0]} castShadow material={mat.gold}><cylinderGeometry args={[0.004, 0.004, 0.07, 6]} /></mesh>
+          <group position={[0, 1.4, 0.088]} rotation={[Math.PI / 2, 0, 0]}>
             <mesh castShadow material={mat.gold}><cylinderGeometry args={[0.027, 0.027, 0.007, 18]} /></mesh>
             <mesh position={[0, 0.002, 0]} material={mat.eyeBlue}><cylinderGeometry args={[0.022, 0.022, 0.008, 18]} /></mesh>
             <mesh position={[0, 0.005, 0]} material={mat.eyeWhite}><cylinderGeometry args={[0.013, 0.013, 0.008, 16]} /></mesh>
@@ -1304,19 +1294,11 @@ function Character() {
           {/* dense curly cap (merged) */}
           <mesh geometry={hairCapGeo} castShadow material={mat.hair} />
           {/* all-down ringlet sections (curl volume + hair cards), each sways on its own */}
-          {hairSectionGeos.map((geo, i) => {
-            const ang = (-1 + 2 * i / (SECTIONS - 1)) * 2.55
-            return (
-              <group key={'hs' + i} ref={el => (hairRefs.current[i] = el)} position={[0, 1.6, -0.05]}>
-                <mesh geometry={geo} castShadow material={mat.hair} />
-                {[-0.14, 0, 0.14].map((o, j) => {
-                  const a = ang + o
-                  const back = Math.max(0, Math.cos(a))
-                  return <mesh key={j} geometry={cardGeo} material={hairCardMat} position={[Math.sin(a) * 0.16, 0.05, -Math.cos(a) * 0.13 - 0.02 - back * 0.04]} rotation={[0.12, a + Math.PI, 0]} />
-                })}
-              </group>
-            )
-          })}
+          {hairSectionGeos.map((geo, i) => (
+            <group key={'hs' + i} ref={el => (hairRefs.current[i] = el)} position={[0, 1.6, -0.05]}>
+              <mesh geometry={geo} castShadow material={mat.hair} />
+            </group>
+          ))}
           {/* shoulders pivot; short sleeve cap + bare arm */}
           <group ref={armL} position={[-0.17, 1.43, 0]}>
             <mesh position={[0, -0.05, 0]} castShadow material={mat.shirt}><sphereGeometry args={[0.07, 10, 8]} /></mesh>
