@@ -671,30 +671,26 @@ function buildCorner(w) {
 function corner(w) { const k = w.toFixed(2); if (!_cornerCache[k]) _cornerCache[k] = buildCorner(w); return _cornerCache[k] }
 
 function Painting({ position, rotation = [0, 0, 0], maxW, maxH, art, cls = 1, wingId, piece, frame, m }) {
-  // frame outer fills the wall slot; painting sits inside a dark mat
-  const big = cls === 2 ? 1 : cls === 1 ? 0.55 : 0.15     // crest drama by class
-  const outerScale = cls === 2 ? 1.06 : cls === 1 ? 1.0 : 0.92
-  const outerW = maxW * outerScale, outerH = maxH * outerScale
-  const ar = art.aspect
-  // art plane is LOCKED to the aperture (never overflows the frame); the texture is
-  // cropped to "cover" the plane (object-fit: cover) so it fills with no distortion.
-  const apW = outerW * 0.66, apH = outerH * 0.70
-  const pw = apW, ph = apH
-  const planeAR = pw / ph, imgAR = 1 / ar          // width/height of plane vs image
-  let rx = 1, ry = 1, ox = 0, oy = 0
-  if (imgAR > planeAR) { rx = planeAR / imgAR; ox = (1 - rx) / 2 }   // image wider → crop sides
-  else { ry = imgAR / planeAR; oy = (1 - ry) / 2 }                   // image taller → crop top/bottom
+  // FIT THE FRAME TO THE PAINTING: size the frame's aperture to the artwork's true
+  // aspect (the whole painting shows, no crop), fitting within the slot box (maxW,maxH).
+  const big = cls === 2 ? 1 : 0.5
+  const ar = art.aspect                              // height / width
+  const apMaxW = maxW * 0.66, apMaxH = maxH * 0.70   // max aperture within the slot box
+  let apW = apMaxW, apH = apMaxW * ar
+  if (apH > apMaxH) { apH = apMaxH; apW = apH / ar }
+  const outerW = apW / 0.66, outerH = apH / 0.70     // frame around that aperture → frame matches the art
+  const pw = apW * 1.02, ph = apH * 1.02             // art fills the aperture, edges tuck just under the frame
 
-  const sx = outerW / frame.nw, sy = outerH / frame.nh, sz = 0.18 / frame.nd   // shallower depth → less edge-on gold
+  const sx = outerW / frame.nw, sy = outerH / frame.nh, sz = 0.18 / frame.nd
   const crestW = outerW
   const crestGeo = useMemo(() => crest(crestW, big), [crestW, big])
 
   const artMat = useMemo(() => new MeshStandardMaterial({ color: '#15100a', roughness: 0.85 }), [])
   useEffect(() => {
     new TextureLoader().load(ART_BASE + art.file,
-      t => { t.colorSpace = SRGBColorSpace; t.anisotropy = 8; t.repeat.set(rx, ry); t.offset.set(ox, oy); artMat.map = t; artMat.color.set('#ffffff'); artMat.needsUpdate = true },
+      t => { t.colorSpace = SRGBColorSpace; t.anisotropy = 8; artMat.map = t; artMat.color.set('#ffffff'); artMat.needsUpdate = true },
       undefined, () => console.warn('[art] FAILED (kept dark):', art.file))
-  }, [art, artMat, rx, ry, ox, oy])
+  }, [art, artMat])
 
   const FZ = 0.13   // frame front-relief origin off the wall
   const open = e => {

@@ -142,35 +142,32 @@ export const WINGS = [
 
 export const wingById = id => WINGS.find(w => w.id === id)
 
-// ── salon collage layouts (tight, varied; all plain baroque frames cls 0) ──
+// ── collage layouts — BIG paintings on an even grid (w,h = slot box; the frame is
+// fitted to each artwork inside it). Multi-row hangs stack high to use the tall walls. ──
 function cluster(n) {
-  if (n <= 1) return [{ dz: 0, dy: 0, w: 2.4, h: 3.3, cls: 1 }]
+  if (n <= 1) return [{ dz: 0, dy: 0.4, w: 3.4, h: 4.4, cls: 1 }]
   if (n === 2) return [
-    { dz: -1.05, dy: 0.35, w: 1.5, h: 1.85, cls: 0 }, { dz: 1.15, dy: -0.2, w: 1.6, h: 1.45, cls: 0 },
+    { dz: -2.05, dy: 0.4, w: 2.9, h: 3.7, cls: 0 }, { dz: 2.05, dy: 0.4, w: 2.9, h: 3.7, cls: 0 },
   ]
   if (n === 3) return [
-    { dz: -1.55, dy: 0.5, w: 1.25, h: 1.2, cls: 0 }, { dz: 0.0, dy: -0.2, w: 1.55, h: 1.95, cls: 0 }, { dz: 1.55, dy: 0.55, w: 1.2, h: 1.4, cls: 0 },
+    { dz: -2.85, dy: 0.4, w: 2.5, h: 3.4, cls: 0 }, { dz: 0, dy: 0.4, w: 2.5, h: 3.4, cls: 0 }, { dz: 2.85, dy: 0.4, w: 2.5, h: 3.4, cls: 0 },
   ]
   if (n === 4) return [
-    { dz: -1.55, dy: 0.62, w: 1.2, h: 1.0, cls: 0 }, { dz: -1.4, dy: -0.72, w: 1.05, h: 1.45, cls: 0 },
-    { dz: 1.0, dy: 0.6, w: 1.45, h: 1.2, cls: 0 }, { dz: 1.5, dy: -0.7, w: 1.1, h: 1.55, cls: 0 },
+    { dz: -2.05, dy: 1.9, w: 2.4, h: 2.7, cls: 0 }, { dz: 2.05, dy: 1.9, w: 2.4, h: 2.7, cls: 0 },
+    { dz: -2.05, dy: -1.3, w: 2.4, h: 2.7, cls: 0 }, { dz: 2.05, dy: -1.3, w: 2.4, h: 2.7, cls: 0 },
   ]
   if (n === 5) return [
-    { dz: -1.7, dy: 0.78, w: 1.25, h: 1.0, cls: 0 }, { dz: -1.7, dy: -0.78, w: 1.25, h: 1.5, cls: 0 },
-    { dz: 0.0, dy: 0.0, w: 1.5, h: 1.85, cls: 0 },
-    { dz: 1.7, dy: 0.78, w: 1.25, h: 1.0, cls: 0 }, { dz: 1.7, dy: -0.78, w: 1.25, h: 1.5, cls: 0 },
+    { dz: -2.8, dy: 1.9, w: 2.0, h: 2.5, cls: 0 }, { dz: 0, dy: 1.9, w: 2.0, h: 2.5, cls: 0 }, { dz: 2.8, dy: 1.9, w: 2.0, h: 2.5, cls: 0 },
+    { dz: -1.5, dy: -1.3, w: 2.2, h: 2.7, cls: 0 }, { dz: 1.5, dy: -1.3, w: 2.2, h: 2.7, cls: 0 },
   ]
   if (n === 6) return [
-    { dz: -2.5, dy: 0.78, w: 1.1, h: 0.88, cls: 0 }, { dz: -2.45, dy: -0.72, w: 1.0, h: 1.25, cls: 0 },
-    { dz: -0.1, dy: 0.85, w: 1.2, h: 0.95, cls: 0 }, { dz: 0.0, dy: -0.7, w: 1.3, h: 1.5, cls: 0 },
-    { dz: 2.45, dy: 0.75, w: 1.05, h: 1.3, cls: 0 }, { dz: 2.5, dy: -0.78, w: 1.1, h: 0.9, cls: 0 },
+    { dz: -2.9, dy: 1.9, w: 2.0, h: 2.5, cls: 0 }, { dz: 0, dy: 1.9, w: 2.0, h: 2.5, cls: 0 }, { dz: 2.9, dy: 1.9, w: 2.0, h: 2.5, cls: 0 },
+    { dz: -2.9, dy: -1.3, w: 2.0, h: 2.5, cls: 0 }, { dz: 0, dy: -1.3, w: 2.0, h: 2.5, cls: 0 }, { dz: 2.9, dy: -1.3, w: 2.0, h: 2.5, cls: 0 },
   ]
-  // 7
+  // 7 — four across the top, three across the bottom
   return [
-    { dz: -2.95, dy: 0.6, w: 1.0, h: 0.82, cls: 0 }, { dz: -2.85, dy: -0.75, w: 0.95, h: 1.2, cls: 0 },
-    { dz: -1.15, dy: 0.92, w: 1.1, h: 0.85, cls: 0 }, { dz: -1.05, dy: -0.82, w: 1.05, h: 1.3, cls: 0 },
-    { dz: 0.75, dy: 0.2, w: 1.35, h: 1.6, cls: 0 },
-    { dz: 2.5, dy: 0.8, w: 1.0, h: 1.05, cls: 0 }, { dz: 2.6, dy: -0.78, w: 1.1, h: 0.9, cls: 0 },
+    { dz: -3.6, dy: 1.9, w: 1.8, h: 2.3, cls: 0 }, { dz: -1.2, dy: 1.9, w: 1.8, h: 2.3, cls: 0 }, { dz: 1.2, dy: 1.9, w: 1.8, h: 2.3, cls: 0 }, { dz: 3.6, dy: 1.9, w: 1.8, h: 2.3, cls: 0 },
+    { dz: -2.4, dy: -1.3, w: 2.0, h: 2.5, cls: 0 }, { dz: 0, dy: -1.3, w: 2.0, h: 2.5, cls: 0 }, { dz: 2.4, dy: -1.3, w: 2.0, h: 2.5, cls: 0 },
   ]
 }
 
