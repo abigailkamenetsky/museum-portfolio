@@ -1276,7 +1276,7 @@ function Character() {
         {/* torso + head + hair + arms + skirt (bobs as one during the walk) */}
         <group ref={body}>
           {/* denim mini — ROUND + taller so it fully covers the hips (no skin showing) */}
-          <mesh position={[0, 0.93, 0]} castShadow material={mat.denim}><cylinderGeometry args={[0.128, 0.166, 0.32, 24, 1, true]} /></mesh>
+          <mesh position={[0, 0.93, 0]} castShadow material={mat.denim}><cylinderGeometry args={[0.142, 0.17, 0.32, 24, 1, true]} /></mesh>
           {/* two front patch pockets */}
           {[-1, 1].map(s => <mesh key={'pk' + s} position={[s * 0.06, 0.9, 0.14]} castShadow material={mat.denimDark}><boxGeometry args={[0.06, 0.075, 0.012]} /></mesh>)}
           {/* maroon belt + gold buckle at the waistband */}
@@ -1339,11 +1339,11 @@ function Character() {
           {/* shoulders pivot; short sleeve cap + bare arm */}
           <group ref={armL} position={[-0.17, 1.43, 0]}>
             <mesh position={[0, -0.05, 0]} castShadow material={mat.shirt}><sphereGeometry args={[0.07, 10, 8]} /></mesh>
-            <mesh position={[0, -0.27, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.04, 0.42, 5, 10]} /></mesh>
+            <mesh position={[0, -0.36, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.04, 0.6, 5, 10]} /></mesh>
           </group>
           <group ref={armR} position={[0.17, 1.43, 0]}>
             <mesh position={[0, -0.05, 0]} castShadow material={mat.shirt}><sphereGeometry args={[0.07, 10, 8]} /></mesh>
-            <mesh position={[0, -0.27, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.04, 0.42, 5, 10]} /></mesh>
+            <mesh position={[0, -0.36, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.04, 0.6, 5, 10]} /></mesh>
           </group>
         </group>
         {/* legs: bare upper leg below the skirt → sock peek → knee-high boot */}
