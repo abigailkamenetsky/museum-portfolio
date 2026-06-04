@@ -661,23 +661,25 @@ function Painting({ position, rotation = [0, 0, 0], maxW, maxH, art, cls = 1, fr
   const outerScale = cls === 2 ? 1.06 : cls === 1 ? 1.0 : 0.92
   const outerW = maxW * outerScale, outerH = maxH * outerScale
   const ar = art.aspect
-  // the gold frame's aperture. COVER-fit the artwork so it FILLS the opening and
-  // its edges tuck under the gold rim — no dark mat border shows.
+  // art plane is LOCKED to the aperture (never overflows the frame); the texture is
+  // cropped to "cover" the plane (object-fit: cover) so it fills with no distortion.
   const apW = outerW * 0.66, apH = outerH * 0.70
-  let pw = apW, ph = apW * ar
-  if (ph < apH) { ph = apH; pw = apH / ar }   // cover: grow to fill the shorter axis too
+  const pw = apW, ph = apH
+  const planeAR = pw / ph, imgAR = 1 / ar          // width/height of plane vs image
+  let rx = 1, ry = 1, ox = 0, oy = 0
+  if (imgAR > planeAR) { rx = planeAR / imgAR; ox = (1 - rx) / 2 }   // image wider → crop sides
+  else { ry = imgAR / planeAR; oy = (1 - ry) / 2 }                   // image taller → crop top/bottom
 
   const sx = outerW / frame.nw, sy = outerH / frame.nh, sz = 0.24 / frame.nd
   const crestW = outerW
   const crestGeo = useMemo(() => crest(crestW, big), [crestW, big])
-  const cornerGeo = useMemo(() => corner(outerW), [outerW])
 
   const artMat = useMemo(() => new MeshStandardMaterial({ color: '#15100a', roughness: 0.85 }), [])
   useEffect(() => {
     new TextureLoader().load(ART_BASE + art.file,
-      t => { t.colorSpace = SRGBColorSpace; t.anisotropy = 8; artMat.map = t; artMat.color.set('#ffffff'); artMat.needsUpdate = true },
+      t => { t.colorSpace = SRGBColorSpace; t.anisotropy = 8; t.repeat.set(rx, ry); t.offset.set(ox, oy); artMat.map = t; artMat.color.set('#ffffff'); artMat.needsUpdate = true },
       undefined, () => console.warn('[art] FAILED (kept dark):', art.file))
-  }, [art, artMat])
+  }, [art, artMat, rx, ry, ox, oy])
 
   const FZ = 0.13   // frame front-relief origin off the wall
   return (
@@ -693,13 +695,11 @@ function Painting({ position, rotation = [0, 0, 0], maxW, maxH, art, cls = 1, fr
       <mesh position={[0, 0, FZ - 0.01]} material={artMat}><planeGeometry args={[pw, ph]} /></mesh>
       {/* carved gold frame (shared GLB geometry, scaled to this opening) */}
       <mesh geometry={frame.geo} material={frame.mat} position={[0, 0, FZ]} scale={[sx, sy, sz]} castShadow receiveShadow />
-      {/* procedural crest above + apron below (apron = crest mirrored) */}
-      <mesh geometry={crestGeo} material={frame.mat} position={[0, outerH / 2 - 0.04, FZ + 0.04]} castShadow />
-      <mesh geometry={crestGeo} material={frame.mat} position={[0, -outerH / 2 + 0.04, FZ + 0.04]} rotation={[0, 0, Math.PI]} scale={[1, 0.7, 1]} castShadow />
-      {/* sculptural corner nodes */}
-      {[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([cx, cy], i) => (
-        <mesh key={i} geometry={cornerGeo} material={frame.mat} position={[cx * outerW * 0.5, cy * outerH * 0.5, FZ + 0.03]} rotation={[0, 0, (cx > 0 ? -1 : 1) * (cy > 0 ? 1 : -1) * Math.PI / 2]} castShadow />
-      ))}
+      {/* procedural crest above + apron below (apron = crest mirrored). The GLB
+          frame already carries the corner ornament, so no separate corner nodes
+          (those projected off the frame and read as floating gold from a distance). */}
+      <mesh geometry={crestGeo} material={frame.mat} position={[0, outerH / 2 - 0.04, FZ + 0.03]} castShadow />
+      <mesh geometry={crestGeo} material={frame.mat} position={[0, -outerH / 2 + 0.04, FZ + 0.03]} rotation={[0, 0, Math.PI]} scale={[1, 0.7, 1]} castShadow />
     </group>
   )
 }
