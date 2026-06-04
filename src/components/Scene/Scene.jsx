@@ -989,7 +989,7 @@ export default function Scene() {
       shadows={false}
       dpr={[1, 1.5]}
       camera={{ position: [0, 2.8, 12], fov: 68 }}
-      gl={{ toneMapping: ACESFilmicToneMapping, toneMappingExposure: 0.92, antialias: true, powerPreference: 'high-performance' }}
+      gl={{ toneMapping: ACESFilmicToneMapping, toneMappingExposure: 0.8, antialias: true, powerPreference: 'high-performance' }}
       onCreated={() => console.log('[Scene] Canvas created, renderer ready')}
       style={{ width: '100vw', height: '100vh', display: 'block' }}
     >
@@ -1001,17 +1001,23 @@ export default function Scene() {
           the window wall. Walls keep their green material; only light increases. */}
       {/* RESET: no directional daylight at all — pure soft museum ambient.
           Room lit by ambient + hemisphere + ceiling keys + picture spots. */}
-      <ambientLight intensity={0.5} color="#f0d884" />
-      <hemisphereLight intensity={0.66} color="#f1ead8" groundColor="#1a130c" />
-      {/* soft grazing fill on the centerpiece bay to reveal carving depth
-          (distance-limited so it does not wash the rest of the ceiling) */}
-      <pointLight position={[-4, CEIL - 2.4, 0]} intensity={7} distance={11} decay={2} color="#f3e0a8" />
-      <pointLight position={[4, CEIL - 2.4, 0]} intensity={7} distance={11} decay={2} color="#f3e0a8" />
-      {/* warm keys only at the hall ENDS, dropped well below the ceiling so
-          they never burn hotspots onto the ceiling near the centerpiece */}
+      {/* overcast-daylight museum lighting — soft, ambient, no beams/patches.
+          Low warm ambient + a gentle (low) hemisphere for soft gradients. */}
+      <ambientLight intensity={0.32} color="#e7ddca" />
+      <hemisphereLight intensity={0.3} color="#dfe3ea" groundColor="#14110a" />
+      {/* soft grazing fill on the centerpiece bay to reveal carving depth */}
+      <pointLight position={[-4, CEIL - 2.4, 0]} intensity={6} distance={11} decay={2} color="#f3e0a8" />
+      <pointLight position={[4, CEIL - 2.4, 0]} intensity={6} distance={11} decay={2} color="#f3e0a8" />
+      {/* warm keys at the hall ends — light the ceiling/room (ceiling reads brighter than floor) */}
       {[-26, 26].map((z, i) => (
-        <pointLight key={i} position={[0, CEIL - 4.5, z]} intensity={26} distance={48} color="#f6dd84" />
+        <pointLight key={i} position={[0, CEIL - 4.0, z]} intensity={18} distance={46} color="#f6dd84" />
       ))}
+      {/* soft cool OVERCAST DAYLIGHT fills high near the window walls — large,
+          gentle, set high so they wash the upper walls + ceiling, not the floor;
+          point lights = smooth round gradients, never rectangles/beams */}
+      {[-16, 16].flatMap(z => [-1, 1].map(s => (
+        <pointLight key={'dl' + s + z} position={[s * (W / 2 - 1.0), 8.6, z]} intensity={2.4} distance={17} decay={2} color="#dde4ee" />
+      )))}
 
       <Gallery />
       <Logger />
