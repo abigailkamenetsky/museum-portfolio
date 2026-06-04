@@ -7,7 +7,8 @@
  */
 
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { ContactShadows, useGLTF, useTexture } from '@react-three/drei'
+import { ContactShadows, useGLTF, useTexture, useAnimations } from '@react-three/drei'
+import { clone as skeletonClone } from 'three/examples/jsm/utils/SkeletonUtils.js'
 import { EffectComposer, N8AO, Bloom, Vignette, HueSaturation, BrightnessContrast } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
 import { Suspense, useRef, useEffect, useMemo } from 'react'
@@ -44,6 +45,8 @@ const FRAME_URL = BASE + 'assets/models/frame_gold.glb'   // optimized ornate go
 useGLTF.preload(FRAME_URL)
 const STAINED_URL = BASE + 'assets/models/stained_glass.glb'   // gothic window with painted glass
 useGLTF.preload(STAINED_URL)
+const ROBOT_URL = BASE + 'assets/models/robot.glb'             // RobotExpressive player character
+useGLTF.preload(ROBOT_URL)
 // stained-glass model native size (from its bbox) → derived in-room size, so the
 // arched wall opening and the model use ONE source of truth and line up.
 const GLB_SG_W = 2.313, GLB_SG_H = 6.633
@@ -1037,60 +1040,116 @@ function Bench({ m }) {
 }
 
 /* ── CHARACTER + CAMERA (lower, wider, cinematic) ─────────── */
-const _fwd = new Vector3(), _off = new Vector3(), _ct = new Vector3()
-const _sc = new Vector3(0, 3.4, 11)
-function Character({ m }) {
-  const g = useRef(); const keys = useRef({}); const vel = useRef({ fwd: 0, rot: 0 })
-  const pitch = useRef(0)   // look up/down offset (radians-ish)
+/* ── THIRD-PERSON PLAYER (RobotExpressive: Idle/Walking/Running, pointer-lock look,
+ *    camera-relative movement, smooth accel/decel, body faces travel direction) ── */
+const WALK_SPEED = 4.4, RUN_SPEED = 7.6, ACCEL = 11, MOUSE_SENS = 0.0027
+const CAM_DIST = 6.2, CAM_HEIGHT = 2.4, HEAD_Y = 1.7, ROBOT_SCALE = 0.42
+const _v1 = new Vector3(), _v2 = new Vector3(), _v3 = new Vector3(), _v4 = new Vector3()
+const _v5 = new Vector3(), _v6 = new Vector3()
+
+function Character() {
+  const root = useRef()       // carries world position
+  const modelRef = useRef()   // inner model, rotates to face travel direction
+  const { scene, animations } = useGLTF(ROBOT_URL)
+  const cloned = useMemo(() => skeletonClone(scene), [scene])
+  const { actions } = useAnimations(animations, modelRef)
+  const keys = useRef({})
+  const st = useRef({ yaw: 0, pitch: 0.12, vel: new Vector3(), face: 0, clip: '' })
+
+  useEffect(() => { cloned.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false } }) }, [cloned])
+
+  // start in Idle
   useEffect(() => {
-    const dn = e => { if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault(); keys.current[e.key] = true }
-    const up = e => { keys.current[e.key] = false }
-    // drag vertically to look up/down (also Q/E keys)
-    let dragging = false, lastY = 0
-    const pdn = e => { dragging = true; lastY = e.clientY }
-    const pmv = e => { if (!dragging) return; pitch.current = MathUtils.clamp(pitch.current + (lastY - e.clientY) * 0.004, -0.5, 1.8); lastY = e.clientY }
-    const pup = () => { dragging = false }
+    const a = actions && actions.Idle
+    if (a) { a.reset().fadeIn(0.2).play(); st.current.clip = 'Idle' }
+  }, [actions])
+
+  useEffect(() => {
+    const dn = e => { keys.current[e.code] = true; if (e.code.startsWith('Arrow')) e.preventDefault() }
+    const up = e => { keys.current[e.code] = false }
+    const canvas = document.querySelector('canvas')
+    const onClick = () => { if (canvas && document.pointerLockElement !== canvas) canvas.requestPointerLock && canvas.requestPointerLock() }
+    const onMove = e => {
+      if (document.pointerLockElement == null) return
+      const s = st.current
+      s.yaw -= e.movementX * MOUSE_SENS
+      s.pitch = MathUtils.clamp(s.pitch - e.movementY * MOUSE_SENS, -0.9, 1.0)
+    }
     window.addEventListener('keydown', dn); window.addEventListener('keyup', up)
-    window.addEventListener('pointerdown', pdn); window.addEventListener('pointermove', pmv); window.addEventListener('pointerup', pup)
+    canvas && canvas.addEventListener('click', onClick)
+    document.addEventListener('mousemove', onMove)
     return () => {
       window.removeEventListener('keydown', dn); window.removeEventListener('keyup', up)
-      window.removeEventListener('pointerdown', pdn); window.removeEventListener('pointermove', pmv); window.removeEventListener('pointerup', pup)
+      canvas && canvas.removeEventListener('click', onClick)
+      document.removeEventListener('mousemove', onMove)
     }
   }, [])
-  useFrame(({ camera }) => {
-    if (!g.current) return
-    const ch = g.current, k = keys.current, v = vel.current
-    if (k['ArrowLeft'] || k['a'] || k['A']) v.rot += 0.0032
-    if (k['ArrowRight'] || k['d'] || k['D']) v.rot -= 0.0032
-    v.rot = MathUtils.clamp(v.rot * 0.8, -0.034, 0.034); ch.rotation.y += v.rot
-    const up = k['ArrowUp'] || k['w'] || k['W'], dn = k['ArrowDown'] || k['s'] || k['S']
-    if (up) v.fwd += 0.006; else if (dn) v.fwd -= 0.006; else v.fwd *= 0.82
-    v.fwd = MathUtils.clamp(v.fwd, -0.075, 0.075)
-    // look up/down: Q / E (hold), or drag the mouse vertically
-    if (k['q'] || k['Q']) pitch.current = MathUtils.clamp(pitch.current + 0.025, -0.5, 1.8)
-    if (k['e'] || k['E']) pitch.current = MathUtils.clamp(pitch.current - 0.025, -0.5, 1.8)
-    _fwd.set(-Math.sin(ch.rotation.y), 0, -Math.cos(ch.rotation.y))
-    ch.position.addScaledVector(_fwd, v.fwd)
-    ch.position.x = MathUtils.clamp(ch.position.x, -W / 2 + 0.5, W / 2 - 0.5)
-    ch.position.z = MathUtils.clamp(ch.position.z, -D / 2 + 0.5, D / 2 - 0.5)
+
+  const setClip = (name, timeScale) => {
+    if (!actions || !actions[name]) return
+    const s = st.current
+    actions[name].timeScale = timeScale
+    if (s.clip !== name) {
+      if (s.clip && actions[s.clip]) actions[s.clip].fadeOut(0.22)
+      actions[name].reset().fadeIn(0.22).play()
+      s.clip = name
+    }
+  }
+
+  useFrame(({ camera }, delta) => {
+    if (!root.current) return
+    const s = st.current, k = keys.current, d = Math.min(delta, 0.05)
+    // camera-relative input
+    const fwd = (k['KeyW'] || k['ArrowUp'] ? 1 : 0) - (k['KeyS'] || k['ArrowDown'] ? 1 : 0)
+    const strafe = (k['KeyD'] || k['ArrowRight'] ? 1 : 0) - (k['KeyA'] || k['ArrowLeft'] ? 1 : 0)
+    const run = k['ShiftLeft'] || k['ShiftRight']
+    const sin = Math.sin(s.yaw), cos = Math.cos(s.yaw)
+    const moveDir = _v3.set(0, 0, 0)
+      .addScaledVector(_v1.set(sin, 0, cos), fwd)        // forward (look dir, horizontal)
+      .addScaledVector(_v2.set(cos, 0, -sin), strafe)    // right
+    const moving = moveDir.lengthSq() > 1e-4
+    if (moving) moveDir.normalize()
+    const desired = _v4.copy(moveDir).multiplyScalar(moving ? (run ? RUN_SPEED : WALK_SPEED) : 0)
+    s.vel.lerp(desired, Math.min(1, ACCEL * d))
+
+    const ch = root.current
+    ch.position.addScaledVector(s.vel, d)
+    ch.position.x = MathUtils.clamp(ch.position.x, -W / 2 + 0.7, W / 2 - 0.7)
+    ch.position.z = MathUtils.clamp(ch.position.z, -D / 2 + 0.7, D / 2 - 0.7)
     ch.position.y = 0
-    // camera lifts a little when looking up, so the view tilts toward the ceiling
-    _off.set(0, 2.4 + pitch.current * 1.2, 9.6).applyEuler(new Euler(0, ch.rotation.y, 0)).add(ch.position)
-    _off.x = MathUtils.clamp(_off.x, -W / 2 + 0.5, W / 2 - 0.5)
-    _off.z = MathUtils.clamp(_off.z, -D / 2 + 0.5, D / 2 - 0.5)
-    _off.y = MathUtils.clamp(_off.y, 1.0, CEIL - 0.5)
-    _sc.lerp(_off, 0.07); camera.position.copy(_sc)
-    // raise the look target with pitch → look up at the ceiling
-    _ct.set(ch.position.x, ch.position.y + 2.2 + pitch.current * 5.5, ch.position.z)
-    camera.lookAt(_ct)
+
+    // body faces travel direction (smooth shortest-arc)
+    const spd = s.vel.length()
+    if (spd > 0.3) {
+      const target = Math.atan2(s.vel.x, s.vel.z)
+      let diff = target - s.face; diff = Math.atan2(Math.sin(diff), Math.cos(diff))
+      s.face += diff * Math.min(1, 9 * d)
+    }
+    if (modelRef.current) modelRef.current.rotation.y = s.face
+
+    // animation: idle / walk / run, playback synced to speed (less foot slide)
+    if (spd < 0.3) setClip('Idle', 1)
+    else if (run) setClip('Running', MathUtils.clamp(spd / RUN_SPEED, 0.6, 1.3))
+    else setClip('Walking', MathUtils.clamp(spd / WALK_SPEED, 0.6, 1.4))
+
+    // third-person orbit camera
+    const cp = Math.cos(s.pitch), sp = Math.sin(s.pitch)
+    const target = _v5.set(ch.position.x, HEAD_Y, ch.position.z)
+    const cam = _v6.set(
+      target.x - sin * CAM_DIST * cp,
+      target.y + CAM_HEIGHT - sp * CAM_DIST,
+      target.z - cos * CAM_DIST * cp,
+    )
+    cam.x = MathUtils.clamp(cam.x, -W / 2 + 0.4, W / 2 - 0.4)
+    cam.z = MathUtils.clamp(cam.z, -D / 2 + 0.4, D / 2 - 0.4)
+    cam.y = MathUtils.clamp(cam.y, 0.9, CEIL - 0.4)
+    camera.position.lerp(cam, Math.min(1, 9 * d))
+    camera.lookAt(target.x, target.y, target.z)
   })
+
   return (
-    <group ref={g} position={[0, 0, 3]}>
-      <mesh position={[0, 1.78, 0]} castShadow material={m.skin}><sphereGeometry args={[0.17, 16, 16]} /></mesh>
-      <mesh position={[0, 1.24, 0]} castShadow material={m.coat}><capsuleGeometry args={[0.15, 0.42, 4, 8]} /></mesh>
-      <mesh position={[0, 0.78, 0]} castShadow material={m.coat}><cylinderGeometry args={[0.16, 0.24, 0.56, 12]} /></mesh>
-      <mesh position={[-0.10, 0.42, 0.05]} castShadow material={m.coat}><capsuleGeometry args={[0.075, 0.5, 4, 6]} /></mesh>
-      <mesh position={[0.10, 0.42, -0.05]} castShadow material={m.coat}><capsuleGeometry args={[0.075, 0.5, 4, 6]} /></mesh>
+    <group ref={root} position={[0, 0, 8]}>
+      <primitive ref={modelRef} object={cloned} scale={ROBOT_SCALE} />
     </group>
   )
 }
@@ -1155,7 +1214,7 @@ function Gallery() {
       <Suspense fallback={null}><SideGothicWindows m={m} side={-1} /></Suspense>
       <Suspense fallback={null}><SideGothicWindows m={m} side={1} /></Suspense>
       <Bench m={m} />
-      <Character m={m} />
+      <Suspense fallback={null}><Character /></Suspense>
 
       <Suspense fallback={null}><Paintings items={items} m={m} /></Suspense>
       {/* curated warm wall-wash spots (kept few for performance) */}
