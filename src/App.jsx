@@ -5,9 +5,9 @@ import './index.css'
 export default function App() {
   const [hint, setHint] = useState(true)
   useEffect(() => {
-    const onLock = () => setHint(document.pointerLockElement == null)
-    document.addEventListener('pointerlockchange', onLock)
-    return () => document.removeEventListener('pointerlockchange', onLock)
+    const hide = () => setHint(false)
+    window.addEventListener('pointerdown', hide, { once: true })
+    return () => window.removeEventListener('pointerdown', hide)
   }, [])
   return (
     <>
@@ -20,7 +20,7 @@ export default function App() {
           letterSpacing: 0.3, textAlign: 'center', backdropFilter: 'blur(3px)',
           boxShadow: '0 4px 18px rgba(0,0,0,0.35)',
         }}>
-          Click to look around &nbsp;·&nbsp; <b>WASD</b> / arrows to move &nbsp;·&nbsp; <b>Shift</b> to run &nbsp;·&nbsp; <b>Esc</b> to release
+          <b>WASD</b> / arrows to move &nbsp;·&nbsp; <b>drag</b> to look around &nbsp;·&nbsp; <b>scroll</b> to zoom &nbsp;·&nbsp; <b>Shift</b> to run
         </div>
       )}
     </>

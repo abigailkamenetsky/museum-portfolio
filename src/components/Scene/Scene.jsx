@@ -1043,8 +1043,7 @@ function Bench({ m }) {
  *    (swinging arms/legs, bending knees, torso bob) + idle breathing. Pointer-lock
  *    mouse look (both axes), camera-relative movement, smooth accel/decel, body
  *    turns to face travel direction. ── */
-const WALK_SPEED = 4.4, RUN_SPEED = 7.6, ACCEL = 11, MOUSE_SENS = 0.0027
-const CAM_DIST = 6.2, CAM_HEIGHT = 2.4, HEAD_Y = 1.7
+const WALK_SPEED = 4.4, RUN_SPEED = 7.6, ACCEL = 11, DRAG_SENS = 0.006, HEAD_Y = 1.7
 const _v1 = new Vector3(), _v2 = new Vector3(), _v3 = new Vector3(), _v4 = new Vector3()
 const _v5 = new Vector3(), _v6 = new Vector3()
 
@@ -1063,7 +1062,7 @@ function Character() {
   const armL = useRef(), armR = useRef()
   const hairRefs = useRef([])   // per-section hair groups (each sways individually)
   const keys = useRef({})
-  const st = useRef({ yaw: 0, pitch: 0.12, vel: new Vector3(), face: 0, phase: 0, t: 0 })
+  const st = useRef({ yaw: 0, yawT: 0, pitch: 0.12, pitchT: 0.12, vel: new Vector3(), face: 0, phase: 0, t: 0, dist: 6.2 })
   const mat = useMemo(() => ({
     skin: new MeshStandardMaterial({ color: '#c8996f', roughness: 0.72, metalness: 0 }),
     hair: new MeshStandardMaterial({ color: '#211008', roughness: 0.85, metalness: 0 }),   // dark brunette
@@ -1179,26 +1178,38 @@ function Character() {
     const dn = e => { keys.current[e.code] = true; if (e.code.startsWith('Arrow')) e.preventDefault() }
     const up = e => { keys.current[e.code] = false }
     const canvas = document.querySelector('canvas')
-    const onClick = () => { if (canvas && document.pointerLockElement !== canvas) canvas.requestPointerLock && canvas.requestPointerLock() }
-    const onMove = e => {
-      if (document.pointerLockElement == null) return
+    // DRAG-TO-LOOK: hold and drag to orbit; release stops. No pointer lock, no Esc.
+    let dragging = false, lx = 0, ly = 0
+    const down = e => { dragging = true; lx = e.clientX; ly = e.clientY }
+    const move = e => {
+      if (!dragging) return
       const s = st.current
-      s.yaw -= e.movementX * MOUSE_SENS
-      s.pitch = MathUtils.clamp(s.pitch - e.movementY * MOUSE_SENS, -0.9, 1.0)
+      s.yawT -= (e.clientX - lx) * DRAG_SENS                                   // horizontal → orbit left/right
+      s.pitchT = MathUtils.clamp(s.pitchT - (e.clientY - ly) * DRAG_SENS, -1.4, 1.4)  // vertical → tilt (±~80°)
+      lx = e.clientX; ly = e.clientY
     }
+    const end = () => { dragging = false }
+    const wheel = e => { e.preventDefault(); st.current.dist = MathUtils.clamp(st.current.dist + e.deltaY * 0.004, 3.5, 9) }
     window.addEventListener('keydown', dn); window.addEventListener('keyup', up)
-    canvas && canvas.addEventListener('click', onClick)
-    document.addEventListener('mousemove', onMove)
+    canvas && canvas.addEventListener('pointerdown', down)
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', end)
+    canvas && canvas.addEventListener('wheel', wheel, { passive: false })
     return () => {
       window.removeEventListener('keydown', dn); window.removeEventListener('keyup', up)
-      canvas && canvas.removeEventListener('click', onClick)
-      document.removeEventListener('mousemove', onMove)
+      canvas && canvas.removeEventListener('pointerdown', down)
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', end)
+      canvas && canvas.removeEventListener('wheel', wheel)
     }
   }, [])
 
   useFrame(({ camera }, delta) => {
     if (!root.current) return
     const s = st.current, k = keys.current, d = Math.min(delta, 0.05)
+    // smooth the look angles toward their drag targets (elegant, not jerky)
+    s.yaw += (s.yawT - s.yaw) * Math.min(1, 12 * d)
+    s.pitch += (s.pitchT - s.pitch) * Math.min(1, 12 * d)
     // camera-relative input
     const fwd = (k['KeyW'] || k['ArrowUp'] ? 1 : 0) - (k['KeyS'] || k['ArrowDown'] ? 1 : 0)
     const strafe = (k['KeyD'] || k['ArrowRight'] ? 1 : 0) - (k['KeyA'] || k['ArrowLeft'] ? 1 : 0)
@@ -1254,19 +1265,21 @@ function Character() {
       g.rotation.z += (sz - g.rotation.z) * Math.min(1, 6 * d)
     }
 
-    // third-person orbit camera
-    const cp = Math.cos(s.pitch), sp = Math.sin(s.pitch)
-    const target = _v5.set(ch.position.x, HEAD_Y, ch.position.z)
+    // third-person orbit: camera circles behind the character (yaw); pitch tilts the
+    // AIM up/down so you can look from the floor, straight ahead, up to the ceiling —
+    // without the camera ever dropping below the floor.
+    const dist = s.dist
     const cam = _v6.set(
-      target.x - sin * CAM_DIST * cp,
-      target.y + CAM_HEIGHT - sp * CAM_DIST,
-      target.z - cos * CAM_DIST * cp,
+      ch.position.x - sin * dist,
+      HEAD_Y + 1.7 + s.pitch * 1.1,
+      ch.position.z - cos * dist,
     )
     cam.x = MathUtils.clamp(cam.x, -W / 2 + 0.4, W / 2 - 0.4)
     cam.z = MathUtils.clamp(cam.z, -D / 2 + 0.4, D / 2 - 0.4)
-    cam.y = MathUtils.clamp(cam.y, 0.9, CEIL - 0.4)
+    cam.y = MathUtils.clamp(cam.y, 0.8, CEIL - 0.4)
     camera.position.lerp(cam, Math.min(1, 9 * d))
-    camera.lookAt(target.x, target.y, target.z)
+    _v5.set(ch.position.x, HEAD_Y + 0.6 + s.pitch * 5.5, ch.position.z)   // aim swings floor→ahead→ceiling
+    camera.lookAt(_v5)
   })
 
   // stylized figure (faces +Z): brunette curls, Y2K tee, denim skirt, knee-high boots
