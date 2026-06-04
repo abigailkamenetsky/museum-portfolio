@@ -824,8 +824,8 @@ function MuseumWindow({ w, h, m }) {
     return new MeshBasicMaterial({ map: t, color })
   }
   const seedRef = useMemo(() => Math.random() * 0.75, [])
-  const treelineMat = useMemo(() => mkScenery([0.2, 0.62], 0.3, '#d8d8ce'), [forest, seedRef])     // full backdrop: trees + soft sky
-  const nearMat = useMemo(() => mkScenery([0.13, 0.34], 0.18, '#c2c6b6'), [forest, seedRef])        // nearer foliage (lower, slightly darker)
+  const treelineMat = useMemo(() => mkScenery([0.2, 0.56], 0.42, '#d8d8ce'), [forest, seedRef])    // full backdrop: trees + soft sky (crop raised → less ground)
+  const nearMat = useMemo(() => mkScenery([0.13, 0.3], 0.34, '#c2c6b6'), [forest, seedRef])         // nearer foliage (trees, not dirt)
 
   const RECESS = WALL_T                            // reveal depth = full wall thickness (~24in)
   const tw = Math.min(0.34, w * 0.105)             // trim width — MUST match buildBaroqueFrame so glass fills the hole
