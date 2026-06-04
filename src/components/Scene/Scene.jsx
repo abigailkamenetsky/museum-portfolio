@@ -1073,6 +1073,7 @@ function Character() {
     boot: new MeshStandardMaterial({ color: '#171311', roughness: 0.42, metalness: 0.18 }),  // knee-high boots
     sock: new MeshStandardMaterial({ color: '#ece6d6', roughness: 0.9, metalness: 0 }),       // sock peek
     belt: new MeshStandardMaterial({ color: '#5e1622', roughness: 0.5, metalness: 0.08 }),   // deep maroon / cherry belt
+    bow: new MeshStandardMaterial({ color: '#9e2230', roughness: 0.45, metalness: 0.08 }),   // cherry maroon hair bow (brighter so it reads on dark hair)
     gold: new MeshStandardMaterial({ color: '#d9b13b', roughness: 0.3, metalness: 1 }),        // dainty necklace
     eyeBlue: new MeshStandardMaterial({ color: '#1c46a0', roughness: 0.4, metalness: 0.1 }),   // evil eye
     eyeWhite: new MeshStandardMaterial({ color: '#eef2f7', roughness: 0.5, metalness: 0 }),
@@ -1306,13 +1307,16 @@ function Character() {
               <mesh geometry={geo} castShadow material={mat.hair} />
             </group>
           ))}
-          {/* cherry-maroon bow nestled at the back of the head */}
-          <group position={[0, 1.65, -0.135]} rotation={[-0.5, 0, 0]}>
-            <mesh position={[-0.072, 0, 0]} scale={[1, 0.62, 0.4]} castShadow material={mat.belt}><sphereGeometry args={[0.072, 12, 10]} /></mesh>
-            <mesh position={[0.072, 0, 0]} scale={[1, 0.62, 0.4]} castShadow material={mat.belt}><sphereGeometry args={[0.072, 12, 10]} /></mesh>
-            <mesh scale={[0.55, 0.95, 0.6]} castShadow material={mat.belt}><sphereGeometry args={[0.042, 10, 8]} /></mesh>
-            <mesh position={[-0.03, -0.085, 0.01]} rotation={[0, 0, 0.25]} scale={[0.45, 1.5, 0.4]} castShadow material={mat.belt}><sphereGeometry args={[0.034, 8, 8]} /></mesh>
-            <mesh position={[0.03, -0.085, 0.01]} rotation={[0, 0, -0.25]} scale={[0.45, 1.5, 0.4]} castShadow material={mat.belt}><sphereGeometry args={[0.034, 8, 8]} /></mesh>
+          {/* cherry-maroon ribbon bow ON TOP of the back curls (proud so it's visible) */}
+          <group position={[0, 1.59, -0.205]} rotation={[0.2, 0, 0]}>
+            {/* two triangular loops, apex meeting at the centre */}
+            <mesh position={[-0.08, 0.01, 0]} rotation={[0, 0, -Math.PI / 2]} scale={[1, 1, 0.32]} castShadow material={mat.bow}><coneGeometry args={[0.065, 0.17, 4]} /></mesh>
+            <mesh position={[0.08, 0.01, 0]} rotation={[0, 0, Math.PI / 2]} scale={[1, 1, 0.32]} castShadow material={mat.bow}><coneGeometry args={[0.065, 0.17, 4]} /></mesh>
+            {/* centre knot */}
+            <mesh scale={[1, 1, 0.6]} castShadow material={mat.bow}><boxGeometry args={[0.045, 0.055, 0.05]} /></mesh>
+            {/* ribbon tails */}
+            <mesh position={[-0.035, -0.11, 0]} rotation={[0, 0, 0.22]} scale={[1, 1, 0.32]} castShadow material={mat.bow}><coneGeometry args={[0.04, 0.16, 4]} /></mesh>
+            <mesh position={[0.035, -0.11, 0]} rotation={[0, 0, -0.22]} scale={[1, 1, 0.32]} castShadow material={mat.bow}><coneGeometry args={[0.04, 0.16, 4]} /></mesh>
           </group>
           {/* shoulders pivot; short sleeve cap + bare arm */}
           <group ref={armL} position={[-0.17, 1.43, 0]}>
