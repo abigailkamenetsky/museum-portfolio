@@ -1073,8 +1073,7 @@ function Character() {
   const arrowRef = useRef()     // "Guide Me" floor arrow
   const keys = useRef({})
   const st = useRef({ yaw: Math.PI, yawT: Math.PI, pitch: 0.12, pitchT: 0.12, vel: new Vector3(), face: Math.PI, phase: 0, t: 0, dist: 6.2, dragging: false })
-  const arrowGeo = useMemo(() => new ConeGeometry(0.17, 0.52, 3), [])
-  const arrowMats = useMemo(() => Array.from({ length: 4 }, () => new MeshBasicMaterial({ color: '#ecc657', transparent: true, opacity: 0.25, depthWrite: false, toneMapped: false })), [])
+  const arrowMat = useMemo(() => new MeshBasicMaterial({ color: '#ecc657', transparent: true, opacity: 0.6, depthWrite: false, toneMapped: false }), [])
   const mat = useMemo(() => ({
     skin: new MeshStandardMaterial({ color: '#c8996f', roughness: 0.72, metalness: 0 }),
     hair: new MeshStandardMaterial({ color: '#211008', roughness: 0.85, metalness: 0 }),   // dark brunette
@@ -1313,30 +1312,14 @@ function Character() {
     _v5.set(ch.position.x, HEAD_Y + 0.4 + s.pitch * 7.0, ch.position.z)   // aim swings floor → ahead → ceiling
     camera.lookAt(_v5)
 
-    // which painting is the player LOOKING at? (camera-forward cone) → "Press E"
-    const camDir = _v7.copy(_v5).sub(camera.position).normalize()
-    let focus = null, bestDot = 0.83
-    for (const p of PAINTINGS) {
-      _v8.set(p.pos[0] - camera.position.x, p.pos[1] - camera.position.y, p.pos[2] - camera.position.z)
-      if (_v8.length() > 11) continue
-      const dot = _v8.normalize().dot(camDir)
-      if (dot > bestDot) { bestDot = dot; focus = p }
-    }
-    const fk = focus ? focus.wingId + ':' + focus.piece : null
-    const mk = mu.focus ? mu.focus.wingId + ':' + mu.focus.piece : null
-    if (fk !== mk) museum.set({ focus: focus ? { wingId: focus.wingId, piece: focus.piece, title: focus.title } : null })
-
-    // "Guide Me" flashing arrow trail: point the trail toward the target, flash in a
-    // marquee toward it, and clear on arrival
+    // "Guide Me" — point the front arrow toward the target, flash it, clear on arrival
     if (mu.guide && arrowRef.current) {
       const gx = mu.guide.pos[0] - ch.position.x, gz = mu.guide.pos[1] - ch.position.z
       if (Math.hypot(gx, gz) < 2.6) museum.set({ guide: null })
       else {
         arrowRef.current.visible = true
         arrowRef.current.rotation.y = Math.atan2(gx, gz)
-        for (let i = 0; i < arrowMats.length; i++) {
-          arrowMats[i].opacity = 0.16 + 0.64 * (0.5 + 0.5 * Math.sin(s.t * 3.4 - i * 0.85))
-        }
+        arrowMat.opacity = 0.3 + 0.6 * (0.5 + 0.5 * Math.sin(s.t * 4.5))
       }
     } else if (arrowRef.current && arrowRef.current.visible) {
       arrowRef.current.visible = false
@@ -1346,11 +1329,10 @@ function Character() {
   // stylized figure (faces +Z): brunette curls, Y2K tee, denim skirt, knee-high boots
   return (
     <group ref={root} position={[0, 0, 34]}>{/* spawn just inside the entrance, facing into the gallery */}
-      {/* "Guide Me" flashing gold floor-arrow trail (steered + animated in useFrame) */}
+      {/* "Guide Me" — one bold flashing arrow on the floor IN FRONT, pointing the way */}
       <group ref={arrowRef} visible={false}>
-        {[0, 1, 2, 3].map(i => (
-          <mesh key={i} geometry={arrowGeo} material={arrowMats[i]} position={[0, 0.06, 0.95 + i * 0.85]} rotation={[-Math.PI / 2, 0, 0]} />
-        ))}
+        <mesh material={arrowMat} position={[0, 0.06, 1.35]}><boxGeometry args={[0.11, 0.02, 0.62]} /></mesh>
+        <mesh material={arrowMat} position={[0, 0.06, 1.92]} rotation={[Math.PI / 2, 0, 0]}><coneGeometry args={[0.21, 0.48, 4]} /></mesh>
       </group>
       <group ref={modelRef} position={[0, 0.07, 0]}>{/* lift so the heeled boots rest on the floor (no clipping) */}
         {/* torso + head + hair + arms + skirt (bobs as one during the walk) */}

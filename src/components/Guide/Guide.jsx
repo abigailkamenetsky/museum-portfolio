@@ -79,6 +79,12 @@ export default function Guide() {
   const s = useMuseum()
   const [hover, setHover] = useState(null)
   const [piece, setPiece] = useState(null)   // selected piece within an exhibit card
+  const [isMobile] = useState(() => typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches)
+  const advance = () => {
+    const m = museum.get()
+    if (m.phase === 'welcome') museum.set({ phase: 'howto' })
+    else if (m.phase === 'howto') { museum.set({ phase: 'explore' }); openGuide() }
+  }
   useEffect(() => {
     const cp = museum.get().cardPiece
     setPiece(cp ?? null)
@@ -103,13 +109,10 @@ export default function Guide() {
       const m = museum.get()
       if (e.code === 'Space') {
         e.preventDefault()
-        if (m.phase === 'welcome') museum.set({ phase: 'howto' })
-        else if (m.phase === 'howto') { museum.set({ phase: 'explore' }); openGuide() }
+        if (m.phase === 'welcome' || m.phase === 'howto') advance()
         else if (!m.menu && !m.card) openGuide()
       } else if (e.code === 'KeyM') {
         e.preventDefault(); museum.set({ phase: 'explore' }); m.menu ? closeGuide() : openGuide()
-      } else if (e.code === 'KeyE') {
-        if (m.focus && !m.menu && !m.card) museum.set({ card: m.focus.wingId, cardPiece: m.focus.piece })
       } else if (e.code === 'Escape') {
         if (m.card) museum.set({ card: null }); else if (m.menu) closeGuide()
       }
@@ -150,19 +153,19 @@ export default function Guide() {
 
       {/* STEP 1 — welcome */}
       {s.phase === 'welcome' && (
-        <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 25, pointerEvents: 'none', animation: 'fadeIn 1.2s ease' }}>
+        <div onClick={advance} style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 25, cursor: 'pointer', animation: 'fadeIn 1.2s ease' }}>
           <div style={{ textAlign: 'center', maxWidth: 460, padding: '30px 38px', background: 'rgba(8,10,8,0.62)', border: `1px solid ${GOLD}44`, borderRadius: 14, backdropFilter: 'blur(3px)' }}>
             <div style={{ color: GOLD, font: `500 12px ${serif}`, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.85 }}>Welcome to the</div>
             <div style={{ color: '#f3ecd9', font: `400 clamp(30px,6vw,40px) ${serif}`, margin: '8px 0 12px' }}>Museum of Abby</div>
             <div style={{ color: '#e7ddca', font: `400 16px/1.55 ${serif}`, opacity: 0.9 }}>An interactive gallery where each art piece reveals a chapter of my journey: projects, internships, research, and hobbies.</div>
-            <div style={{ color: GOLD, font: `500 15px ${serif}`, marginTop: 20, letterSpacing: 0.5 }}>Press <b>SPACE</b> to see how it works</div>
+            <div style={{ color: GOLD, font: `500 15px ${serif}`, marginTop: 20, letterSpacing: 0.5 }}>Tap the screen or press <b>SPACE</b> to see how it works</div>
           </div>
         </div>
       )}
 
       {/* STEP 2 — how it works (handheld audio guide) */}
       {s.phase === 'howto' && (
-        <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 25, pointerEvents: 'none', animation: 'fadeIn .8s ease' }}>
+        <div onClick={advance} style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 25, cursor: 'pointer', animation: 'fadeIn .8s ease' }}>
           <div style={{ textAlign: 'center', maxWidth: 440, padding: '26px 34px', background: 'rgba(8,10,8,0.62)', border: `1px solid ${GOLD}44`, borderRadius: 14, backdropFilter: 'blur(3px)' }}>
             <div style={{ color: GOLD, font: `500 12px ${serif}`, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.85 }}>Your Audio Guide</div>
             {/* small centered device icon */}
@@ -173,8 +176,8 @@ export default function Guide() {
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 7 }}>{[0, 1, 2].map(i => <div key={i} style={{ width: 9, height: 9, borderRadius: 9, border: `1px solid ${GOLD}88` }} />)}</div>
               </div>
             </div>
-            <div style={{ color: '#e7ddca', font: `400 15px/1.55 ${serif}`, opacity: 0.92, marginTop: 2 }}>Walk up to any piece and press <b>E</b> to learn more, or use your handheld guide to jump to any wing.</div>
-            <div style={{ color: GOLD, font: `500 15px ${serif}`, marginTop: 16 }}>Press <b>SPACE</b> to open the Audio Guide</div>
+            <div style={{ color: '#e7ddca', font: `400 15px/1.55 ${serif}`, opacity: 0.92, marginTop: 2 }}>Tap on the paintings to see information for each project! Or use your handheld guide to jump to any wing.</div>
+            <div style={{ color: GOLD, font: `500 15px ${serif}`, marginTop: 16 }}>Tap the screen or press <b>SPACE</b> to open the Audio Guide</div>
           </div>
         </div>
       )}
@@ -253,12 +256,20 @@ export default function Guide() {
         )
       })()}
 
-      {/* bottom hints */}
-      {!s.menu && !s.card && s.phase === 'explore' && (
-        <div style={{ position: 'fixed', left: '50%', bottom: 22, transform: 'translateX(-50%)', zIndex: 20, pointerEvents: 'none', textAlign: 'center' }}>
-          {s.focus && <div style={{ marginBottom: 8, display: 'inline-block', padding: '8px 16px', background: INK, border: `1px solid ${GOLD}66`, borderRadius: 8, color: GOLD, font: `500 15px ${serif}`, animation: 'fadeIn .3s ease' }}>Press <b>E</b> — {s.focus.title}</div>}
-          <div style={{ color: '#efe7d6', opacity: 0.55, font: `500 13px ${serif}` }}>WASD / arrows · drag to look · <b>M</b> audio guide · <b>E</b> exhibit</div>
+      {/* desktop-only bottom hint (hidden on mobile) */}
+      {!isMobile && !s.menu && !s.card && s.phase === 'explore' && (
+        <div style={{ position: 'fixed', left: '50%', bottom: 22, transform: 'translateX(-50%)', zIndex: 20, pointerEvents: 'none', textAlign: 'center', color: '#efe7d6', opacity: 0.55, font: `500 13px ${serif}` }}>
+          WASD / arrows · drag to look · <b>M</b> audio guide · click a painting
         </div>
+      )}
+
+      {/* mobile-only audio-guide button (bottom-right) */}
+      {isMobile && ready && !s.menu && !s.card && s.phase === 'explore' && (
+        <button onClick={openGuide} aria-label="Open audio guide" style={{ position: 'fixed', right: 16, bottom: 16, zIndex: 22, width: 58, height: 76, padding: '7px 6px', borderRadius: 14, border: '2px solid #2c0a10', background: 'linear-gradient(165deg,#7d1c2c,#4a0d15)', boxShadow: '0 8px 22px rgba(0,0,0,0.5)', cursor: 'pointer' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 3, marginBottom: 4 }}>{[0, 1, 2].map(i => <div key={i} style={{ width: 3, height: 3, borderRadius: 3, background: '#2c0a10' }} />)}</div>
+          <div style={{ height: 38, background: '#0f120e', border: `1px solid ${GOLD}66`, borderRadius: 5, boxShadow: 'inset 0 0 6px rgba(0,0,0,0.6)' }} />
+          <div style={{ color: GOLD, font: `600 7px ${serif}`, textAlign: 'center', marginTop: 5, letterSpacing: 1.5 }}>GUIDE</div>
+        </button>
       )}
 
       <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`}</style>
