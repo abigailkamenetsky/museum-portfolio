@@ -26,7 +26,7 @@ import { ARTWORKS, ART_BASE } from '../../data/artworks'
 /* ── DIMENSIONS — long rectangular palace gallery (~2:1) ────── */
 const W = 18, H = 13.5, D = 78
 const CEIL = H
-const WALL_T = 0.5                              // wall thickness → real opening depth
+const WALL_T = 0.62                             // thick masonry wall → deep (~24in) window reveal
 const WIN_Z = [27, 13.5, 0, -13.5, -27]         // window centres down each long wall
 
 // tall arched window openings (the procedural Gothic window fills these fully)
@@ -87,12 +87,21 @@ function useMaterials() {
     // the short (front/back) and long (side) walls.
     wall: new MeshStandardMaterial({
       color: '#ffffff', roughness: 0.82, metalness: 0,
+      emissive: '#0c1408', emissiveIntensity: 0.4,   // faint self-glow → wallpaper never crushes to pure black
       normalScale: new Vector2(1.0, 1.0), envMapIntensity: 0,   // ignore HDRI → no cool/blue cast
     }),
     wallSide: new MeshStandardMaterial({
       color: '#ffffff', roughness: 0.82, metalness: 0,
+      emissive: '#0c1408', emissiveIntensity: 0.4,
       normalScale: new Vector2(1.0, 1.0), envMapIntensity: 0, side: DoubleSide,
     }),
+    // plaster lining the window recess (jambs / head / sill reveal) — a muted
+    // green plaster a touch lighter than the walls so the depth reads in shadow
+    revealPlaster: new MeshStandardMaterial({ color: '#5f6a48', roughness: 0.96, metalness: 0, envMapIntensity: 0, side: DoubleSide }),
+    // pale museum stone sill (projects into the room, catches light, casts shadow)
+    sillStone: new MeshStandardMaterial({ color: '#c9c2af', roughness: 0.82, metalness: 0, envMapIntensity: 0.08 }),
+    // hazy distant sky layer seen far beyond the trees
+    skyHaze: new MeshBasicMaterial({ color: '#c4cdd2' }),
     // espresso/smoked walnut — far less red, nearly black in shadow, polished oil luster
     floor: new MeshPhysicalMaterial({
       color: '#241710', roughness: 0.66, metalness: 0,
@@ -697,7 +706,7 @@ function rosetteMerge(d) {
 
 const _frameCache = {}
 function buildBaroqueFrame(w, h) {
-  const tw = Math.min(0.42, w * 0.12)
+  const tw = Math.min(0.58, w * 0.16)              // heavier surround → reads as architecture, not a picture frame
   const iw = w - 2 * tw, ih = h - 2 * tw            // arched glass opening
   const parts = []
   const add = (geo, pos = [0, 0, 0], rot = [0, 0, 0], scl = [1, 1, 1]) => {
@@ -706,15 +715,15 @@ function buildBaroqueFrame(w, h) {
   }
   const A2 = ih / 2, sy = -A2 + 0.6 * ih            // arch spring (local y)
   // ── moldings: backing fills the wall opening + hugs the arched glass ──
-  add(rectArchRing(w, h, iw * 0.96, ih * 0.96, 0.05))                          // backing plate (fills corners)
-  add(rectArchRing(w + 0.6, h + 0.5, iw + 0.10, ih + 0.10, 0.10), [0, 0, 0.05]) // main body
-  add(archBand(iw + 0.16, ih + 0.16, iw, ih, 0.13), [0, 0, 0.06])              // inner bead molding (arched)
-  add(rectArchRing(w + 1.0, h + 0.9, w + 0.55, h + 0.45, 0.07), [0, 0, 0.16])  // outer molding
+  add(rectArchRing(w, h, iw * 0.96, ih * 0.96, 0.06))                          // backing plate (fills corners)
+  add(rectArchRing(w + 0.9, h + 0.8, iw + 0.10, ih + 0.10, 0.16), [0, 0, 0.05]) // main body — heavier
+  add(archBand(iw + 0.18, ih + 0.18, iw, ih, 0.15), [0, 0, 0.07])              // inner bead molding (arched)
+  add(rectArchRing(w + 1.4, h + 1.3, w + 0.78, h + 0.66, 0.11), [0, 0, 0.18])  // outer molding — heavier
   // ── side pilasters with capital/base + carved bits ──
-  const pw = w * 0.16, ph = h * 0.82
+  const pw = w * 0.20, ph = h * 0.82
   for (const s of [-1, 1]) {
     const px = s * (w / 2 + 0.16)
-    add(new BoxGeometry(pw, ph, 0.12), [px, -h * 0.03, 0.07])
+    add(new BoxGeometry(pw, ph, 0.18), [px, -h * 0.03, 0.07])
     add(new BoxGeometry(0.05, ph, 0.2), [px - pw / 2 + 0.03, -h * 0.03, 0.16])   // raised inner edge
     add(new BoxGeometry(0.05, ph, 0.2), [px + pw / 2 - 0.03, -h * 0.03, 0.16])   // raised outer edge
     add(new BoxGeometry(pw + 0.14, 0.16, 0.22), [px, ph / 2 - h * 0.03, 0.18])   // capital
@@ -723,7 +732,7 @@ function buildBaroqueFrame(w, h) {
     for (let i = 0; i < 2; i++) { const y = -h * 0.03 + (i ? ph * 0.22 : -ph * 0.22); add(scrollGeo(0.16, 0.03, Math.PI * 1.5), [px, y, 0.22], [0, 0, s > 0 ? 0 : Math.PI]) }
   }
   // ── arch bands over the top (egg-and-dart approximated by ovoids on an arc) ──
-  add(archBand(iw + 0.5, ih + 0.5, iw + 0.28, ih + 0.28, 0.11), [0, 0, 0.2])
+  add(archBand(iw + 0.6, ih + 0.6, iw + 0.30, ih + 0.30, 0.16), [0, 0, 0.2])
   for (let i = 0; i <= 12; i++) { const a = Math.PI * (0.12 + 0.76 * i / 12); const r = (iw / 2) + 0.18; const x = Math.cos(a) * r; const y = sy + Math.sin(a) * r * 0.95; const egg = new SphereGeometry(w * 0.02, 8, 6); egg.scale(0.8, 1, 1.2); add(egg, [x, y, 0.22]) }
   // ── upper crown + central cartouche + flanking C-scrolls + acanthus ──
   const cy = A2 + h * 0.13
@@ -752,7 +761,7 @@ function buildBaroqueFrame(w, h) {
   for (const s of [-1, 1]) add(scrollGeo(w * 0.1, 0.035, Math.PI * 1.4), [s * apronW * 0.3, ay, 0.16], [0, 0, s > 0 ? Math.PI : 0])
   for (const s of [-1, 1]) add(leafGeo(h * 0.06, w * 0.05), [s * apronW * 0.42, ay, 0.14], [Math.PI * 0.5, 0, s * 0.6])
   // ── beadwork along the jambs ──
-  for (const s of [-1, 1]) for (let i = 0; i < 9; i++) { const y = -h * 0.03 - ih * 0.45 + (i + 0.5) * ih * 0.9 / 9; add(new SphereGeometry(w * 0.011, 6, 6), [s * (iw / 2 + 0.06), y, 0.14]) }
+  for (const s of [-1, 1]) for (let i = 0; i < 6; i++) { const y = -h * 0.03 - ih * 0.45 + (i + 0.5) * ih * 0.9 / 6; add(new SphereGeometry(w * 0.013, 6, 6), [s * (iw / 2 + 0.06), y, 0.14]) }
   // ── floral garlands (under the cartouche + across the apron) ──
   const garland = (gx0, gy0, span, sag, z) => {
     const n = 8
@@ -789,15 +798,20 @@ function pointedArch(w, h, spring = 0.6) {
  * part, Y-tracery + oculus in the arch, side colonnettes, hood mould + finial.
  * w,h = the wall opening (rectangular). Local +Z faces the room. */
 function MuseumWindow({ w, h, m }) {
-  // real forest backdrop: a unique vertical slice of the equirectangular image
+  // ── layered exterior scenery (aerial perspective: near darker, far hazier) ──
   const forest = useTexture(FOREST_URL)
-  const sceneryMat = useMemo(() => {
+  const mkScenery = (rep, off, color) => {
     const t = forest.clone(); t.needsUpdate = true
     t.colorSpace = SRGBColorSpace; t.wrapS = t.wrapT = RepeatWrapping
-    t.repeat.set(0.18, 0.55); t.offset.set(Math.random() * 0.75, 0.42)   // higher crop: trees + sky, no dirt
-    return new MeshBasicMaterial({ map: t, color: '#e6e6e6' })   // bright daytime — windows feel brighter than the room
-  }, [forest])
-  const tw = Math.min(0.42, w * 0.12)              // trim width
+    t.repeat.set(rep[0], rep[1]); t.offset.set(off, 0.42)
+    return new MeshBasicMaterial({ map: t, color })
+  }
+  const seed = useMemo(() => Math.random() * 0.75, [])
+  const treelineMat = useMemo(() => mkScenery([0.18, 0.55], seed, '#e2e2dc'), [forest, seed])      // mid: tree line
+  const nearMat = useMemo(() => mkScenery([0.11, 0.42], seed + 0.05, '#bcc1b2'), [forest, seed])    // near foliage (darker)
+
+  const RECESS = WALL_T                            // reveal depth = full wall thickness (~24in)
+  const tw = Math.min(0.58, w * 0.16)              // trim width
   const iw = w - 2 * tw, ih = h - 2 * tw           // arched opening (glass)
   const spring = 0.6
   const H2 = ih / 2, W2 = iw / 2, sy = -H2 + spring * ih   // arch spring line
@@ -806,26 +820,55 @@ function MuseumWindow({ w, h, m }) {
   const glassGeo = useMemo(() => new ShapeGeometry(pointedArch(iw * 0.99, ih * 0.99, spring)), [iw, ih])
   const frameGeo = useMemo(() => baroqueFrame(w, h), [w, h])   // cached + reused across windows
 
+  // depths (local +Z faces the room; the recess runs back to -RECESS)
+  const frameZ = -(RECESS - 0.10)                  // carved surround sits INSIDE the opening, recessed
+  const glassZ = -(RECESS - 0.04)                  // glazing near the back of the reveal
+  const mullZ = glassZ + 0.03
+  const jambT = 0.14                               // plaster reveal thickness shown
+
   const cols = 3, vx = [-W2 + iw / cols, -W2 + 2 * iw / cols]   // two vertical mullions
   const straightH = sy + H2                                     // straight (sash) region height
   const transoms = [-H2 + straightH * 0.33, -H2 + straightH * 0.66, sy]   // sash rails + spring transom
   const arcR = (H2 - sy) * 0.30
   return (
     <group>
-      {/* real forest just behind the glass — sized to the opening (no leak) */}
-      <mesh position={[0, 0, -WALL_T - 0.35]} material={sceneryMat}><planeGeometry args={[w * 1.25, h * 1.15]} /></mesh>
-      {/* arched glass filling the opening */}
-      <mesh geometry={glassGeo} position={[0, 0, -0.30]} material={m.glass} />
+      {/* ── EXTERIOR DEPTH LAYERS (behind the glazing) ──
+          far hazy sky → tree line → near foliage, separated in Z for parallax */}
+      <mesh position={[0, 0, -(RECESS + 2.6)]} material={m.skyHaze}><planeGeometry args={[w * 3.2, h * 2.4]} /></mesh>
+      <mesh position={[0, 0, -(RECESS + 1.35)]} material={treelineMat}><planeGeometry args={[w * 1.7, h * 1.4]} /></mesh>
+      <mesh position={[0, -h * 0.12, -(RECESS + 0.55)]} material={nearMat}><planeGeometry args={[w * 1.35, h * 1.2]} /></mesh>
+
+      {/* ── DEEP PLASTER REVEAL lining the opening (jambs / head / sill bed) ──
+          turns the cut hole into a real architectural recess that catches shadow */}
+      {[-1, 1].map(s => (
+        <mesh key={'jamb' + s} position={[s * (w / 2 + 0.01), -h * 0.02, -RECESS / 2]} receiveShadow material={m.revealPlaster}>
+          <boxGeometry args={[jambT, h + 0.26, RECESS]} />
+        </mesh>
+      ))}
+      <mesh position={[0, h / 2 + 0.02, -RECESS / 2]} receiveShadow material={m.revealPlaster}><boxGeometry args={[w + 0.12, jambT, RECESS]} /></mesh>
+      <mesh position={[0, -h / 2 - 0.02, -RECESS / 2]} receiveShadow material={m.revealPlaster}><boxGeometry args={[w + 0.12, jambT, RECESS]} /></mesh>
+
+      {/* ── SUBSTANTIAL STONE SILL — projects into the room, casts a real shadow ── */}
+      <mesh position={[0, -h / 2 - 0.05, (0.22 - RECESS) / 2]} castShadow receiveShadow material={m.sillStone}>
+        <boxGeometry args={[w + 0.7, 0.17, RECESS + 0.22]} />
+      </mesh>
+      <mesh position={[0, -h / 2 - 0.155, 0.205]} castShadow material={m.sillStone}>
+        <boxGeometry args={[w + 0.7, 0.07, 0.1]} />
+      </mesh>
+
+      {/* ── GLAZING (two offset panes → reads as thick glass, not a plane) ── */}
+      <mesh geometry={glassGeo} position={[0, 0, glassZ]} material={m.glass} />
+      <mesh geometry={glassGeo} position={[0, 0, glassZ - 0.05]} material={m.glass} />
       {/* mullions: 2 verticals up to the spring, sash transoms, central mullion into
           the arch, two Y-tracery bars, and an oculus — all inside the glass */}
-      {vx.map((x, i) => <mesh key={'v' + i} position={[x, (-H2 + sy) / 2, -0.26]} material={m.trimWhite}><boxGeometry args={[mull, straightH, 0.05]} /></mesh>)}
-      {transoms.map((y, i) => <mesh key={'t' + i} position={[0, y, -0.26]} material={m.trimWhite}><boxGeometry args={[iw - 0.04, mull, 0.05]} /></mesh>)}
-      <mesh position={[0, (sy + H2) / 2, -0.26]} material={m.trimWhite}><boxGeometry args={[mull, H2 - sy, 0.05]} /></mesh>
-      <mesh position={[-W2 * 0.34, sy + (H2 - sy) * 0.45, -0.26]} rotation={[0, 0, 0.5]} material={m.trimWhite}><boxGeometry args={[mull, (H2 - sy) * 0.9, 0.05]} /></mesh>
-      <mesh position={[W2 * 0.34, sy + (H2 - sy) * 0.45, -0.26]} rotation={[0, 0, -0.5]} material={m.trimWhite}><boxGeometry args={[mull, (H2 - sy) * 0.9, 0.05]} /></mesh>
-      <mesh position={[0, sy + (H2 - sy) * 0.5, -0.26]} material={m.trimWhite}><torusGeometry args={[arcR, mull * 0.7, 8, 20]} /></mesh>
-      {/* the carved Baroque surround (one merged geometry) */}
-      <mesh geometry={frameGeo} material={m.trim} castShadow receiveShadow />
+      {vx.map((x, i) => <mesh key={'v' + i} position={[x, (-H2 + sy) / 2, mullZ]} material={m.trimWhite}><boxGeometry args={[mull, straightH, 0.05]} /></mesh>)}
+      {transoms.map((y, i) => <mesh key={'t' + i} position={[0, y, mullZ]} material={m.trimWhite}><boxGeometry args={[iw - 0.04, mull, 0.05]} /></mesh>)}
+      <mesh position={[0, (sy + H2) / 2, mullZ]} material={m.trimWhite}><boxGeometry args={[mull, H2 - sy, 0.05]} /></mesh>
+      <mesh position={[-W2 * 0.34, sy + (H2 - sy) * 0.45, mullZ]} rotation={[0, 0, 0.5]} material={m.trimWhite}><boxGeometry args={[mull, (H2 - sy) * 0.9, 0.05]} /></mesh>
+      <mesh position={[W2 * 0.34, sy + (H2 - sy) * 0.45, mullZ]} rotation={[0, 0, -0.5]} material={m.trimWhite}><boxGeometry args={[mull, (H2 - sy) * 0.9, 0.05]} /></mesh>
+      <mesh position={[0, sy + (H2 - sy) * 0.5, mullZ]} material={m.trimWhite}><torusGeometry args={[arcR, mull * 0.7, 8, 20]} /></mesh>
+      {/* the carved Baroque surround — recessed INTO the opening, overlapping the reveal */}
+      <mesh geometry={frameGeo} position={[0, 0, frameZ]} material={m.trim} castShadow receiveShadow />
     </group>
   )
 }
@@ -833,7 +876,7 @@ function MuseumWindow({ w, h, m }) {
 /* far-wall monumental Gothic window */
 function GothicFeature({ m }) {
   return (
-    <group position={[0, FEAT_CY, -D / 2 + 0.04]}>
+    <group position={[0, FEAT_CY, -D / 2 + WALL_T]}>
       <MuseumWindow w={FEAT_W} h={FEAT_H} m={m} />
     </group>
   )
