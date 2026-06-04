@@ -87,11 +87,11 @@ function useMaterials() {
     // the short (front/back) and long (side) walls.
     wall: new MeshStandardMaterial({
       color: '#ffffff', roughness: 0.82, metalness: 0,
-      normalScale: new Vector2(1.0, 1.0), envMapIntensity: 0.04,
+      normalScale: new Vector2(1.0, 1.0), envMapIntensity: 0,   // ignore HDRI → no cool/blue cast
     }),
     wallSide: new MeshStandardMaterial({
       color: '#ffffff', roughness: 0.82, metalness: 0,
-      normalScale: new Vector2(1.0, 1.0), envMapIntensity: 0.04, side: DoubleSide,
+      normalScale: new Vector2(1.0, 1.0), envMapIntensity: 0, side: DoubleSide,
     }),
     // espresso/smoked walnut — far less red, nearly black in shadow, polished oil luster
     floor: new MeshPhysicalMaterial({
