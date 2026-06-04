@@ -26,10 +26,13 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Build (Pages subpath base)
+      # Custom domain (public/CNAME present) → serve at root '/'.
+      # Otherwise it's the project page → serve under '/museum-portfolio/'.
+      - name: Choose base path
+        run: |
+          if [ -f public/CNAME ]; then echo "VITE_BASE=/" >> "$GITHUB_ENV"; else echo "VITE_BASE=/museum-portfolio/" >> "$GITHUB_ENV"; fi
+      - name: Build
         run: npm run build
-        env:
-          VITE_BASE: /museum-portfolio/
       - uses: actions/configure-pages@v5
         with:
           enablement: true
