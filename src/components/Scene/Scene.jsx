@@ -1045,6 +1045,13 @@ const CAM_DIST = 6.2, CAM_HEIGHT = 2.4, HEAD_Y = 1.7
 const _v1 = new Vector3(), _v2 = new Vector3(), _v3 = new Vector3(), _v4 = new Vector3()
 const _v5 = new Vector3(), _v6 = new Vector3()
 
+// merge many small spheres into ONE geometry (dense curls at ~1 draw call)
+function mergeSpheres(list) {
+  return mergeGeometries(list.map(c => {
+    const g = new SphereGeometry(c.r, 8, 7); g.translate(c.p[0], c.p[1], c.p[2]); return g
+  }), false)
+}
+
 function Character() {
   const root = useRef()       // carries world position
   const modelRef = useRef()   // inner figure, rotates to face travel direction
@@ -1055,7 +1062,7 @@ function Character() {
   const st = useRef({ yaw: 0, pitch: 0.12, vel: new Vector3(), face: 0, phase: 0, t: 0 })
   const mat = useMemo(() => ({
     skin: new MeshStandardMaterial({ color: '#c8996f', roughness: 0.72, metalness: 0 }),
-    hair: new MeshStandardMaterial({ color: '#2c1a10', roughness: 0.86, metalness: 0 }),   // brunette
+    hair: new MeshStandardMaterial({ color: '#211008', roughness: 0.85, metalness: 0 }),   // dark brunette
     shirt: new MeshStandardMaterial({ color: '#1b2750', roughness: 0.62, metalness: 0.06 }), // dark-blue Y2K tee
     denim: new MeshStandardMaterial({ color: '#3f5f86', roughness: 0.9, metalness: 0 }),     // denim skirt
     denimDark: new MeshStandardMaterial({ color: '#324d6c', roughness: 0.92, metalness: 0 }), // pocket contrast
@@ -1067,33 +1074,42 @@ function Character() {
     eyeWhite: new MeshStandardMaterial({ color: '#eef2f7', roughness: 0.5, metalness: 0 }),
     eyePupil: new MeshStandardMaterial({ color: '#0a1c3a', roughness: 0.4, metalness: 0 }),
   }), [])
-  // curly brunette hair (3a–3c): a DENSE cap of small tight ringlets covering the
-  // whole crown/back/sides (no bald gaps), leaving the front face open.
-  const hairCap = useMemo(() => {
-    const a = []
+  // DENSE curly cap covering crown/back/sides (front face open) — merged to 1 mesh
+  const hairCapGeo = useMemo(() => {
+    const list = []
     for (let layer = 0; layer < 3; layer++) {
-      const rr = 0.148 + layer * 0.022, count = 64 - layer * 12
+      const rr = 0.15 + layer * 0.02, count = 80 - layer * 16
       for (let i = 0; i < count; i++) {
         const u = Math.random(), v = Math.random()
         const theta = u * Math.PI * 2, phi = Math.acos(2 * v - 1)
         const x = Math.sin(phi) * Math.cos(theta), y = Math.cos(phi), z = Math.sin(phi) * Math.sin(theta)
-        if (z > 0.32 && y < 0.42) continue                 // skip the front lower arc = the face
-        a.push({ p: [x * rr * 1.06, 1.64 + y * rr * 1.1 + 0.02, z * rr * 0.92 - 0.012], r: 0.036 + Math.random() * 0.022 })
+        if (z > 0.34 && y < 0.4) continue                  // skip front-lower arc = the face
+        list.push({ p: [x * rr * 1.05, 1.64 + y * rr * 1.08 + 0.02, z * rr * 0.9 - 0.012], r: 0.03 + Math.random() * 0.018 })
       }
     }
-    return a
+    return mergeSpheres(list)
   }, [])
-  // trailing length down the BACK only (lives in an animated group → sways when walking)
-  const hairLength = useMemo(() => {
-    const a = []; const rnd = n => (Math.random() - 0.5) * n
-    for (let row = 0; row < 13; row++) {
-      const y = -0.02 - row * 0.048, n = row < 8 ? 5 : 3
-      for (let j = 0; j < n; j++) {
-        const x = (-(n - 1) / 2 + j) * (0.075 + row * 0.002) + rnd(0.035)
-        a.push({ p: [x, y, -0.03 + rnd(0.035)], r: 0.036 + Math.random() * 0.02 })
+  // long DEFINED RINGLET strands down the back — each strand spirals (helix) for
+  // real curl definition; widens slightly for volume. Lives in an animated group.
+  const hairLengthGeo = useMemo(() => {
+    const list = []; const strands = 22
+    for (let s = 0; s < strands; s++) {
+      const ang = (-0.5 + s / (strands - 1)) * Math.PI * 1.3
+      const ox = Math.sin(ang) * 0.15
+      const oz = -Math.abs(Math.cos(ang)) * 0.1 - 0.03
+      const len = 16 + Math.floor(Math.random() * 8)        // long
+      const curlR = 0.02 + Math.random() * 0.022            // ringlet tightness
+      const freq = 1.5 + Math.random() * 0.9
+      const ph = Math.random() * Math.PI * 2
+      const dir = Math.random() < 0.5 ? 1 : -1
+      for (let i = 0; i < len; i++) {
+        const spread = 1 + i * 0.022                        // fans out → volume
+        const x = ox * spread + Math.cos(ph + i * freq * dir) * curlR
+        const z = oz * spread + Math.sin(ph + i * freq * dir) * curlR
+        list.push({ p: [x, -0.02 - i * 0.046, z], r: 0.03 + Math.random() * 0.012 })
       }
     }
-    return a
+    return mergeSpheres(list)
   }, [])
 
   useEffect(() => {
@@ -1191,17 +1207,18 @@ function Character() {
       <group ref={modelRef}>
         {/* torso + head + hair + arms + skirt (bobs as one during the walk) */}
         <group ref={body}>
-          {/* denim mini — shorter, straight/boxy (square) silhouette */}
-          <mesh position={[0, 0.92, 0]} castShadow material={mat.denim}><cylinderGeometry args={[0.185, 0.205, 0.24, 20, 1, true]} /></mesh>
+          {/* denim mini — shorter, straight/boxy; flattened front-to-back so it's
+              not too thick in profile (scaleZ) */}
+          <mesh position={[0, 0.92, 0]} scale={[1, 1, 0.68]} castShadow material={mat.denim}><cylinderGeometry args={[0.172, 0.195, 0.24, 20, 1, true]} /></mesh>
           {/* two front patch pockets */}
-          {[-1, 1].map(s => <mesh key={'pk' + s} position={[s * 0.075, 0.9, 0.185]} castShadow material={mat.denimDark}><boxGeometry args={[0.075, 0.085, 0.012]} /></mesh>)}
+          {[-1, 1].map(s => <mesh key={'pk' + s} position={[s * 0.07, 0.9, 0.118]} castShadow material={mat.denimDark}><boxGeometry args={[0.07, 0.085, 0.012]} /></mesh>)}
           {/* red belt + gold buckle at the waist */}
-          <mesh position={[0, 1.03, 0]} castShadow material={mat.belt}><cylinderGeometry args={[0.16, 0.165, 0.05, 22]} /></mesh>
-          <mesh position={[0, 1.03, 0.16]} castShadow material={mat.gold}><boxGeometry args={[0.05, 0.042, 0.02]} /></mesh>
-          {/* dark-blue Y2K tee (fitted) + bust */}
+          <mesh position={[0, 1.03, 0]} scale={[1, 1, 0.68]} castShadow material={mat.belt}><cylinderGeometry args={[0.152, 0.158, 0.05, 22]} /></mesh>
+          <mesh position={[0, 1.03, 0.105]} castShadow material={mat.gold}><boxGeometry args={[0.05, 0.042, 0.02]} /></mesh>
+          {/* dark-blue Y2K tee (fitted) + bust (DD) */}
           <mesh position={[0, 1.2, 0]} castShadow material={mat.shirt}><capsuleGeometry args={[0.112, 0.3, 6, 14]} /></mesh>
-          <mesh position={[-0.058, 1.31, 0.072]} scale={[1, 1, 0.92]} castShadow material={mat.shirt}><sphereGeometry args={[0.082, 14, 12]} /></mesh>
-          <mesh position={[0.058, 1.31, 0.072]} scale={[1, 1, 0.92]} castShadow material={mat.shirt}><sphereGeometry args={[0.082, 14, 12]} /></mesh>
+          <mesh position={[-0.062, 1.3, 0.082]} scale={[1, 1, 0.95]} castShadow material={mat.shirt}><sphereGeometry args={[0.095, 14, 12]} /></mesh>
+          <mesh position={[0.062, 1.3, 0.082]} scale={[1, 1, 0.95]} castShadow material={mat.shirt}><sphereGeometry args={[0.095, 14, 12]} /></mesh>
           {/* neck + head */}
           <mesh position={[0, 1.5, 0]} castShadow material={mat.skin}><cylinderGeometry args={[0.05, 0.06, 0.1, 10]} /></mesh>
           {/* head + smooth scalp cap (so curls never reveal bald gaps) + front face */}
@@ -1217,11 +1234,11 @@ function Character() {
             <mesh position={[0, 0.005, 0]} material={mat.eyeWhite}><cylinderGeometry args={[0.013, 0.013, 0.008, 16]} /></mesh>
             <mesh position={[0, 0.008, 0]} material={mat.eyePupil}><cylinderGeometry args={[0.006, 0.006, 0.008, 12]} /></mesh>
           </group>
-          {/* dense tight ringlets over the crown/back */}
-          {hairCap.map((c, i) => <mesh key={'hc' + i} position={c.p} castShadow material={mat.hair}><sphereGeometry args={[c.r, 8, 8]} /></mesh>)}
-          {/* trailing length down the BACK (sways while walking) */}
+          {/* dense curly cap (merged) */}
+          <mesh geometry={hairCapGeo} castShadow material={mat.hair} />
+          {/* long defined ringlets down the back (merged) — sways while walking */}
           <group ref={hairRef} position={[0, 1.6, -0.12]}>
-            {hairLength.map((c, i) => <mesh key={'hl' + i} position={c.p} castShadow material={mat.hair}><sphereGeometry args={[c.r, 8, 8]} /></mesh>)}
+            <mesh geometry={hairLengthGeo} castShadow material={mat.hair} />
           </group>
           {/* shoulders pivot; short sleeve cap + bare arm */}
           <group ref={armL} position={[-0.17, 1.43, 0]}>
@@ -1234,24 +1251,26 @@ function Character() {
           </group>
         </group>
         {/* legs: bare upper leg below the skirt → sock peek → knee-high boot */}
-        <group ref={thighL} position={[-0.095, 0.93, 0]}>
-          <mesh position={[0, -0.21, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.052, 0.32, 5, 10]} /></mesh>
-          <group ref={shinL} position={[0, -0.46, 0]}>
-            <mesh position={[0, -0.03, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.044, 0.13, 5, 10]} /></mesh>
-            <mesh position={[0, -0.07, 0]} castShadow material={mat.sock}><cylinderGeometry args={[0.056, 0.056, 0.06, 12]} /></mesh>
-            <mesh position={[0, -0.26, 0]} castShadow material={mat.boot}><capsuleGeometry args={[0.052, 0.34, 6, 12]} /></mesh>
-            <mesh position={[0, -0.47, 0.055]} castShadow material={mat.boot}><boxGeometry args={[0.1, 0.085, 0.24]} /></mesh>
-            <mesh position={[0, -0.45, -0.055]} castShadow material={mat.boot}><boxGeometry args={[0.085, 0.14, 0.085]} /></mesh>
+        <group ref={thighL} position={[-0.1, 0.94, 0]}>
+          <mesh position={[0, -0.22, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.062, 0.34, 6, 12]} /></mesh>
+          <group ref={shinL} position={[0, -0.48, 0]}>
+            <mesh position={[0, -0.03, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.05, 0.14, 5, 10]} /></mesh>
+            <mesh position={[0, -0.08, 0]} castShadow material={mat.sock}><cylinderGeometry args={[0.062, 0.062, 0.06, 12]} /></mesh>
+            <mesh position={[0, -0.27, 0]} castShadow material={mat.boot}><capsuleGeometry args={[0.057, 0.34, 6, 12]} /></mesh>
+            {/* shoe: foot/toe forward + chunky block heel under the back */}
+            <mesh position={[0, -0.43, 0.04]} castShadow material={mat.boot}><boxGeometry args={[0.092, 0.09, 0.2]} /></mesh>
+            <mesh position={[0, -0.41, -0.06]} castShadow material={mat.boot}><boxGeometry args={[0.085, 0.13, 0.08]} /></mesh>
           </group>
         </group>
-        <group ref={thighR} position={[0.095, 0.93, 0]}>
-          <mesh position={[0, -0.21, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.052, 0.32, 5, 10]} /></mesh>
-          <group ref={shinR} position={[0, -0.46, 0]}>
-            <mesh position={[0, -0.03, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.044, 0.13, 5, 10]} /></mesh>
-            <mesh position={[0, -0.07, 0]} castShadow material={mat.sock}><cylinderGeometry args={[0.056, 0.056, 0.06, 12]} /></mesh>
-            <mesh position={[0, -0.26, 0]} castShadow material={mat.boot}><capsuleGeometry args={[0.052, 0.34, 6, 12]} /></mesh>
-            <mesh position={[0, -0.47, 0.055]} castShadow material={mat.boot}><boxGeometry args={[0.1, 0.085, 0.24]} /></mesh>
-            <mesh position={[0, -0.45, -0.055]} castShadow material={mat.boot}><boxGeometry args={[0.085, 0.14, 0.085]} /></mesh>
+        <group ref={thighR} position={[0.1, 0.94, 0]}>
+          <mesh position={[0, -0.22, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.062, 0.34, 6, 12]} /></mesh>
+          <group ref={shinR} position={[0, -0.48, 0]}>
+            <mesh position={[0, -0.03, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.05, 0.14, 5, 10]} /></mesh>
+            <mesh position={[0, -0.08, 0]} castShadow material={mat.sock}><cylinderGeometry args={[0.062, 0.062, 0.06, 12]} /></mesh>
+            <mesh position={[0, -0.27, 0]} castShadow material={mat.boot}><capsuleGeometry args={[0.057, 0.34, 6, 12]} /></mesh>
+            {/* shoe: foot/toe forward + chunky block heel under the back */}
+            <mesh position={[0, -0.43, 0.04]} castShadow material={mat.boot}><boxGeometry args={[0.092, 0.09, 0.2]} /></mesh>
+            <mesh position={[0, -0.41, -0.06]} castShadow material={mat.boot}><boxGeometry args={[0.085, 0.13, 0.08]} /></mesh>
           </group>
         </group>
       </group>
