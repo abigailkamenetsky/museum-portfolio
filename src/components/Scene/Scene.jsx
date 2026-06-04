@@ -1277,6 +1277,8 @@ function Character() {
         <group ref={body}>
           {/* denim mini — ROUND + taller so it fully covers the hips (no skin showing) */}
           <mesh position={[0, 0.91, 0]} castShadow material={mat.denim}><cylinderGeometry args={[0.142, 0.172, 0.36, 24, 1, true]} /></mesh>
+          {/* extra denim panels over the hip SIDES (guarantees no skin/gap shows there) */}
+          {[-1, 1].map(s => <mesh key={'hp' + s} position={[s * 0.155, 0.95, 0]} castShadow material={mat.denim}><boxGeometry args={[0.05, 0.28, 0.26]} /></mesh>)}
           {/* two front patch pockets */}
           {[-1, 1].map(s => <mesh key={'pk' + s} position={[s * 0.06, 0.9, 0.14]} castShadow material={mat.denimDark}><boxGeometry args={[0.06, 0.075, 0.012]} /></mesh>)}
           {/* maroon belt + gold buckle at the waistband */}
