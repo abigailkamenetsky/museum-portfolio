@@ -608,11 +608,16 @@ function useGoldFrame() {
     // keep the baked baseColor/normal/roughness maps (gives real gold-leaf wear),
     // but tint to warm antique gold and calm the metalness so it isn't cartoon-bright
     const mat = mt.clone()
-    mat.color.set('#cda545')           // warm gold tint (baked maps still carry the rustic wear/scratches)
-    mat.metalness = 0.9
-    if (mat.roughness === undefined || mat.roughness < 0.34) mat.roughness = 0.4
-    mat.envMapIntensity = 0.7
-    if (mat.emissive) { mat.emissive.set('#3a2c0a'); mat.emissiveIntensity = 0.12 }   // faint warm glow so the gold reads gold even in shadow
+    // the GLB's baked baseColor is a dark bronze → any tint reads brown. Drop the
+    // albedo map and use a LITERAL gold color, but KEEP the normal + roughness maps
+    // so the rustic scratches / relief / wear remain.
+    mat.map = null
+    if (mat.metalnessMap) mat.metalnessMap = null
+    mat.color.set('#ffcf40')           // literal gold
+    mat.metalness = 1.0
+    mat.roughness = 0.42               // roughnessMap still multiplies for variation
+    mat.envMapIntensity = 1.1          // catch gold reflections so metal reads as gold
+    if (mat.emissive) { mat.emissive.set('#5a4410'); mat.emissiveIntensity = 0.22 }   // warm self-glow so it stays gold in shadow
     if (mat.emissive) mat.emissiveIntensity = 0
     mat.needsUpdate = true
     return { geo, mat, nw, nh, nd }
