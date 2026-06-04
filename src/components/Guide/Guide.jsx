@@ -256,6 +256,11 @@ export default function Guide() {
         )
       })()}
 
+      {/* hover label when near/looking at a painting (tap it to open) */}
+      {!s.menu && !s.card && s.phase === 'explore' && s.focus && (
+        <button onClick={() => museum.set({ card: s.focus.wingId, cardPiece: s.focus.piece })} style={{ position: 'fixed', left: '50%', bottom: isMobile ? 70 : 60, transform: 'translateX(-50%)', zIndex: 23, padding: '9px 18px', background: INK, border: `1px solid ${GOLD}77`, borderRadius: 9, color: GOLD, font: `500 15px ${serif}`, cursor: 'pointer', animation: 'fadeIn .25s ease', whiteSpace: 'nowrap' }}>Tap to see {s.focus.title}</button>
+      )}
+
       {/* desktop-only bottom hint (hidden on mobile) */}
       {!isMobile && !s.menu && !s.card && s.phase === 'explore' && (
         <div style={{ position: 'fixed', left: '50%', bottom: 22, transform: 'translateX(-50%)', zIndex: 20, pointerEvents: 'none', textAlign: 'center', color: '#efe7d6', opacity: 0.55, font: `500 13px ${serif}` }}>

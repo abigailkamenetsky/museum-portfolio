@@ -1312,6 +1312,19 @@ function Character() {
     _v5.set(ch.position.x, HEAD_Y + 0.4 + s.pitch * 7.0, ch.position.z)   // aim swings floor → ahead → ceiling
     camera.lookAt(_v5)
 
+    // which painting is the player looking at / near? → hover label (no key needed)
+    const camDir = _v7.copy(_v5).sub(camera.position).normalize()
+    let focus = null, bestDot = 0.86
+    for (const p of PAINTINGS) {
+      _v8.set(p.pos[0] - camera.position.x, p.pos[1] - camera.position.y, p.pos[2] - camera.position.z)
+      if (_v8.length() > 10) continue
+      const dot = _v8.normalize().dot(camDir)
+      if (dot > bestDot) { bestDot = dot; focus = p }
+    }
+    const fk = focus ? focus.wingId + ':' + focus.piece : null
+    const mk = mu.focus ? mu.focus.wingId + ':' + mu.focus.piece : null
+    if (fk !== mk) museum.set({ focus: focus ? { wingId: focus.wingId, piece: focus.piece, title: focus.title } : null })
+
     // "Guide Me" — point the front arrow toward the target, flash it, clear on arrival
     if (mu.guide && arrowRef.current) {
       const gx = mu.guide.pos[0] - ch.position.x, gz = mu.guide.pos[1] - ch.position.z
@@ -1331,8 +1344,9 @@ function Character() {
     <group ref={root} position={[0, 0, 34]}>{/* spawn just inside the entrance, facing into the gallery */}
       {/* "Guide Me" — one bold flashing arrow on the floor IN FRONT, pointing the way */}
       <group ref={arrowRef} visible={false}>
-        <mesh material={arrowMat} position={[0, 0.06, 1.35]}><boxGeometry args={[0.11, 0.02, 0.62]} /></mesh>
-        <mesh material={arrowMat} position={[0, 0.06, 1.92]} rotation={[Math.PI / 2, 0, 0]}><coneGeometry args={[0.21, 0.48, 4]} /></mesh>
+        {/* offset to one side so it isn't hidden directly in front of the character */}
+        <mesh material={arrowMat} position={[0.65, 0.06, 1.15]}><boxGeometry args={[0.11, 0.02, 0.62]} /></mesh>
+        <mesh material={arrowMat} position={[0.65, 0.06, 1.72]} rotation={[Math.PI / 2, 0, 0]}><coneGeometry args={[0.21, 0.48, 4]} /></mesh>
       </group>
       <group ref={modelRef} position={[0, 0.07, 0]}>{/* lift so the heeled boots rest on the floor (no clipping) */}
         {/* torso + head + hair + arms + skirt (bobs as one during the walk) */}
