@@ -571,7 +571,7 @@ function Trim({ m }) {
       const n = Math.max(1, Math.floor(len / spacing)); const step = len / n
       for (let i = 0; i < n; i++) { const t = -len / 2 + (i + 0.5) * step; arr.push(mat4(axis === 'x' ? t : fixed, yy, axis === 'x' ? fixed : t, rotY)) }
     }
-    run(W, 'x', -D / 2 + proj, 0); run(W, 'x', D / 2 - proj, Math.PI)
+    run(W, 'x', -D / 2 + WALL_T + proj, 0); run(W, 'x', D / 2 - proj, Math.PI)   // back wall = interior face (+WALL_T)
     run(D, 'z', -W / 2 + proj, Math.PI / 2); run(D, 'z', W / 2 - proj, -Math.PI / 2)
     return arr
   }
@@ -583,14 +583,14 @@ function Trim({ m }) {
 
   return (
     <group>
-      <Cornice len={W} pos={[0, H - 0.06, -D / 2]} rotY={0} />
+      <Cornice len={W} pos={[0, H - 0.06, -D / 2 + WALL_T]} rotY={0} />
       <Cornice len={W} pos={[0, H - 0.06, D / 2]} rotY={Math.PI} />
       <Cornice len={D} pos={[-W / 2, H - 0.06, 0]} rotY={Math.PI / 2} />
       <Cornice len={D} pos={[W / 2, H - 0.06, 0]} rotY={-Math.PI / 2} />
       <Instanced geo={dentilGeo} mat={m.trim} matrices={dentilM} />
       <Instanced geo={eggGeo} mat={m.trim} matrices={eggM} />
       <Instanced geo={beadGeo} mat={m.trim} matrices={beadM} />
-      {base(W, [0, 0.10, -D / 2 + 0.07])}{base(W, [0, 0.10, D / 2 - 0.07])}
+      {base(W, [0, 0.10, -D / 2 + WALL_T + 0.07])}{base(W, [0, 0.10, D / 2 - 0.07])}
       {base(D, [-W / 2 + 0.07, 0.10, 0], Math.PI / 2)}{base(D, [W / 2 - 0.07, 0.10, 0], Math.PI / 2)}
     </group>
   )
