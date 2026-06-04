@@ -1306,6 +1306,14 @@ function Character() {
               <mesh geometry={geo} castShadow material={mat.hair} />
             </group>
           ))}
+          {/* cherry-maroon bow nestled at the back of the head */}
+          <group position={[0, 1.65, -0.135]} rotation={[-0.5, 0, 0]}>
+            <mesh position={[-0.072, 0, 0]} scale={[1, 0.62, 0.4]} castShadow material={mat.belt}><sphereGeometry args={[0.072, 12, 10]} /></mesh>
+            <mesh position={[0.072, 0, 0]} scale={[1, 0.62, 0.4]} castShadow material={mat.belt}><sphereGeometry args={[0.072, 12, 10]} /></mesh>
+            <mesh scale={[0.55, 0.95, 0.6]} castShadow material={mat.belt}><sphereGeometry args={[0.042, 10, 8]} /></mesh>
+            <mesh position={[-0.03, -0.085, 0.01]} rotation={[0, 0, 0.25]} scale={[0.45, 1.5, 0.4]} castShadow material={mat.belt}><sphereGeometry args={[0.034, 8, 8]} /></mesh>
+            <mesh position={[0.03, -0.085, 0.01]} rotation={[0, 0, -0.25]} scale={[0.45, 1.5, 0.4]} castShadow material={mat.belt}><sphereGeometry args={[0.034, 8, 8]} /></mesh>
+          </group>
           {/* shoulders pivot; short sleeve cap + bare arm */}
           <group ref={armL} position={[-0.17, 1.43, 0]}>
             <mesh position={[0, -0.05, 0]} castShadow material={mat.shirt}><sphereGeometry args={[0.07, 10, 8]} /></mesh>
