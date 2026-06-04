@@ -40,6 +40,8 @@ const WALNUT = TEX + 'walnut/'   // real CC0 scanned dark walnut (Artaley3D)
 const WALLP = TEX + 'wallpaper/'   // dark-green baroque damask (from GLB)
 const CEILP = TEX + 'ceilingplaster/Plaster001_1K-JPG_'   // ceiling plaster PBR
 const HDRI = BASE + 'assets/hdri/gallery.hdr'
+const FRAME_URL = BASE + 'assets/models/frame_gold.glb'   // optimized ornate gold vintage frame
+useGLTF.preload(FRAME_URL)
 
 /* ── helpers ──────────────────────────────────────────────── */
 function configure(t, rep, srgb) {
@@ -584,36 +586,113 @@ function Trim({ m }) {
   )
 }
 
-/* ── FRAME + REAL PAINTING + soft wall drop-shadow ────────── */
-function makeFrameGeo(fw, fh, cw, ch) {
-  const s = new Shape([new Vector2(-fw / 2, -fh / 2), new Vector2(fw / 2, -fh / 2), new Vector2(fw / 2, fh / 2), new Vector2(-fw / 2, fh / 2)])
-  const hl = new Path([new Vector2(-cw / 2, -ch / 2), new Vector2(cw / 2, -ch / 2), new Vector2(cw / 2, ch / 2), new Vector2(-cw / 2, ch / 2)])
-  s.holes.push(hl)
-  return new ExtrudeGeometry(s, { depth: 0.16, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.07, bevelSegments: 5 })
+/* ── ORNATE GOLD FRAME (real carved GLB + procedural Baroque crest/apron) ──────
+ * The base is the optimized ornate_gold_vintage_frame.glb (symmetric carved gold
+ * border). We share ONE geometry across every painting (clones reuse the buffer),
+ * rotate it to portrait, keep its baked gold-leaf maps (tinted to aged antique
+ * gold), and bolt on a procedural crest, apron, and corner nodes so each frame
+ * reads as a sculptural Baroque object that breaks the rectangular boundary. */
+
+// load once → return the shared portrait geometry + aged-gold material (with maps)
+function useGoldFrame() {
+  const { scene } = useGLTF(FRAME_URL)
+  return useMemo(() => {
+    let g, mt
+    scene.traverse(o => { if (o.isMesh && !g) { g = o.geometry; mt = o.material } })
+    const geo = g.clone()
+    geo.rotateZ(Math.PI / 2)            // landscape asset → portrait
+    geo.center()
+    geo.computeBoundingBox()
+    const bb = geo.boundingBox
+    const nw = bb.max.x - bb.min.x, nh = bb.max.y - bb.min.y, nd = Math.max(0.02, bb.max.z - bb.min.z)
+    // keep the baked baseColor/normal/roughness maps (gives real gold-leaf wear),
+    // but tint to warm antique gold and calm the metalness so it isn't cartoon-bright
+    const mat = mt.clone()
+    mat.color.set('#9a7b32')
+    mat.metalness = 0.86
+    if (mat.roughness === undefined || mat.roughness < 0.38) mat.roughness = 0.44
+    mat.envMapIntensity = 0.5
+    if (mat.emissive) mat.emissiveIntensity = 0
+    mat.needsUpdate = true
+    return { geo, mat, nw, nh, nd }
+  }, [scene])
 }
-function Painting({ position, rotation = [0, 0, 0], maxW, maxH, art, m }) {
+
+// procedural Baroque crest (aged gold) — central shell, acanthus explosion,
+// radiating scrolls, floral crown. `big` scales the drama by frame class.
+const _crestCache = {}
+function buildCrest(w, big) {
+  const parts = []
+  const add = (geo, pos = [0, 0, 0], rot = [0, 0, 0], scl = [1, 1, 1]) => {
+    geo.scale(scl[0], scl[1], scl[2]); geo.rotateX(rot[0]); geo.rotateY(rot[1]); geo.rotateZ(rot[2]); geo.translate(pos[0], pos[1], pos[2])
+    parts.push(geo.toNonIndexed())
+  }
+  add(new SphereGeometry(w * 0.13, 16, 10, 0, Math.PI), [0, 0, 0.06], [-Math.PI / 2, 0, 0], [1.5, 0.65, 1])      // central shell
+  for (let i = -3; i <= 3; i++) add(leafGeo(w * (0.16 + 0.10 * big) * (1 - Math.abs(i) * 0.08), w * 0.07), [i * w * 0.055, w * 0.02, 0.05], [Math.PI * 0.5, 0, i * 0.30])  // acanthus explosion
+  for (const s of [-1, 1]) add(scrollGeo(w * 0.14, 0.04, Math.PI * 1.4), [s * w * 0.17, w * 0.05, 0.06], [0, 0, s > 0 ? -0.6 : Math.PI + 0.6])  // radiating C-scrolls
+  for (const s of [-1, 1]) add(scrollGeo(w * 0.08, 0.03, Math.PI * 1.4), [s * w * 0.30, w * 0.02, 0.05], [0, 0, s > 0 ? -0.3 : Math.PI + 0.3])  // secondary scrolls
+  add(rosetteMerge(w * (0.12 + 0.05 * big)), [0, w * (0.18 + 0.10 * big), 0.07])     // floral crown
+  for (let i = -1; i <= 1; i++) add(leafGeo(w * 0.10, w * 0.05), [i * w * 0.08, w * (0.10 + 0.06 * big), 0.05], [Math.PI * 0.5, 0, i * 0.5])  // crown leaves
+  return mergeGeometries(parts, false)
+}
+function crest(w, big) { const k = w.toFixed(2) + '_' + big.toFixed(2); if (!_crestCache[k]) _crestCache[k] = buildCrest(w, big); return _crestCache[k] }
+
+// a corner node: layered leaves + a curled scroll (heavier than the side rails)
+const _cornerCache = {}
+function buildCorner(w) {
+  const parts = []
+  const add = (geo, pos = [0, 0, 0], rot = [0, 0, 0]) => { geo.rotateX(rot[0]); geo.rotateY(rot[1]); geo.rotateZ(rot[2]); geo.translate(pos[0], pos[1], pos[2]); parts.push(geo.toNonIndexed()) }
+  add(scrollGeo(w * 0.10, 0.035, Math.PI * 1.6), [0, 0, 0.05], [0, 0, -0.5])
+  for (let i = 0; i < 3; i++) add(leafGeo(w * 0.11, w * 0.05), [w * 0.02 * i, w * 0.02 * i, 0.04], [Math.PI * 0.5, 0, 0.5 + i * 0.4])
+  add(rosetteMerge(w * 0.06), [0, 0, 0.06])
+  return mergeGeometries(parts, false)
+}
+function corner(w) { const k = w.toFixed(2); if (!_cornerCache[k]) _cornerCache[k] = buildCorner(w); return _cornerCache[k] }
+
+function Painting({ position, rotation = [0, 0, 0], maxW, maxH, art, cls = 1, frame, m }) {
+  // frame outer fills the wall slot; painting sits inside a dark mat
+  const big = cls === 2 ? 1 : cls === 1 ? 0.55 : 0.15     // crest drama by class
+  const outerScale = cls === 2 ? 1.06 : cls === 1 ? 1.0 : 0.92
+  const outerW = maxW * outerScale, outerH = maxH * outerScale
   const ar = art.aspect
-  let pw = maxW, ph = maxW * ar
-  if (ph > maxH) { ph = maxH; pw = maxH / ar }
-  const fw = pw + 0.36, fh = ph + 0.36
-  const geo = useMemo(() => makeFrameGeo(fw, fh, pw + 0.06, ph + 0.06), [fw, fh, pw, ph])
+  // aperture ~62% of the outer; fit the artwork inside it preserving aspect
+  const apW = outerW * 0.62, apH = outerH * 0.66
+  let pw = apW, ph = apW * ar
+  if (ph > apH) { ph = apH; pw = apH / ar }
+
+  const sx = outerW / frame.nw, sy = outerH / frame.nh, sz = 0.24 / frame.nd
+  const crestW = outerW
+  const crestGeo = useMemo(() => crest(crestW, big), [crestW, big])
+  const cornerGeo = useMemo(() => corner(outerW), [outerW])
+
   const artMat = useMemo(() => new MeshStandardMaterial({ color: '#15100a', roughness: 0.85 }), [])
   useEffect(() => {
     new TextureLoader().load(ART_BASE + art.file,
-      t => { t.colorSpace = SRGBColorSpace; t.anisotropy = 8; artMat.map = t; artMat.color.set('#ffffff'); artMat.needsUpdate = true; console.log('[art] ok', art.file) },
+      t => { t.colorSpace = SRGBColorSpace; t.anisotropy = 8; artMat.map = t; artMat.color.set('#ffffff'); artMat.needsUpdate = true },
       undefined, () => console.warn('[art] FAILED (kept dark):', art.file))
   }, [art, artMat])
+
+  const FZ = 0.13   // frame front-relief origin off the wall
   return (
     <group position={position} rotation={rotation}>
-      {/* soft drop shadow behind frame */}
-      <mesh position={[0, -0.06, -0.02]}>
-        <planeGeometry args={[fw + 0.24, fh + 0.24]} />
-        <meshBasicMaterial color="#000000" transparent opacity={0.28} depthWrite={false} />
+      {/* soft drop shadow on the wall behind the frame */}
+      <mesh position={[0, -0.08, -0.02]}>
+        <planeGeometry args={[outerW + 0.4, outerH + 0.5]} />
+        <meshBasicMaterial color="#000000" transparent opacity={0.32} depthWrite={false} />
       </mesh>
-      <mesh geometry={geo} material={m.gold} castShadow />
-      {/* darker inner crevice */}
-      <mesh position={[0, 0, 0.05]} material={m.woodDark}><boxGeometry args={[pw + 0.10, ph + 0.10, 0.02]} /></mesh>
-      <mesh position={[0, 0, 0.155]} material={artMat}><planeGeometry args={[pw, ph]} /></mesh>
+      {/* dark mat board (shows between art and the frame's aperture) */}
+      <mesh position={[0, 0, FZ - 0.06]} material={m.woodDark}><boxGeometry args={[outerW * 0.78, outerH * 0.82, 0.04]} /></mesh>
+      {/* the artwork */}
+      <mesh position={[0, 0, FZ - 0.03]} material={artMat}><planeGeometry args={[pw, ph]} /></mesh>
+      {/* carved gold frame (shared GLB geometry, scaled to this opening) */}
+      <mesh geometry={frame.geo} material={frame.mat} position={[0, 0, FZ]} scale={[sx, sy, sz]} castShadow receiveShadow />
+      {/* procedural crest above + apron below (apron = crest mirrored) */}
+      <mesh geometry={crestGeo} material={frame.mat} position={[0, outerH / 2 - 0.04, FZ + 0.04]} castShadow />
+      <mesh geometry={crestGeo} material={frame.mat} position={[0, -outerH / 2 + 0.04, FZ + 0.04]} rotation={[0, 0, Math.PI]} scale={[1, 0.7, 1]} castShadow />
+      {/* sculptural corner nodes */}
+      {[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([cx, cy], i) => (
+        <mesh key={i} geometry={cornerGeo} material={frame.mat} position={[cx * outerW * 0.5, cy * outerH * 0.5, FZ + 0.03]} rotation={[0, 0, (cx > 0 ? -1 : 1) * (cy > 0 ? 1 : -1) * Math.PI / 2]} castShadow />
+      ))}
     </group>
   )
 }
@@ -997,6 +1076,14 @@ function Logger() {
   return null
 }
 
+/* loads the shared gold-frame geometry ONCE and renders every painting with it */
+function Paintings({ items, m }) {
+  const frame = useGoldFrame()
+  return items.map(it => (
+    <Painting key={it.key} position={it.pos} rotation={it.rot} maxW={it.mw} maxH={it.mh} art={it.art} cls={it.cls} frame={frame} m={m} />
+  ))
+}
+
 /* ── GALLERY ──────────────────────────────────────────────── */
 function Gallery() {
   const m = useMaterials()
@@ -1012,9 +1099,11 @@ function Gallery() {
 
   let k = 0
   const items = []
-  back.forEach((x, i) => items.push({ key: 'b' + i, pos: [x, PY, -hd + 0.12], rot: [0, 0, 0], mw: 2.6, mh: 3.6, art: pick(k++) }))
-  art.forEach((z, i) => items.push({ key: 'la' + i, pos: [-hw + 0.12, PY, z], rot: [0, Math.PI / 2, 0], mw: 2.4, mh: 3.4, art: pick(k++) }))
-  art.forEach((z, i) => items.push({ key: 'ra' + i, pos: [hw - 0.12, PY, z], rot: [0, -Math.PI / 2, 0], mw: 2.4, mh: 3.4, art: pick(k++) }))
+  // hierarchy: back-wall pair flanking the feature window = MASTERPIECE frames;
+  // a couple of side paintings = IMPORTANT; the rest = SECONDARY (still ornate).
+  back.forEach((x, i) => items.push({ key: 'b' + i, pos: [x, PY, -hd + 0.12], rot: [0, 0, 0], mw: 2.9, mh: 4.0, art: pick(k++), cls: 2 }))
+  art.forEach((z, i) => items.push({ key: 'la' + i, pos: [-hw + 0.12, PY, z], rot: [0, Math.PI / 2, 0], mw: 2.5, mh: 3.5, art: pick(k++), cls: i === 2 ? 1 : 0 }))
+  art.forEach((z, i) => items.push({ key: 'ra' + i, pos: [hw - 0.12, PY, z], rot: [0, -Math.PI / 2, 0], mw: 2.5, mh: 3.5, art: pick(k++), cls: i === 3 ? 1 : 0 }))
 
   return (
     <group>
@@ -1029,7 +1118,7 @@ function Gallery() {
       <Bench m={m} />
       <Character m={m} />
 
-      {items.map(it => <Painting key={it.key} position={it.pos} rotation={it.rot} maxW={it.mw} maxH={it.mh} art={it.art} m={m} />)}
+      <Suspense fallback={null}><Paintings items={items} m={m} /></Suspense>
       {/* curated warm wall-wash spots (kept few for performance) */}
       {[
         { pos: [-6, H - 1.4, -hd + 1.0], tgt: [-6, PY, -hd + 0.1], ry: 0 },
