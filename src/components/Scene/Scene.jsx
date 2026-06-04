@@ -1092,7 +1092,7 @@ function Character() {
         const theta = u * Math.PI * 2, phi = Math.acos(2 * v - 1)
         const x = Math.sin(phi) * Math.cos(theta), y = Math.cos(phi), z = Math.sin(phi) * Math.sin(theta)
         if (y < 0.28 && z > -0.25) continue                 // raise the hairline (kills sideburns)
-        if (z > 0.16 && y < 0.74) continue                  // push the front hairline back → clean forehead, no fringe
+        if (z > 0.22 && y < 0.42) continue                  // hairline comes down naturally over the forehead
         geos.push(curlTorus(x * rr * 1.05, 1.65 + y * rr * 1.06 + 0.02, z * rr * 0.9 - 0.012, 0.028 + Math.random() * 0.016))
       }
     }
@@ -1113,7 +1113,7 @@ function Character() {
       for (let q = 0; q < strandsN; q++) {
         const ang = center + (q - (strandsN - 1) / 2) * 0.13
         const ox = Math.sin(ang) * 0.15, oz = -Math.cos(ang) * 0.12 - 0.02
-        const segs = 8 + Math.floor(Math.random() * 4)
+        const segs = 6 + Math.floor(Math.random() * 3)   // shorter → mid-torso length
         const coilR = 0.03 + Math.random() * 0.016
         const tilt = (Math.random() < 0.5 ? 1 : -1) * (0.35 + Math.random() * 0.35)
         const step = 0.052
@@ -1256,6 +1256,9 @@ function Character() {
           <mesh position={[0, 1.62, 0]} castShadow material={mat.skin}><sphereGeometry args={[0.135, 18, 16]} /></mesh>
           <mesh position={[0, 1.675, -0.03]} castShadow material={mat.hair}><sphereGeometry args={[0.14, 18, 16]} /></mesh>
           <mesh position={[0, 1.6, 0.075]} castShadow material={mat.skin}><sphereGeometry args={[0.115, 16, 14]} /></mesh>
+          {/* ears */}
+          <mesh position={[-0.132, 1.605, 0.025]} rotation={[0, -0.35, 0]} scale={[0.45, 1, 0.85]} castShadow material={mat.skin}><sphereGeometry args={[0.04, 10, 10]} /></mesh>
+          <mesh position={[0.132, 1.605, 0.025]} rotation={[0, 0.35, 0]} scale={[0.45, 1, 0.85]} castShadow material={mat.skin}><sphereGeometry args={[0.04, 10, 10]} /></mesh>
           {/* dainty thin gold necklace + evil-eye pendant on the tee */}
           <mesh position={[0, 1.45, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow material={mat.gold}><torusGeometry args={[0.072, 0.005, 6, 28]} /></mesh>
           <mesh position={[0, 1.40, 0.085]} castShadow material={mat.gold}><cylinderGeometry args={[0.004, 0.004, 0.085, 6]} /></mesh>
