@@ -1056,7 +1056,13 @@ function Character() {
   const keys = useRef({})
   const st = useRef({ yaw: 0, pitch: 0.12, vel: new Vector3(), face: 0, clip: '' })
 
-  useEffect(() => { cloned.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false } }) }, [cloned])
+  // render the rigged robot as an elegant near-black silhouette (skinning/animation
+  // is independent of material, so all joints/arms still move). One shared material
+  // unifies every body part into a single dark figure with a faint edge sheen.
+  const silhouette = useMemo(() => new MeshStandardMaterial({ color: '#070709', roughness: 0.5, metalness: 0.0, envMapIntensity: 0.25 }), [])
+  useEffect(() => {
+    cloned.traverse(o => { if (o.isMesh) { o.material = silhouette; o.castShadow = true; o.frustumCulled = false } })
+  }, [cloned, silhouette])
 
   // start in Idle
   useEffect(() => {
