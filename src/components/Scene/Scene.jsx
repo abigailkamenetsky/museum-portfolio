@@ -87,11 +87,11 @@ function useMaterials() {
     // the short (front/back) and long (side) walls.
     wall: new MeshStandardMaterial({
       color: '#ffffff', roughness: 0.82, metalness: 0,
-      normalScale: new Vector2(1.0, 1.0), envMapIntensity: 0.18,
+      normalScale: new Vector2(1.0, 1.0), envMapIntensity: 0.04,
     }),
     wallSide: new MeshStandardMaterial({
       color: '#ffffff', roughness: 0.82, metalness: 0,
-      normalScale: new Vector2(1.0, 1.0), envMapIntensity: 0.18, side: DoubleSide,
+      normalScale: new Vector2(1.0, 1.0), envMapIntensity: 0.04, side: DoubleSide,
     }),
     // espresso/smoked walnut — far less red, nearly black in shadow, polished oil luster
     floor: new MeshPhysicalMaterial({
@@ -709,7 +709,7 @@ function MuseumWindow({ w, h, m }) {
   const sceneryMat = useMemo(() => {
     const t = forest.clone(); t.needsUpdate = true
     t.colorSpace = SRGBColorSpace; t.wrapS = t.wrapT = RepeatWrapping
-    t.repeat.set(0.18, 0.82); t.offset.set(Math.random() * 0.75, 0.10)
+    t.repeat.set(0.18, 0.55); t.offset.set(Math.random() * 0.75, 0.42)   // higher crop: trees + sky, no dirt
     return new MeshBasicMaterial({ map: t, color: '#bcbcbc' })   // slight dim so sky doesn't blow
   }, [forest])
   const tw = Math.min(0.42, w * 0.12)              // trim width
@@ -938,7 +938,7 @@ export default function Scene() {
       {/* RESET: no directional daylight at all — pure soft museum ambient.
           Room lit by ambient + hemisphere + ceiling keys + picture spots. */}
       <ambientLight intensity={0.5} color="#f0d884" />
-      <hemisphereLight intensity={0.66} color="#dfe6f0" groundColor="#1a130c" />
+      <hemisphereLight intensity={0.66} color="#f1ead8" groundColor="#1a130c" />
       {/* soft grazing fill on the centerpiece bay to reveal carving depth
           (distance-limited so it does not wash the rest of the ceiling) */}
       <pointLight position={[-4, CEIL - 2.4, 0]} intensity={7} distance={11} decay={2} color="#f3e0a8" />
