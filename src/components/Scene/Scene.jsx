@@ -1068,48 +1068,60 @@ function Character() {
     denimDark: new MeshStandardMaterial({ color: '#324d6c', roughness: 0.92, metalness: 0 }), // pocket contrast
     boot: new MeshStandardMaterial({ color: '#171311', roughness: 0.42, metalness: 0.18 }),  // knee-high boots
     sock: new MeshStandardMaterial({ color: '#ece6d6', roughness: 0.9, metalness: 0 }),       // sock peek
-    belt: new MeshStandardMaterial({ color: '#b23a30', roughness: 0.55, metalness: 0.05 }),  // red belt + bow
+    belt: new MeshStandardMaterial({ color: '#5e1622', roughness: 0.5, metalness: 0.08 }),   // deep maroon / cherry belt
     gold: new MeshStandardMaterial({ color: '#d9b13b', roughness: 0.3, metalness: 1 }),        // dainty necklace
     eyeBlue: new MeshStandardMaterial({ color: '#1c46a0', roughness: 0.4, metalness: 0.1 }),   // evil eye
     eyeWhite: new MeshStandardMaterial({ color: '#eef2f7', roughness: 0.5, metalness: 0 }),
     eyePupil: new MeshStandardMaterial({ color: '#0a1c3a', roughness: 0.4, metalness: 0 }),
   }), [])
-  // DENSE curly cap covering crown/back/sides (front face open) — merged to 1 mesh
+  // INDIVIDUAL curls made of little torus RINGS. Raised hairline (no sideburns),
+  // a gathered "half-up" cluster at the back crown, and baby-hair wisps in front.
+  const rnd = n => (Math.random() - 0.5) * n
+  const curlTorus = (x, y, z, r) => {
+    const g = new TorusGeometry(r, r * 0.42, 6, 9)
+    g.rotateX(Math.random() * Math.PI); g.rotateY(Math.random() * Math.PI)
+    g.translate(x, y, z); return g
+  }
   const hairCapGeo = useMemo(() => {
-    const list = []
+    const geos = []
     for (let layer = 0; layer < 3; layer++) {
-      const rr = 0.15 + layer * 0.02, count = 80 - layer * 16
+      const rr = 0.15 + layer * 0.02, count = 64 - layer * 12
       for (let i = 0; i < count; i++) {
         const u = Math.random(), v = Math.random()
         const theta = u * Math.PI * 2, phi = Math.acos(2 * v - 1)
         const x = Math.sin(phi) * Math.cos(theta), y = Math.cos(phi), z = Math.sin(phi) * Math.sin(theta)
-        if (z > 0.34 && y < 0.4) continue                  // skip front-lower arc = the face
-        list.push({ p: [x * rr * 1.05, 1.64 + y * rr * 1.08 + 0.02, z * rr * 0.9 - 0.012], r: 0.03 + Math.random() * 0.018 })
+        if (y < 0.28 && z > -0.25) continue                 // raise the hairline (kills sideburns)
+        if (z > 0.32 && y < 0.6) continue                   // keep the face open
+        geos.push(curlTorus(x * rr * 1.05, 1.65 + y * rr * 1.06 + 0.02, z * rr * 0.9 - 0.012, 0.03 + Math.random() * 0.016))
       }
     }
-    return mergeSpheres(list)
+    // half-up gather: a bunched cluster of curls high at the back crown
+    for (let i = 0; i < 24; i++) geos.push(curlTorus(rnd(0.13), 1.6 + Math.random() * 0.1, -0.12 - Math.random() * 0.05, 0.028 + Math.random() * 0.016))
+    // baby hairs: tiny wisps at the front hairline / temples
+    for (let i = 0; i < 10; i++) { const s = i < 5 ? -1 : 1; geos.push(curlTorus(s * (0.1 + Math.random() * 0.05), 1.71 + rnd(0.05), 0.05 + rnd(0.04), 0.014 + Math.random() * 0.01)) }
+    return mergeGeometries(geos, false)
   }, [])
-  // long DEFINED RINGLET strands down the back — each strand spirals (helix) for
-  // real curl definition; widens slightly for volume. Lives in an animated group.
+  // length = individual RINGLET COILS (stacked torus rings → corkscrew curls),
+  // half-down: flows from the back crown to about the belt. Sways while walking.
   const hairLengthGeo = useMemo(() => {
-    const list = []; const strands = 22
+    const geos = []; const strands = 17
     for (let s = 0; s < strands; s++) {
-      const ang = (-0.5 + s / (strands - 1)) * Math.PI * 1.3
-      const ox = Math.sin(ang) * 0.15
-      const oz = -Math.abs(Math.cos(ang)) * 0.1 - 0.03
-      const len = 16 + Math.floor(Math.random() * 8)        // long
-      const curlR = 0.02 + Math.random() * 0.022            // ringlet tightness
-      const freq = 1.5 + Math.random() * 0.9
-      const ph = Math.random() * Math.PI * 2
-      const dir = Math.random() < 0.5 ? 1 : -1
-      for (let i = 0; i < len; i++) {
-        const spread = 1 + i * 0.022                        // fans out → volume
-        const x = ox * spread + Math.cos(ph + i * freq * dir) * curlR
-        const z = oz * spread + Math.sin(ph + i * freq * dir) * curlR
-        list.push({ p: [x, -0.02 - i * 0.046, z], r: 0.03 + Math.random() * 0.012 })
+      const ang = (-0.5 + s / (strands - 1)) * Math.PI * 1.2
+      const ox = Math.sin(ang) * 0.14
+      const oz = -Math.abs(Math.cos(ang)) * 0.1 - 0.04
+      const segs = 8 + Math.floor(Math.random() * 3)
+      const coilR = 0.032 + Math.random() * 0.016
+      const tilt = (Math.random() < 0.5 ? 1 : -1) * (0.4 + Math.random() * 0.3)
+      const step = 0.055
+      for (let i = 0; i < segs; i++) {
+        const sp = 1 + i * 0.03
+        const g = new TorusGeometry(coilR, 0.014, 6, 9)
+        g.rotateX(Math.PI / 2); g.rotateZ(tilt)
+        g.translate(ox * sp + rnd(0.01), -0.02 - i * step, oz * sp + rnd(0.01))
+        geos.push(g)
       }
     }
-    return mergeSpheres(list)
+    return mergeGeometries(geos, false)
   }, [])
 
   useEffect(() => {
@@ -1223,8 +1235,8 @@ function Character() {
           <mesh position={[0, 1.5, 0]} castShadow material={mat.skin}><cylinderGeometry args={[0.05, 0.06, 0.1, 10]} /></mesh>
           {/* head + smooth scalp cap (so curls never reveal bald gaps) + front face */}
           <mesh position={[0, 1.62, 0]} castShadow material={mat.skin}><sphereGeometry args={[0.135, 18, 16]} /></mesh>
-          <mesh position={[0, 1.655, -0.02]} castShadow material={mat.hair}><sphereGeometry args={[0.148, 18, 16]} /></mesh>
-          <mesh position={[0, 1.6, 0.072]} castShadow material={mat.skin}><sphereGeometry args={[0.112, 16, 14]} /></mesh>
+          <mesh position={[0, 1.675, -0.03]} castShadow material={mat.hair}><sphereGeometry args={[0.14, 18, 16]} /></mesh>
+          <mesh position={[0, 1.6, 0.075]} castShadow material={mat.skin}><sphereGeometry args={[0.115, 16, 14]} /></mesh>
           {/* dainty thin gold necklace + evil-eye pendant on the tee */}
           <mesh position={[0, 1.45, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow material={mat.gold}><torusGeometry args={[0.072, 0.005, 6, 28]} /></mesh>
           <mesh position={[0, 1.40, 0.085]} castShadow material={mat.gold}><cylinderGeometry args={[0.004, 0.004, 0.085, 6]} /></mesh>
@@ -1257,9 +1269,10 @@ function Character() {
             <mesh position={[0, -0.03, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.05, 0.14, 5, 10]} /></mesh>
             <mesh position={[0, -0.08, 0]} castShadow material={mat.sock}><cylinderGeometry args={[0.062, 0.062, 0.06, 12]} /></mesh>
             <mesh position={[0, -0.27, 0]} castShadow material={mat.boot}><capsuleGeometry args={[0.057, 0.34, 6, 12]} /></mesh>
-            {/* shoe: foot/toe forward + chunky block heel under the back */}
-            <mesh position={[0, -0.43, 0.04]} castShadow material={mat.boot}><boxGeometry args={[0.092, 0.09, 0.2]} /></mesh>
-            <mesh position={[0, -0.41, -0.06]} castShadow material={mat.boot}><boxGeometry args={[0.085, 0.13, 0.08]} /></mesh>
+            {/* boot: narrow toe in front, chunky block heel ONLY at the back */}
+            <mesh position={[0, -0.435, 0.055]} castShadow material={mat.boot}><boxGeometry args={[0.074, 0.07, 0.2]} /></mesh>
+            <mesh position={[0, -0.45, 0.14]} castShadow material={mat.boot}><boxGeometry args={[0.06, 0.05, 0.06]} /></mesh>
+            <mesh position={[0, -0.405, -0.06]} castShadow material={mat.boot}><boxGeometry args={[0.08, 0.13, 0.085]} /></mesh>
           </group>
         </group>
         <group ref={thighR} position={[0.1, 0.94, 0]}>
@@ -1268,9 +1281,10 @@ function Character() {
             <mesh position={[0, -0.03, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.05, 0.14, 5, 10]} /></mesh>
             <mesh position={[0, -0.08, 0]} castShadow material={mat.sock}><cylinderGeometry args={[0.062, 0.062, 0.06, 12]} /></mesh>
             <mesh position={[0, -0.27, 0]} castShadow material={mat.boot}><capsuleGeometry args={[0.057, 0.34, 6, 12]} /></mesh>
-            {/* shoe: foot/toe forward + chunky block heel under the back */}
-            <mesh position={[0, -0.43, 0.04]} castShadow material={mat.boot}><boxGeometry args={[0.092, 0.09, 0.2]} /></mesh>
-            <mesh position={[0, -0.41, -0.06]} castShadow material={mat.boot}><boxGeometry args={[0.085, 0.13, 0.08]} /></mesh>
+            {/* boot: narrow toe in front, chunky block heel ONLY at the back */}
+            <mesh position={[0, -0.435, 0.055]} castShadow material={mat.boot}><boxGeometry args={[0.074, 0.07, 0.2]} /></mesh>
+            <mesh position={[0, -0.45, 0.14]} castShadow material={mat.boot}><boxGeometry args={[0.06, 0.05, 0.06]} /></mesh>
+            <mesh position={[0, -0.405, -0.06]} castShadow material={mat.boot}><boxGeometry args={[0.08, 0.13, 0.085]} /></mesh>
           </group>
         </group>
       </group>
