@@ -23,7 +23,7 @@ import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 import { makeLandscapeTexture } from './textures'
 import { ARTWORKS, ART_BASE } from '../../data/artworks'
 import { museum } from '../../museum/store'
-import { WINGS } from '../../data/museum'
+import { WINGS, PAINTINGS } from '../../data/museum'
 
 /* ── DIMENSIONS — long rectangular palace gallery (~2:1) ────── */
 const W = 18, H = 13.5, D = 78
@@ -1047,7 +1047,7 @@ function Bench({ m }) {
  *    turns to face travel direction. ── */
 const WALK_SPEED = 4.4, RUN_SPEED = 7.6, ACCEL = 11, DRAG_SENS = 0.006, HEAD_Y = 1.7
 const _v1 = new Vector3(), _v2 = new Vector3(), _v3 = new Vector3(), _v4 = new Vector3()
-const _v5 = new Vector3(), _v6 = new Vector3()
+const _v5 = new Vector3(), _v6 = new Vector3(), _v7 = new Vector3(), _v8 = new Vector3()
 
 // merge many small spheres into ONE geometry (dense curls at ~1 draw call)
 function mergeSpheres(list) {
@@ -1306,13 +1306,18 @@ function Character() {
     _v5.set(ch.position.x, HEAD_Y + 0.4 + s.pitch * 7.0, ch.position.z)   // aim swings floor → ahead → ceiling
     camera.lookAt(_v5)
 
-    // nearest wing → "Press E to Learn More"
-    let near = null, best = 3.8
-    for (const w of WINGS) {
-      const dd = Math.hypot(ch.position.x - w.pos[0], ch.position.z - w.pos[1])
-      if (dd < best) { best = dd; near = w.id }
+    // which painting is the player LOOKING at? (camera-forward cone) → "Press E"
+    const camDir = _v7.copy(_v5).sub(camera.position).normalize()
+    let focus = null, bestDot = 0.83
+    for (const p of PAINTINGS) {
+      _v8.set(p.pos[0] - camera.position.x, p.pos[1] - camera.position.y, p.pos[2] - camera.position.z)
+      if (_v8.length() > 11) continue
+      const dot = _v8.normalize().dot(camDir)
+      if (dot > bestDot) { bestDot = dot; focus = p }
     }
-    if (mu.near !== near) museum.set({ near })
+    const fk = focus ? focus.wingId + ':' + focus.piece : null
+    const mk = mu.focus ? mu.focus.wingId + ':' + mu.focus.piece : null
+    if (fk !== mk) museum.set({ focus: focus ? { wingId: focus.wingId, piece: focus.piece, title: focus.title } : null })
 
     // "Guide Me" flashing arrow trail: point the trail toward the target, flash in a
     // marquee toward it, and clear on arrival
@@ -1482,42 +1487,11 @@ function Gallery() {
   const A = ARTWORKS
   const pick = i => A[((i % A.length) + A.length) % A.length]
 
-  // WING-DRIVEN HANG: each wing owns a wall section between the windows. Single-piece
-  // wings get one painting; multi-piece wings (Professional 5, Projects 3, Research 2)
-  // get a SALON CLUSTER of varied-size baroque frames in that section.
-  const items = useMemo(() => {
-    let k = 0
-    const out = []
-    const cluster = n => {
-      if (n <= 1) return [{ dz: 0, dy: 0, w: 2.5, h: 3.4, cls: 1 }]
-      if (n === 2) return [
-        { dz: -1.85, dy: 0.15, w: 1.9, h: 2.4, cls: 1 },
-        { dz: 1.85, dy: -0.05, w: 1.8, h: 2.2, cls: 0 },
-      ]
-      if (n === 3) return [
-        { dz: 0, dy: 0.45, w: 2.0, h: 2.5, cls: 2 },
-        { dz: -2.55, dy: -0.35, w: 1.5, h: 1.9, cls: 0 },
-        { dz: 2.55, dy: -0.1, w: 1.6, h: 2.0, cls: 0 },
-      ]
-      return [ // salon hang for 5 — a larger centre flanked by varied smaller frames
-        { dz: 0, dy: 0.05, w: 2.0, h: 2.6, cls: 2 },
-        { dz: -2.75, dy: 1.3, w: 1.4, h: 1.65, cls: 0 },
-        { dz: -2.55, dy: -1.5, w: 1.6, h: 1.35, cls: 0 },
-        { dz: 2.75, dy: 1.2, w: 1.5, h: 1.5, cls: 0 },
-        { dz: 2.6, dy: -1.45, w: 1.35, h: 1.85, cls: 0 },
-      ]
-    }
-    for (const w of WINGS) {
-      if (w.id === 'contact') continue   // back wall = stained-glass centrepiece (no paintings)
-      const side = w.pos[0] < 0 ? -1 : 1
-      const wallX = side * (hw - 0.12)
-      const ry = side < 0 ? Math.PI / 2 : -Math.PI / 2
-      cluster(w.pieces?.length || 1).forEach((p, j) => {
-        out.push({ key: w.id + j, pos: [wallX, PY + p.dy, w.pos[1] + p.dz], rot: [0, ry, 0], mw: p.w, mh: p.h, art: pick(k++), cls: p.cls })
-      })
-    }
-    return out
-  }, [])
+  // WING-DRIVEN HANG (from shared PAINTINGS): single-piece wings = one painting;
+  // multi-piece wings = an organic salon COLLAGE, each painting → one piece.
+  const items = useMemo(() => PAINTINGS.map((p, i) => ({
+    key: p.wingId + i, pos: p.pos, rot: [0, p.ry, 0], mw: p.w, mh: p.h, art: pick(i), cls: p.cls,
+  })), [])
 
   return (
     <group>

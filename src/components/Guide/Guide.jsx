@@ -78,7 +78,11 @@ export default function Guide() {
   const s = useMuseum()
   const [hover, setHover] = useState(null)
   const [piece, setPiece] = useState(null)   // selected piece within an exhibit card
-  useEffect(() => { setPiece(null) }, [s.card])
+  useEffect(() => {
+    const cp = museum.get().cardPiece
+    setPiece(cp ?? null)
+    if (cp != null) museum.set({ cardPiece: null })
+  }, [s.card])
 
   useEffect(() => {
     const t = setTimeout(() => { if (museum.get().phase === 'enter') museum.set({ phase: 'welcome' }) }, 2600)
@@ -96,7 +100,7 @@ export default function Guide() {
       } else if (e.code === 'KeyM') {
         e.preventDefault(); museum.set({ phase: 'explore' }); m.menu ? closeGuide() : openGuide()
       } else if (e.code === 'KeyE') {
-        if (m.near && !m.menu) museum.set({ card: m.near })
+        if (m.focus && !m.menu && !m.card) museum.set({ card: m.focus.wingId, cardPiece: m.focus.piece })
       } else if (e.code === 'Escape') {
         if (m.card) museum.set({ card: null }); else if (m.menu) closeGuide()
       }
@@ -232,7 +236,7 @@ export default function Guide() {
       {/* bottom hints */}
       {!s.menu && !s.card && s.phase === 'explore' && (
         <div style={{ position: 'fixed', left: '50%', bottom: 22, transform: 'translateX(-50%)', zIndex: 20, pointerEvents: 'none', textAlign: 'center' }}>
-          {s.near && <div style={{ marginBottom: 8, display: 'inline-block', padding: '8px 16px', background: INK, border: `1px solid ${GOLD}66`, borderRadius: 8, color: GOLD, font: `500 15px ${serif}`, animation: 'fadeIn .3s ease' }}>Press <b>E</b> — {wingById(s.near)?.title}</div>}
+          {s.focus && <div style={{ marginBottom: 8, display: 'inline-block', padding: '8px 16px', background: INK, border: `1px solid ${GOLD}66`, borderRadius: 8, color: GOLD, font: `500 15px ${serif}`, animation: 'fadeIn .3s ease' }}>Press <b>E</b> — {s.focus.title}</div>}
           <div style={{ color: '#efe7d6', opacity: 0.55, font: `500 13px ${serif}` }}>WASD / arrows · drag to look · <b>M</b> audio guide · <b>E</b> exhibit</div>
         </div>
       )}

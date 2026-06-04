@@ -7,7 +7,8 @@ const state = {
   menu: null,          // null | 'home' | <categoryId>  (which guide screen is open)
   visitCat: null,      // category id awaiting "Guide Me / Teleport" choice
   card: null,          // category id whose exhibit card is open
-  near: null,          // category id the player is standing near (for "Press E")
+  focus: null,         // painting the player is looking at: { wingId, piece, title }
+  cardPiece: null,     // piece index to open when a card is launched via E
   guide: null,         // active "Guide Me" target: { id, pos:[x,z], title }
   teleport: null,      // command consumed by the scene: { x, z, yaw, title }
   titleCard: null,     // wing title shown briefly after a teleport
