@@ -1069,7 +1069,9 @@ function Gallery() {
   const items = []
   // hierarchy: back-wall pair flanking the feature window = MASTERPIECE frames;
   // a couple of side paintings = IMPORTANT; the rest = SECONDARY (still ornate).
-  back.forEach((x, i) => items.push({ key: 'b' + i, pos: [x, PY, -hd + 0.12], rot: [0, 0, 0], mw: 2.9, mh: 4.0, art: pick(k++), cls: 2 }))
+  // back-wall paintings sit on the INTERIOR wall face (wall is WALL_T thick now);
+  // the old -hd+0.12 buried them inside the thicker wall (only crest/apron poked out)
+  back.forEach((x, i) => items.push({ key: 'b' + i, pos: [x, PY, -hd + WALL_T + 0.06], rot: [0, 0, 0], mw: 2.9, mh: 4.0, art: pick(k++), cls: 2 }))
   art.forEach((z, i) => items.push({ key: 'la' + i, pos: [-hw + 0.12, PY, z], rot: [0, Math.PI / 2, 0], mw: 2.5, mh: 3.5, art: pick(k++), cls: i === 2 ? 1 : 0 }))
   art.forEach((z, i) => items.push({ key: 'ra' + i, pos: [hw - 0.12, PY, z], rot: [0, -Math.PI / 2, 0], mw: 2.5, mh: 3.5, art: pick(k++), cls: i === 3 ? 1 : 0 }))
 
