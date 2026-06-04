@@ -668,29 +668,94 @@ function BackWall({ m }) {
   )
 }
 
-/* Ornate gothic frame asset used purely as a CARVED SURROUND: scaled larger
- * than the window and placed just behind it so its ornament peeks around the
- * whole perimeter (crest above the arch, apron below the sill, sides alongside).
- * Its own opening is hidden behind the window — it does NOT define the glass. */
-const GOTHIC_FRAME = BASE + 'assets/models/gothic_frame_lo.glb'
 const FOREST_URL = BASE + 'assets/scenery/forest.jpg'   // real forest (equirect slice)
-const FRAME_OW = 1.239, FRAME_OH = 2.001    // measured outer bbox of the asset
-function FrameSurround({ w, h, m }) {
-  const { scene } = useGLTF(GOTHIC_FRAME)
-  const node = useMemo(() => {
-    const root = scene.clone(true)
-    const stone = new MeshStandardMaterial({ color: '#e4dece', roughness: 0.86, metalness: 0, side: DoubleSide })
-    root.traverse(o => { if (o.isMesh) { o.material = stone; o.frustumCulled = false } })
-    root.position.set(0, 0, 0)
-    return root
-  }, [scene])
-  const sx = (w + 1.6) / FRAME_OW            // outer a bit wider than the window
-  const sy = (h + 2.4) / FRAME_OH            // taller → crest above, apron below
-  const sz = Math.min(sx, sy) * 0.7
-  return (
-    <group position={[0, 0, -0.12]} scale={[sx, sy, sz]}><primitive object={node} /></group>
-  )
+
+/* ════════════════════════════════════════════════════════════
+ * PROCEDURAL BAROQUE WINDOW SURROUND — built as ONE merged geometry of
+ * layered carved parts (moldings, pilasters, arch bands, crown + cartouche,
+ * C/S-scrolls, acanthus leaves, rosettes, beadwork, egg-and-dart, sill,
+ * apron, corner clusters). Cached per opening size and reused across all
+ * windows so it stays a couple of draw calls. Local +Z faces the room.
+ * ════════════════════════════════════════════════════════════ */
+function rectArchRing(ow, oh, iw, ih, depth, spring = 0.6) {
+  const o = new Shape()
+  o.moveTo(-ow / 2, -oh / 2); o.lineTo(ow / 2, -oh / 2); o.lineTo(ow / 2, oh / 2); o.lineTo(-ow / 2, oh / 2); o.lineTo(-ow / 2, -oh / 2)
+  o.holes.push(pointedArch(iw, ih, spring))
+  return new ExtrudeGeometry(o, { depth, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.03, bevelSegments: 1 })
 }
+function archBand(ow, oh, iw, ih, depth, spring = 0.6) {
+  const o = pointedArch(ow, oh, spring); o.holes.push(pointedArch(iw, ih, spring))
+  return new ExtrudeGeometry(o, { depth, bevelEnabled: false })
+}
+function leafGeo(len, wid) { const g = new ConeGeometry(wid * 0.5, len, 6); g.translate(0, len / 2, 0); return g }
+function scrollGeo(r, tube, arc) { return new TorusGeometry(r, tube, 6, 18, arc) }
+function rosetteMerge(d) {
+  const p = [new CylinderGeometry(d * 0.2, d * 0.22, 0.08, 12).rotateX(Math.PI / 2)]
+  for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; const s = new SphereGeometry(d * 0.16, 6, 6); s.scale(1, 0.55, 1.6); s.translate(Math.cos(a) * d * 0.34, Math.sin(a) * d * 0.34, 0.03); p.push(s) }
+  return mergeGeometries(p.map(g => g.toNonIndexed()), false)
+}
+
+const _frameCache = {}
+function buildBaroqueFrame(w, h) {
+  const tw = Math.min(0.42, w * 0.12)
+  const iw = w - 2 * tw, ih = h - 2 * tw            // arched glass opening
+  const parts = []
+  const add = (geo, pos = [0, 0, 0], rot = [0, 0, 0], scl = [1, 1, 1]) => {
+    geo.scale(scl[0], scl[1], scl[2]); geo.rotateX(rot[0]); geo.rotateY(rot[1]); geo.rotateZ(rot[2]); geo.translate(pos[0], pos[1], pos[2])
+    parts.push(geo.toNonIndexed())
+  }
+  const A2 = ih / 2, sy = -A2 + 0.6 * ih            // arch spring (local y)
+  // ── moldings: backing fills the wall opening + hugs the arched glass ──
+  add(rectArchRing(w, h, iw * 0.96, ih * 0.96, 0.05))                          // backing plate (fills corners)
+  add(rectArchRing(w + 0.6, h + 0.5, iw + 0.10, ih + 0.10, 0.10), [0, 0, 0.05]) // main body
+  add(archBand(iw + 0.16, ih + 0.16, iw, ih, 0.13), [0, 0, 0.06])              // inner bead molding (arched)
+  add(rectArchRing(w + 1.0, h + 0.9, w + 0.55, h + 0.45, 0.07), [0, 0, 0.16])  // outer molding
+  // ── side pilasters with capital/base + carved bits ──
+  const pw = w * 0.16, ph = h * 0.82
+  for (const s of [-1, 1]) {
+    const px = s * (w / 2 + 0.16)
+    add(new BoxGeometry(pw, ph, 0.12), [px, -h * 0.03, 0.07])
+    add(new BoxGeometry(0.05, ph, 0.2), [px - pw / 2 + 0.03, -h * 0.03, 0.16])   // raised inner edge
+    add(new BoxGeometry(0.05, ph, 0.2), [px + pw / 2 - 0.03, -h * 0.03, 0.16])   // raised outer edge
+    add(new BoxGeometry(pw + 0.14, 0.16, 0.22), [px, ph / 2 - h * 0.03, 0.18])   // capital
+    add(new BoxGeometry(pw + 0.16, 0.16, 0.22), [px, -ph / 2 - h * 0.03, 0.18])  // base
+    for (let i = 0; i < 5; i++) { const y = -h * 0.03 - ph / 2 + (i + 0.6) * ph / 5; add(rosetteMerge(0.16), [px, y, 0.2]) }
+    for (let i = 0; i < 2; i++) { const y = -h * 0.03 + (i ? ph * 0.22 : -ph * 0.22); add(scrollGeo(0.16, 0.03, Math.PI * 1.5), [px, y, 0.22], [0, 0, s > 0 ? 0 : Math.PI]) }
+  }
+  // ── arch bands over the top (egg-and-dart approximated by ovoids on an arc) ──
+  add(archBand(iw + 0.5, ih + 0.5, iw + 0.28, ih + 0.28, 0.11), [0, 0, 0.2])
+  for (let i = 0; i <= 12; i++) { const a = Math.PI * (0.12 + 0.76 * i / 12); const r = (iw / 2) + 0.18; const x = Math.cos(a) * r; const y = sy + Math.sin(a) * r * 0.95; const egg = new SphereGeometry(w * 0.02, 8, 6); egg.scale(0.8, 1, 1.2); add(egg, [x, y, 0.22]) }
+  // ── upper crown + central cartouche + flanking C-scrolls + acanthus ──
+  const cy = A2 + h * 0.13
+  add(new SphereGeometry(1, 12, 10), [0, cy, 0.22], [0, 0, 0], [w * 0.12, h * 0.06, 0.14])  // cartouche shield
+  for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; add(new SphereGeometry(w * 0.01, 6, 6), [Math.cos(a) * w * 0.15, cy + Math.sin(a) * h * 0.07, 0.25]) }
+  for (const s of [-1, 1]) add(scrollGeo(w * 0.13, 0.045, Math.PI * 1.3), [s * w * 0.24, cy, 0.24], [0, 0, s > 0 ? -0.5 : Math.PI + 0.5])
+  for (const s of [-1, 1]) for (let i = 0; i < 3; i++) add(leafGeo(h * 0.09, w * 0.06), [s * (w * 0.1 + i * w * 0.09), cy - h * 0.02, 0.2], [Math.PI * 0.5, 0, s * (0.5 + i * 0.35)])
+  add(rosetteMerge(w * 0.12), [0, cy + h * 0.07, 0.25])                          // floral crest
+  add(new SphereGeometry(w * 0.1, 12, 6, 0, Math.PI), [0, cy - h * 0.04, 0.2], [Math.PI / 2, 0, 0], [1, 0.5, 1])  // shell
+  // ── corner leaf clusters ──
+  for (const sx of [-1, 1]) for (const syc of [-1, 1]) {
+    const cxp = sx * (w / 2 + 0.12), cyp = syc * (h / 2) - h * 0.03
+    for (let i = 0; i < 2; i++) add(leafGeo(h * 0.075, w * 0.05), [cxp, cyp, 0.2], [Math.PI * 0.5, 0, sx * (0.6 + i * 0.4)])
+    add(scrollGeo(0.12, 0.03, Math.PI * 1.5), [cxp, cyp, 0.22], [0, 0, sx > 0 ? 0 : Math.PI])
+  }
+  // ── shoulder + center rosettes ──
+  for (const s of [-1, 1]) add(rosetteMerge(w * 0.05), [s * w * 0.46, sy, 0.22])
+  // ── projecting sill + brackets ──
+  const sillW = (w + 1.0) * 0.95
+  add(new BoxGeometry(sillW, h * 0.05, 0.3), [0, -h / 2 - 0.08, 0.2])
+  for (const s of [-1, 1]) add(new BoxGeometry(0.12, 0.26, 0.2), [s * sillW * 0.4, -h / 2 - 0.24, 0.16])
+  // ── lower apron: panel + shell + scrolls + leaves ──
+  const apronW = (w + 1.0) * 0.75, ay = -h / 2 - h * 0.12
+  add(new BoxGeometry(apronW, h * 0.13, 0.08), [0, ay, 0.04])
+  add(new SphereGeometry(w * 0.1, 12, 6, 0, Math.PI), [0, ay, 0.14], [-Math.PI / 2, 0, 0], [1, 0.5, 1])
+  for (const s of [-1, 1]) add(scrollGeo(w * 0.1, 0.035, Math.PI * 1.4), [s * apronW * 0.3, ay, 0.16], [0, 0, s > 0 ? Math.PI : 0])
+  for (const s of [-1, 1]) add(leafGeo(h * 0.06, w * 0.05), [s * apronW * 0.42, ay, 0.14], [Math.PI * 0.5, 0, s * 0.6])
+  // ── beadwork along the jambs ──
+  for (const s of [-1, 1]) for (let i = 0; i < 9; i++) { const y = -h * 0.03 - ih * 0.45 + (i + 0.5) * ih * 0.9 / 9; add(new SphereGeometry(w * 0.011, 6, 6), [s * (iw / 2 + 0.06), y, 0.14]) }
+  return mergeGeometries(parts, false)
+}
+function baroqueFrame(w, h) { const k = w.toFixed(2) + 'x' + h.toFixed(2); if (!_frameCache[k]) _frameCache[k] = buildBaroqueFrame(w, h); return _frameCache[k] }
 
 // pointed-arch outline (centred at origin): rect lower + two-arc gothic head
 function pointedArch(w, h, spring = 0.6) {
@@ -724,18 +789,7 @@ function MuseumWindow({ w, h, m }) {
   const mull = 0.055
 
   const glassGeo = useMemo(() => new ShapeGeometry(pointedArch(iw * 0.99, ih * 0.99, spring)), [iw, ih])
-  const trimGeo = useMemo(() => {
-    const o = new Shape()
-    o.moveTo(-w / 2, -h / 2); o.lineTo(w / 2, -h / 2); o.lineTo(w / 2, h / 2); o.lineTo(-w / 2, h / 2); o.lineTo(-w / 2, -h / 2)
-    o.holes.push(pointedArch(iw, ih, spring))
-    return new ExtrudeGeometry(o, { depth: 0.22, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.07, bevelSegments: 2 })
-  }, [w, h, iw, ih])
-  const innerGeo = useMemo(() => {           // recessed reveal band for depth
-    const o = new Shape(); const a = 0.13
-    o.moveTo(-(iw / 2 + a), -(ih / 2 + a)); o.lineTo((iw / 2 + a), -(ih / 2 + a)); o.lineTo((iw / 2 + a), (ih / 2 + a)); o.lineTo(-(iw / 2 + a), (ih / 2 + a)); o.lineTo(-(iw / 2 + a), -(ih / 2 + a))
-    o.holes.push(pointedArch(iw - 0.04, ih - 0.04, spring))
-    return new ExtrudeGeometry(o, { depth: 0.16, bevelEnabled: false })
-  }, [iw, ih])
+  const frameGeo = useMemo(() => baroqueFrame(w, h), [w, h])   // cached + reused across windows
 
   const cols = 3, vx = [-W2 + iw / cols, -W2 + 2 * iw / cols]   // two vertical mullions
   const straightH = sy + H2                                     // straight (sash) region height
@@ -743,8 +797,6 @@ function MuseumWindow({ w, h, m }) {
   const arcR = (H2 - sy) * 0.30
   return (
     <group>
-      {/* ornate gothic carved surround wrapping the window perimeter */}
-      <FrameSurround w={w} h={h} m={m} />
       {/* real forest just behind the glass — sized to the opening (no leak) */}
       <mesh position={[0, 0, -WALL_T - 0.35]} material={sceneryMat}><planeGeometry args={[w * 1.25, h * 1.15]} /></mesh>
       {/* arched glass filling the opening */}
@@ -757,16 +809,8 @@ function MuseumWindow({ w, h, m }) {
       <mesh position={[-W2 * 0.34, sy + (H2 - sy) * 0.45, -0.26]} rotation={[0, 0, 0.5]} material={m.trimWhite}><boxGeometry args={[mull, (H2 - sy) * 0.9, 0.05]} /></mesh>
       <mesh position={[W2 * 0.34, sy + (H2 - sy) * 0.45, -0.26]} rotation={[0, 0, -0.5]} material={m.trimWhite}><boxGeometry args={[mull, (H2 - sy) * 0.9, 0.05]} /></mesh>
       <mesh position={[0, sy + (H2 - sy) * 0.5, -0.26]} material={m.trimWhite}><torusGeometry args={[arcR, mull * 0.7, 8, 20]} /></mesh>
-      {/* recessed reveal + carved stone surround at the room face */}
-      <mesh geometry={innerGeo} position={[0, 0, -0.18]} material={m.trim} />
-      <mesh geometry={trimGeo} position={[0, 0, -0.02]} material={m.trim} castShadow />
-      {/* side colonnettes (slim shafts on the jambs) */}
-      {[-1, 1].map(s => <mesh key={'c' + s} position={[s * (iw / 2 + tw * 0.5), 0, 0.06]} material={m.trim}><cylinderGeometry args={[tw * 0.32, tw * 0.32, h * 0.96, 10]} /></mesh>)}
-      {/* hood mould over the arch + apex finial */}
-      <mesh position={[0, H2 + tw * 0.4, 0.04]} material={m.trim}><torusGeometry args={[W2 + tw * 0.4, 0.06, 8, 22, Math.PI]} /></mesh>
-      <mesh position={[0, h / 2 + 0.02, 0.08]} material={m.trim}><coneGeometry args={[0.13, 0.46, 8]} /></mesh>
-      {/* projecting sill */}
-      <mesh position={[0, -h / 2 + 0.04, 0.18]} material={m.trim}><boxGeometry args={[w + 0.4, 0.16, 0.42]} /></mesh>
+      {/* the carved Baroque surround (one merged geometry) */}
+      <mesh geometry={frameGeo} material={m.trim} castShadow receiveShadow />
     </group>
   )
 }
