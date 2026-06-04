@@ -117,7 +117,9 @@ function useMaterials() {
     // real glass: transparent, faintly reflective, NOT emissive / not white
     glass: new MeshStandardMaterial({ color: '#aebccb', roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.30, envMapIntensity: 0.9 }),
     sky: new MeshStandardMaterial({ color: '#9fb2c6', roughness: 1, metalness: 0 }),   // muted daylight behind glass
-    scenery: new MeshBasicMaterial({ map: makeLandscapeTexture() }),                   // estate grounds seen through windows
+    // estate grounds seen through windows — dimmed so windows read as daylight,
+    // not glowing light-cards (color multiplies the map down)
+    scenery: new MeshBasicMaterial({ map: makeLandscapeTexture(), color: '#8d938c' }),
     trimWhite: new MeshStandardMaterial({ color: '#f2efe6', roughness: 0.7, metalness: 0 }),
     darkRoom: new MeshStandardMaterial({ color: '#0a0c08', roughness: 1 }),
   }), [])
@@ -733,8 +735,8 @@ function MuseumWindow({ w, h, m }) {
     <group>
       {/* ornate gothic carved surround wrapping the window perimeter */}
       <FrameSurround w={w} h={h} m={m} />
-      {/* estate grounds, far beyond the glass — fills the whole opening */}
-      <mesh position={[0, 0, -WALL_T - 0.7]} material={m.scenery}><planeGeometry args={[w * 2.0, h * 1.7]} /></mesh>
+      {/* estate grounds just behind the glass — sized to the opening (no leak) */}
+      <mesh position={[0, 0, -WALL_T - 0.35]} material={m.scenery}><planeGeometry args={[w * 1.25, h * 1.15]} /></mesh>
       {/* arched glass filling the opening */}
       <mesh geometry={glassGeo} position={[0, 0, -0.30]} material={m.glass} />
       {/* mullions: 2 verticals up to the spring, sash transoms, central mullion into
