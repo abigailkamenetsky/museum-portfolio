@@ -44,6 +44,14 @@ const FRAME_URL = BASE + 'assets/models/frame_gold.glb'   // optimized ornate go
 useGLTF.preload(FRAME_URL)
 const STAINED_URL = BASE + 'assets/models/stained_glass.glb'   // gothic window with painted glass
 useGLTF.preload(STAINED_URL)
+// stained-glass model native size (from its bbox) → derived in-room size, so the
+// arched wall opening and the model use ONE source of truth and line up.
+const GLB_SG_W = 2.313, GLB_SG_H = 6.633
+const FEAT_S = FEAT_H * 0.99 / GLB_SG_H        // scale that fills the opening height
+const WIN_W = GLB_SG_W * FEAT_S                 // in-room window width (~3.59)
+const FEAT_HOLE_W = WIN_W * 0.9                 // arched masonry hole hugs just inside the window frame
+const FEAT_HOLE_H = FEAT_H * 0.99 * 0.965
+const FEAT_SPRING = 0.6                          // where the pointed arch springs (fraction up)
 
 /* ── helpers ──────────────────────────────────────────────── */
 function configure(t, rep, srgb) {
@@ -760,10 +768,26 @@ function SideWall({ side, m }) {
   )
 }
 
-/* far wall: ONE continuous holed surface with the central feature opening */
+/* pointed-arch (gothic) hole as a Path — straight jambs, two-arc head, point on top */
+function archedHolePath(cx, cy, w, h, spring) {
+  const w2 = w / 2, yb = cy - h / 2, yt = cy + h / 2, ys = yb + spring * h
+  const p = new Path()
+  p.moveTo(cx - w2, yb); p.lineTo(cx + w2, yb); p.lineTo(cx + w2, ys)
+  p.quadraticCurveTo(cx + w2, yt, cx, yt)
+  p.quadraticCurveTo(cx - w2, yt, cx - w2, ys)
+  p.lineTo(cx - w2, yb)
+  return p
+}
+
+/* far wall: ONE continuous holed surface; the feature opening is a GOTHIC ARCH so
+ * the masonry hugs the pointed stained-glass window (no rectangular plaster border) */
 function BackWall({ m }) {
-  const y0 = FEAT_CY - FEAT_H / 2, y1 = FEAT_CY + FEAT_H / 2
-  const geo = useMemo(() => holedWallGeo(W, [[0, FEAT_W, y0, y1]]), [])
+  const geo = useMemo(() => {
+    const s = new Shape()
+    s.moveTo(-W / 2, 0); s.lineTo(W / 2, 0); s.lineTo(W / 2, H); s.lineTo(-W / 2, H); s.lineTo(-W / 2, 0)
+    s.holes.push(archedHolePath(0, FEAT_CY, FEAT_HOLE_W, FEAT_HOLE_H, FEAT_SPRING))
+    return new ExtrudeGeometry(s, { depth: WALL_T, bevelEnabled: false })
+  }, [])
   return (
     <mesh geometry={geo} position={[0, 0, -D / 2]} rotation={[0, 0, 0]} receiveShadow material={m.wallSide} />
   )
@@ -966,22 +990,14 @@ function GothicFeature({ m }) {
   }, [scene])
 
   const RECESS = WALL_T
-  const S = (FEAT_H * 0.99) / inst.size.y          // fill the opening height
-  const winZ = -0.26                                // set the window back into the reveal
+  const S = (FEAT_H * 0.99) / inst.size.y          // fill the opening height (matches the arch hole)
+  const winZ = -0.24                                // fully behind the wall face → arched masonry masks the outer frame
   return (
     <group position={[0, FEAT_CY, -D / 2 + WALL_T]}>
-      {/* plaster reveal lining the opening (jambs / head / sill) — built-in look */}
-      {[-1, 1].map(s => (
-        <mesh key={'fj' + s} position={[s * (FEAT_W / 2 + 0.01), 0, -RECESS / 2]} receiveShadow material={m.revealPlaster}>
-          <boxGeometry args={[0.14, FEAT_H + 0.26, RECESS]} />
-        </mesh>
-      ))}
-      <mesh position={[0, FEAT_H / 2 + 0.02, -RECESS / 2]} receiveShadow material={m.revealPlaster}><boxGeometry args={[FEAT_W + 0.12, 0.14, RECESS]} /></mesh>
-      <mesh position={[0, -FEAT_H / 2 - 0.02, -RECESS / 2]} receiveShadow material={m.revealPlaster}><boxGeometry args={[FEAT_W + 0.12, 0.14, RECESS]} /></mesh>
-
-      {/* projecting stone sill */}
-      <mesh position={[0, -FEAT_H / 2 - 0.06, (0.24 - RECESS) / 2]} castShadow receiveShadow material={m.sillStone}>
-        <boxGeometry args={[FEAT_W + 0.8, 0.2, RECESS + 0.24]} />
+      {/* the arched masonry hole (BackWall) hugs the window, so no plaster reveal is
+          needed. A low projecting stone sill at the base only. */}
+      <mesh position={[0, -FEAT_H / 2 + 0.2, (0.24 - RECESS) / 2]} castShadow receiveShadow material={m.sillStone}>
+        <boxGeometry args={[FEAT_HOLE_W + 0.5, 0.2, RECESS + 0.24]} />
       </mesh>
 
       {/* backlight behind the glass so the painted panes read as daylight-lit */}
