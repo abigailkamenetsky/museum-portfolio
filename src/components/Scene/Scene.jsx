@@ -7,8 +7,7 @@
  */
 
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { ContactShadows, useGLTF, useTexture, useAnimations } from '@react-three/drei'
-import { clone as skeletonClone } from 'three/examples/jsm/utils/SkeletonUtils.js'
+import { ContactShadows, useGLTF, useTexture } from '@react-three/drei'
 import { EffectComposer, N8AO, Bloom, Vignette, HueSaturation, BrightnessContrast } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
 import { Suspense, useRef, useEffect, useMemo } from 'react'
@@ -45,8 +44,6 @@ const FRAME_URL = BASE + 'assets/models/frame_gold.glb'   // optimized ornate go
 useGLTF.preload(FRAME_URL)
 const STAINED_URL = BASE + 'assets/models/stained_glass.glb'   // gothic window with painted glass
 useGLTF.preload(STAINED_URL)
-const ROBOT_URL = BASE + 'assets/models/robot.glb'             // RobotExpressive player character
-useGLTF.preload(ROBOT_URL)
 // stained-glass model native size (from its bbox) → derived in-room size, so the
 // arched wall opening and the model use ONE source of truth and line up.
 const GLB_SG_W = 2.313, GLB_SG_H = 6.633
@@ -1039,36 +1036,24 @@ function Bench({ m }) {
   )
 }
 
-/* ── CHARACTER + CAMERA (lower, wider, cinematic) ─────────── */
-/* ── THIRD-PERSON PLAYER (RobotExpressive: Idle/Walking/Running, pointer-lock look,
- *    camera-relative movement, smooth accel/decel, body faces travel direction) ── */
+/* ── THIRD-PERSON PLAYER — slim BLACK HUMAN SILHOUETTE with a procedural walk
+ *    (swinging arms/legs, bending knees, torso bob) + idle breathing. Pointer-lock
+ *    mouse look (both axes), camera-relative movement, smooth accel/decel, body
+ *    turns to face travel direction. ── */
 const WALK_SPEED = 4.4, RUN_SPEED = 7.6, ACCEL = 11, MOUSE_SENS = 0.0027
-const CAM_DIST = 6.2, CAM_HEIGHT = 2.4, HEAD_Y = 1.7, ROBOT_SCALE = 0.42
+const CAM_DIST = 6.2, CAM_HEIGHT = 2.4, HEAD_Y = 1.7
 const _v1 = new Vector3(), _v2 = new Vector3(), _v3 = new Vector3(), _v4 = new Vector3()
 const _v5 = new Vector3(), _v6 = new Vector3()
 
 function Character() {
   const root = useRef()       // carries world position
-  const modelRef = useRef()   // inner model, rotates to face travel direction
-  const { scene, animations } = useGLTF(ROBOT_URL)
-  const cloned = useMemo(() => skeletonClone(scene), [scene])
-  const { actions } = useAnimations(animations, modelRef)
+  const modelRef = useRef()   // inner figure, rotates to face travel direction
+  const body = useRef()       // torso+arms+head group (for the walk bob)
+  const thighL = useRef(), thighR = useRef(), shinL = useRef(), shinR = useRef()
+  const armL = useRef(), armR = useRef()
   const keys = useRef({})
-  const st = useRef({ yaw: 0, pitch: 0.12, vel: new Vector3(), face: 0, clip: '' })
-
-  // render the rigged robot as an elegant near-black silhouette (skinning/animation
-  // is independent of material, so all joints/arms still move). One shared material
-  // unifies every body part into a single dark figure with a faint edge sheen.
-  const silhouette = useMemo(() => new MeshStandardMaterial({ color: '#070709', roughness: 0.5, metalness: 0.0, envMapIntensity: 0.25 }), [])
-  useEffect(() => {
-    cloned.traverse(o => { if (o.isMesh) { o.material = silhouette; o.castShadow = true; o.frustumCulled = false } })
-  }, [cloned, silhouette])
-
-  // start in Idle
-  useEffect(() => {
-    const a = actions && actions.Idle
-    if (a) { a.reset().fadeIn(0.2).play(); st.current.clip = 'Idle' }
-  }, [actions])
+  const st = useRef({ yaw: 0, pitch: 0.12, vel: new Vector3(), face: 0, phase: 0, t: 0 })
+  const blk = useMemo(() => new MeshStandardMaterial({ color: '#070709', roughness: 0.55, metalness: 0, envMapIntensity: 0.22 }), [])
 
   useEffect(() => {
     const dn = e => { keys.current[e.code] = true; if (e.code.startsWith('Arrow')) e.preventDefault() }
@@ -1090,17 +1075,6 @@ function Character() {
       document.removeEventListener('mousemove', onMove)
     }
   }, [])
-
-  const setClip = (name, timeScale) => {
-    if (!actions || !actions[name]) return
-    const s = st.current
-    actions[name].timeScale = timeScale
-    if (s.clip !== name) {
-      if (s.clip && actions[s.clip]) actions[s.clip].fadeOut(0.22)
-      actions[name].reset().fadeIn(0.22).play()
-      s.clip = name
-    }
-  }
 
   useFrame(({ camera }, delta) => {
     if (!root.current) return
@@ -1133,10 +1107,23 @@ function Character() {
     }
     if (modelRef.current) modelRef.current.rotation.y = s.face
 
-    // animation: idle / walk / run, playback synced to speed (less foot slide)
-    if (spd < 0.3) setClip('Idle', 1)
-    else if (run) setClip('Running', MathUtils.clamp(spd / RUN_SPEED, 0.6, 1.3))
-    else setClip('Walking', MathUtils.clamp(spd / WALK_SPEED, 0.6, 1.4))
+    // ── procedural locomotion ──
+    s.t += d
+    const walkAmt = MathUtils.clamp(spd / 1.6, 0, 1)          // 0 idle → 1 full stride
+    s.phase += d * (4.2 + spd * 1.5)                          // cadence rises with speed
+    const A = 0.55 * walkAmt
+    const ease = (ref, tgt) => { if (ref.current) ref.current.rotation.x += (tgt - ref.current.rotation.x) * Math.min(1, 12 * d) }
+    ease(thighL, Math.sin(s.phase) * A)
+    ease(thighR, Math.sin(s.phase + Math.PI) * A)
+    ease(shinL, Math.max(0, -Math.sin(s.phase - 0.5)) * 1.0 * walkAmt)
+    ease(shinR, Math.max(0, -Math.sin(s.phase + Math.PI - 0.5)) * 1.0 * walkAmt)
+    const idleSway = (1 - walkAmt) * Math.sin(s.t * 1.5) * 0.05
+    ease(armL, Math.sin(s.phase + Math.PI) * A * 0.85 + idleSway)
+    ease(armR, Math.sin(s.phase) * A * 0.85 - idleSway)
+    if (body.current) {
+      const bob = walkAmt > 0.05 ? Math.abs(Math.sin(s.phase)) * 0.05 * walkAmt : Math.sin(s.t * 1.6) * 0.012
+      body.current.position.y += (bob - body.current.position.y) * Math.min(1, 10 * d)
+    }
 
     // third-person orbit camera
     const cp = Math.cos(s.pitch), sp = Math.sin(s.pitch)
@@ -1153,9 +1140,39 @@ function Character() {
     camera.lookAt(target.x, target.y, target.z)
   })
 
+  // slim, elegant human figure (faces +Z); limb groups pivot for the walk cycle
   return (
     <group ref={root} position={[0, 0, 8]}>
-      <primitive ref={modelRef} object={cloned} scale={ROBOT_SCALE} />
+      <group ref={modelRef}>
+        {/* torso + head + arms (bobs as one during the walk) */}
+        <group ref={body}>
+          <mesh position={[0, 1.18, 0]} castShadow material={blk}><capsuleGeometry args={[0.135, 0.4, 6, 12]} /></mesh>
+          <mesh position={[0, 0.94, 0]} castShadow material={blk}><sphereGeometry args={[0.15, 14, 12]} /></mesh>
+          <mesh position={[0, 1.62, 0]} castShadow material={blk}><sphereGeometry args={[0.135, 16, 14]} /></mesh>
+          {/* shoulders pivot at the top; arm hangs down from the pivot */}
+          <group ref={armL} position={[-0.205, 1.44, 0]}>
+            <mesh position={[0, -0.26, 0]} castShadow material={blk}><capsuleGeometry args={[0.052, 0.46, 5, 10]} /></mesh>
+          </group>
+          <group ref={armR} position={[0.205, 1.44, 0]}>
+            <mesh position={[0, -0.26, 0]} castShadow material={blk}><capsuleGeometry args={[0.052, 0.46, 5, 10]} /></mesh>
+          </group>
+        </group>
+        {/* legs: hip pivot → thigh, knee pivot → shin + foot */}
+        <group ref={thighL} position={[-0.1, 0.92, 0]}>
+          <mesh position={[0, -0.21, 0]} castShadow material={blk}><capsuleGeometry args={[0.068, 0.34, 5, 10]} /></mesh>
+          <group ref={shinL} position={[0, -0.44, 0]}>
+            <mesh position={[0, -0.21, 0]} castShadow material={blk}><capsuleGeometry args={[0.06, 0.34, 5, 10]} /></mesh>
+            <mesh position={[0, -0.45, 0.06]} castShadow material={blk}><boxGeometry args={[0.11, 0.07, 0.22]} /></mesh>
+          </group>
+        </group>
+        <group ref={thighR} position={[0.1, 0.92, 0]}>
+          <mesh position={[0, -0.21, 0]} castShadow material={blk}><capsuleGeometry args={[0.068, 0.34, 5, 10]} /></mesh>
+          <group ref={shinR} position={[0, -0.44, 0]}>
+            <mesh position={[0, -0.21, 0]} castShadow material={blk}><capsuleGeometry args={[0.06, 0.34, 5, 10]} /></mesh>
+            <mesh position={[0, -0.45, 0.06]} castShadow material={blk}><boxGeometry args={[0.11, 0.07, 0.22]} /></mesh>
+          </group>
+        </group>
+      </group>
     </group>
   )
 }
