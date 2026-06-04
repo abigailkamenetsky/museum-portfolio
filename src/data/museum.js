@@ -22,17 +22,42 @@ export const WINGS = [
   {
     id: 'professional', title: 'Professional Experience', wing: 'Professional Experience Wing',
     pos: [R, 34], yaw: YAW_R, sub: ['Current Internship', 'Past Internships'],
-    exhibit: { blurb: 'Internships and professional roles — where the work met the world.', items: ['Current Internship — role, company, dates, impact', 'Past Internships — selected highlights'], images: [], links: [] },
+    exhibit: {
+      blurb: 'Internships and roles — each painting in this wing is one chapter of the work.',
+      images: [], links: [],
+      pieces: [
+        { title: 'Current Internship — Company', blurb: 'Role · dates. What you’re building and the impact.', items: [], images: [], links: [] },
+        { title: 'Internship — Company (Year)', blurb: 'Role · dates. Summary + impact.', items: [], images: [], links: [] },
+        { title: 'Internship — Company (Year)', blurb: 'Role · dates. Summary + impact.', items: [], images: [], links: [] },
+        { title: 'Internship — Company (Year)', blurb: 'Role · dates. Summary + impact.', items: [], images: [], links: [] },
+        { title: 'Internship — Company (Year)', blurb: 'Role · dates. Summary + impact.', items: [], images: [], links: [] },
+      ],
+    },
   },
   {
     id: 'projects', title: 'Projects', wing: 'Projects Hall',
     pos: [L, 20.25], yaw: YAW_L, sub: ['Current Projects', 'Past Projects'],
-    exhibit: { blurb: 'Things built — from prototypes to shipped work.', items: ['Current Projects — what you are building now', 'Past Projects — selected showcases'], images: [], links: [] },
+    exhibit: {
+      blurb: 'Things built — each painting is one project.',
+      images: [], links: [],
+      pieces: [
+        { title: 'Current Project — Name', blurb: 'What it is, the stack, and where it’s headed.', items: [], images: [], links: [] },
+        { title: 'Project — Name', blurb: 'Problem, approach, result.', items: [], images: [], links: [] },
+        { title: 'Project — Name', blurb: 'Problem, approach, result.', items: [], images: [], links: [] },
+      ],
+    },
   },
   {
     id: 'research', title: 'Research Experience', wing: 'Research Gallery',
     pos: [R, 20.25], yaw: YAW_R, sub: ['Current Research', 'Past Research'],
-    exhibit: { blurb: 'Questions pursued — posters, publications, and findings.', items: ['Current Research — lab, topic, methods', 'Past Research — prior projects + results'], images: [], links: [] },
+    exhibit: {
+      blurb: 'Questions pursued — each painting is one research project.',
+      images: [], links: [],
+      pieces: [
+        { title: 'Current Research — Lab / Topic', blurb: 'Question, methods, progress.', items: [], images: [], links: [] },
+        { title: 'Research — Topic (Year)', blurb: 'Question, methods, findings.', items: [], images: [], links: [] },
+      ],
+    },
   },
   {
     id: 'leadership', title: 'Leadership Experience', wing: 'Leadership Gallery',

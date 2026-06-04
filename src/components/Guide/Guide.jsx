@@ -77,6 +77,8 @@ const pill = (active) => ({
 export default function Guide() {
   const s = useMuseum()
   const [hover, setHover] = useState(null)
+  const [piece, setPiece] = useState(null)   // selected piece within an exhibit card
+  useEffect(() => { setPiece(null) }, [s.card])
 
   useEffect(() => {
     const t = setTimeout(() => { if (museum.get().phase === 'enter') museum.set({ phase: 'welcome' }) }, 2600)
@@ -180,33 +182,52 @@ export default function Guide() {
         </div>
       )}
 
-      {/* exhibit card (E) */}
-      {cardWing && (
-        <div style={dim} onClick={e => { if (e.target === e.currentTarget) museum.set({ card: null }) }}>
-          <div style={{ width: 'min(620px,92vw)', maxHeight: '84vh', overflowY: 'auto', background: INK, border: `1px solid ${GOLD}55`, borderRadius: 14, padding: '28px 32px', color: '#efe7d6', fontFamily: serif, boxShadow: '0 24px 70px rgba(0,0,0,0.6)' }}>
-            <div style={{ color: GOLD, font: `600 12px ${serif}`, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.8 }}>{cardWing.wing}</div>
-            <div style={{ font: `400 28px ${serif}`, margin: '4px 0 12px' }}>{cardWing.title}</div>
-            <div style={{ opacity: 0.9, lineHeight: 1.55, marginBottom: 14 }}>{cardWing.exhibit.blurb}</div>
-            {/* photo gallery */}
-            {cardWing.exhibit.images?.length > 0 ? (
+      {/* exhibit card (E) — wings with `pieces` show a list → each piece opens its own detail */}
+      {cardWing && (() => {
+        const ex = cardWing.exhibit, pcs = ex.pieces
+        const inList = pcs && piece === null
+        const d = pcs ? (piece != null ? pcs[piece] : null) : ex
+        const detail = obj => (
+          <>
+            {obj.blurb && <div style={{ opacity: 0.9, lineHeight: 1.55, marginBottom: 14 }}>{obj.blurb}</div>}
+            {obj.images?.length > 0 ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 10, marginBottom: 16 }}>
-                {cardWing.exhibit.images.map((src, i) => (
-                  <img key={i} src={ASSET + src} alt="" style={{ width: '100%', height: 150, objectFit: 'cover', borderRadius: 8, border: `1px solid ${GOLD}44` }} />
-                ))}
+                {obj.images.map((src, i) => <img key={i} src={ASSET + src} alt="" style={{ width: '100%', height: 150, objectFit: 'cover', borderRadius: 8, border: `1px solid ${GOLD}44` }} />)}
               </div>
             ) : cardWing.id === 'about' && (
               <div style={{ marginBottom: 16, padding: '22px', textAlign: 'center', border: `1px dashed ${GOLD}44`, borderRadius: 8, opacity: 0.6, font: `400 14px ${serif}` }}>Photos coming soon — add them to <code>public/assets/about/</code></div>
             )}
-            {cardWing.exhibit.items?.length > 0 && <ul style={{ margin: '0 0 14px', paddingLeft: 20, lineHeight: 1.7 }}>{cardWing.exhibit.items.map((it, i) => <li key={i} style={{ opacity: 0.92 }}>{it}</li>)}</ul>}
-            {cardWing.exhibit.links?.length > 0 && (
+            {obj.items?.length > 0 && <ul style={{ margin: '0 0 14px', paddingLeft: 20, lineHeight: 1.7 }}>{obj.items.map((it, i) => <li key={i} style={{ opacity: 0.92 }}>{it}</li>)}</ul>}
+            {obj.links?.length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 6 }}>
-                {cardWing.exhibit.links.map(l => <a key={l.label} href={l.url} target="_blank" rel="noreferrer" style={{ padding: '9px 16px', background: 'rgba(227,194,102,0.1)', border: `1px solid ${GOLD}66`, borderRadius: 8, color: GOLD, textDecoration: 'none', font: `500 15px ${serif}` }}>{l.label}</a>)}
+                {obj.links.map(l => <a key={l.label} href={l.url} target="_blank" rel="noreferrer" style={{ padding: '9px 16px', background: 'rgba(227,194,102,0.1)', border: `1px solid ${GOLD}66`, borderRadius: 8, color: GOLD, textDecoration: 'none', font: `500 15px ${serif}` }}>{l.label}</a>)}
               </div>
             )}
-            <button style={{ marginTop: 18, padding: '8px 18px', background: 'rgba(227,194,102,0.08)', border: `1px solid ${GOLD}66`, borderRadius: 8, color: GOLD, font: `500 15px ${serif}`, cursor: 'pointer' }} onClick={() => museum.set({ card: null })}>Close</button>
+          </>
+        )
+        return (
+          <div style={dim} onClick={e => { if (e.target === e.currentTarget) museum.set({ card: null }) }}>
+            <div style={{ width: 'min(620px,92vw)', maxHeight: '84vh', overflowY: 'auto', background: INK, border: `1px solid ${GOLD}55`, borderRadius: 14, padding: '28px 32px', color: '#efe7d6', fontFamily: serif, boxShadow: '0 24px 70px rgba(0,0,0,0.6)' }}>
+              <div style={{ color: GOLD, font: `600 12px ${serif}`, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.8 }}>{cardWing.wing}</div>
+              <div style={{ font: `400 28px ${serif}`, margin: '4px 0 12px' }}>{piece != null ? pcs[piece].title : cardWing.title}</div>
+              {inList ? (
+                <>
+                  <div style={{ opacity: 0.9, lineHeight: 1.55, marginBottom: 16 }}>{ex.blurb}</div>
+                  {pcs.map((p, i) => (
+                    <button key={i} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '13px 16px', margin: '7px 0', background: hover === 'pc' + i ? 'rgba(227,194,102,0.16)' : 'rgba(227,194,102,0.05)', border: `1px solid ${GOLD}44`, borderRadius: 9, color: '#efe7d6', font: `500 16px ${serif}`, cursor: 'pointer' }} onMouseEnter={() => setHover('pc' + i)} onMouseLeave={() => setHover(null)} onClick={() => setPiece(i)}>{p.title} ›</button>
+                  ))}
+                </>
+              ) : (
+                <>
+                  {pcs && <button style={{ marginBottom: 12, padding: '6px 14px', background: 'transparent', border: `1px solid ${GOLD}55`, borderRadius: 8, color: GOLD, font: `500 14px ${serif}`, cursor: 'pointer' }} onClick={() => setPiece(null)}>‹ All of {cardWing.title}</button>}
+                  {detail(d)}
+                </>
+              )}
+              <button style={{ marginTop: 18, padding: '8px 18px', background: 'rgba(227,194,102,0.08)', border: `1px solid ${GOLD}66`, borderRadius: 8, color: GOLD, font: `500 15px ${serif}`, cursor: 'pointer' }} onClick={() => museum.set({ card: null })}>Close</button>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* bottom hints */}
       {!s.menu && !s.card && s.phase === 'explore' && (

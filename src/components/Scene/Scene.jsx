@@ -1066,6 +1066,8 @@ function Character() {
   const arrowRef = useRef()     // "Guide Me" floor arrow
   const keys = useRef({})
   const st = useRef({ yaw: Math.PI, yawT: Math.PI, pitch: 0.12, pitchT: 0.12, vel: new Vector3(), face: Math.PI, phase: 0, t: 0, dist: 6.2, dragging: false })
+  const arrowGeo = useMemo(() => new ConeGeometry(0.17, 0.52, 3), [])
+  const arrowMats = useMemo(() => Array.from({ length: 4 }, () => new MeshBasicMaterial({ color: '#ecc657', transparent: true, opacity: 0.25, depthWrite: false, toneMapped: false })), [])
   const mat = useMemo(() => ({
     skin: new MeshStandardMaterial({ color: '#c8996f', roughness: 0.72, metalness: 0 }),
     hair: new MeshStandardMaterial({ color: '#211008', roughness: 0.85, metalness: 0 }),   // dark brunette
@@ -1312,11 +1314,18 @@ function Character() {
     }
     if (mu.near !== near) museum.set({ near })
 
-    // "Guide Me" floor arrow: point toward the target; clear it on arrival
+    // "Guide Me" flashing arrow trail: point the trail toward the target, flash in a
+    // marquee toward it, and clear on arrival
     if (mu.guide && arrowRef.current) {
       const gx = mu.guide.pos[0] - ch.position.x, gz = mu.guide.pos[1] - ch.position.z
       if (Math.hypot(gx, gz) < 2.6) museum.set({ guide: null })
-      else { arrowRef.current.visible = true; arrowRef.current.rotation.y = Math.atan2(gx, gz) }
+      else {
+        arrowRef.current.visible = true
+        arrowRef.current.rotation.y = Math.atan2(gx, gz)
+        for (let i = 0; i < arrowMats.length; i++) {
+          arrowMats[i].opacity = 0.16 + 0.64 * (0.5 + 0.5 * Math.sin(s.t * 3.4 - i * 0.85))
+        }
+      }
     } else if (arrowRef.current && arrowRef.current.visible) {
       arrowRef.current.visible = false
     }
@@ -1325,12 +1334,11 @@ function Character() {
   // stylized figure (faces +Z): brunette curls, Y2K tee, denim skirt, knee-high boots
   return (
     <group ref={root} position={[0, 0, 34]}>{/* spawn just inside the entrance, facing into the gallery */}
-      {/* "Guide Me" gold floor arrow (steered toward the target in useFrame) */}
+      {/* "Guide Me" flashing gold floor-arrow trail (steered + animated in useFrame) */}
       <group ref={arrowRef} visible={false}>
-        <mesh position={[0, 0.05, 0.8]} rotation={[-Math.PI / 2, 0, 0]}>
-          <coneGeometry args={[0.16, 0.46, 3]} />
-          <meshStandardMaterial color="#e3c266" emissive="#5a4410" emissiveIntensity={0.6} roughness={0.45} metalness={0.7} />
-        </mesh>
+        {[0, 1, 2, 3].map(i => (
+          <mesh key={i} geometry={arrowGeo} material={arrowMats[i]} position={[0, 0.06, 0.95 + i * 0.85]} rotation={[-Math.PI / 2, 0, 0]} />
+        ))}
       </group>
       <group ref={modelRef} position={[0, 0.07, 0]}>{/* lift so the heeled boots rest on the floor (no clipping) */}
         {/* torso + head + hair + arms + skirt (bobs as one during the walk) */}
