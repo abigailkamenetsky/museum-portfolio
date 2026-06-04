@@ -1275,13 +1275,13 @@ function Character() {
       <group ref={modelRef} position={[0, 0.07, 0]}>{/* lift so the heeled boots rest on the floor (no clipping) */}
         {/* torso + head + hair + arms + skirt (bobs as one during the walk) */}
         <group ref={body}>
-          {/* low-rise SQUARE denim mini (box → square silhouette), fully wraps the hips */}
-          <mesh position={[0, 0.93, 0]} castShadow material={mat.denim}><boxGeometry args={[0.3, 0.22, 0.25]} /></mesh>
+          {/* natural A-line denim mini — smooth, gently flared, low-rise on the hips */}
+          <mesh position={[0, 0.92, 0]} castShadow material={mat.denim}><cylinderGeometry args={[0.125, 0.168, 0.3, 26, 1, true]} /></mesh>
           {/* front patch pockets */}
-          {[-1, 1].map(s => <mesh key={'pk' + s} position={[s * 0.07, 0.91, 0.128]} castShadow material={mat.denimDark}><boxGeometry args={[0.07, 0.08, 0.012]} /></mesh>)}
+          {[-1, 1].map(s => <mesh key={'pk' + s} position={[s * 0.06, 0.91, 0.132]} castShadow material={mat.denimDark}><boxGeometry args={[0.065, 0.078, 0.012]} /></mesh>)}
           {/* maroon belt + gold buckle at the low waistband */}
-          <mesh position={[0, 1.03, 0]} castShadow material={mat.belt}><boxGeometry args={[0.305, 0.045, 0.255]} /></mesh>
-          <mesh position={[0, 1.03, 0.135]} castShadow material={mat.gold}><boxGeometry args={[0.05, 0.04, 0.02]} /></mesh>
+          <mesh position={[0, 1.04, 0]} castShadow material={mat.belt}><cylinderGeometry args={[0.128, 0.132, 0.045, 26]} /></mesh>
+          <mesh position={[0, 1.04, 0.13]} castShadow material={mat.gold}><boxGeometry args={[0.05, 0.04, 0.02]} /></mesh>
           {/* hourglass tee: chest → THIN waist → smoothly flares to the hips  ) . (  */}
           <mesh position={[0, 1.40, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.1, 0.084, 0.1, 18]} /></mesh>
           <mesh position={[0, 1.30, 0]} castShadow material={mat.shirt}><cylinderGeometry args={[0.084, 0.066, 0.12, 18]} /></mesh>
