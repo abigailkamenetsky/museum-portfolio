@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { museum, useMuseum, openGuide, closeGuide } from '../../museum/store'
-import { WINGS, wingById } from '../../data/museum'
+import { WINGS, wingById, ABOUT } from '../../data/museum'
 
 const GOLD = '#e3c266'
 const INK = 'rgba(14,16,12,0.94)'
@@ -137,8 +137,13 @@ export default function Guide() {
         <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 25, pointerEvents: 'none', animation: 'fadeIn .8s ease' }}>
           <div style={{ textAlign: 'center', maxWidth: 440, padding: '26px 34px', background: 'rgba(8,10,8,0.62)', border: `1px solid ${GOLD}44`, borderRadius: 14, backdropFilter: 'blur(3px)' }}>
             <div style={{ color: GOLD, font: `500 12px ${serif}`, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.85 }}>Your Audio Guide</div>
-            <div style={{ transform: 'scale(0.62)', transformOrigin: 'top center', height: 280, marginTop: 4 }}>
-              <Device big><div style={{ color: GOLD, font: `600 13px ${serif}`, letterSpacing: 2, textAlign: 'center', opacity: 0.8, marginTop: 6 }}>MUSEUM GUIDE</div><div style={{ textAlign: 'center', font: `400 15px ${serif}`, marginTop: 10, opacity: 0.8 }}>Tap a wing to explore Abby's journey.</div></Device>
+            {/* small centered device icon */}
+            <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0' }}>
+              <div style={{ width: 84, background: 'linear-gradient(165deg,#7d1c2c,#4a0d15)', border: '2px solid #2c0a10', borderRadius: 16, padding: '8px 7px 10px', boxShadow: '0 14px 30px rgba(0,0,0,0.5)' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 3, marginBottom: 5 }}>{[0, 1, 2, 3].map(i => <div key={i} style={{ width: 3, height: 3, borderRadius: 3, background: '#2c0a10' }} />)}</div>
+                <div style={{ height: 70, background: '#0f120e', border: `1px solid ${GOLD}55`, borderRadius: 6, boxShadow: 'inset 0 0 8px rgba(0,0,0,0.7)' }} />
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 7 }}>{[0, 1, 2].map(i => <div key={i} style={{ width: 9, height: 9, borderRadius: 9, border: `1px solid ${GOLD}88` }} />)}</div>
+              </div>
             </div>
             <div style={{ color: '#e7ddca', font: `400 15px/1.55 ${serif}`, opacity: 0.92, marginTop: 2 }}>Walk up to any piece and press <b>E</b> to learn more — or use your handheld guide to jump to any wing.</div>
             <div style={{ color: GOLD, font: `500 15px ${serif}`, marginTop: 16 }}>Press <b>SPACE</b> to open the Audio Guide</div>
@@ -150,13 +155,20 @@ export default function Guide() {
       {s.menu && (
         <div style={dim} onClick={e => { if (e.target === e.currentTarget) closeGuide() }}>
           <Device>
-            {!cat ? (
+            {s.menu === 'home' ? (
               <>
                 <div style={{ color: GOLD, font: `600 12px ${serif}`, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.8 }}>Museum Guide</div>
                 <div style={{ font: `400 18px ${serif}`, margin: '2px 0 10px' }}>How would you like to explore?</div>
+                <button style={row(hover === 'about')} onMouseEnter={() => setHover('about')} onMouseLeave={() => setHover(null)} onClick={() => museum.set({ menu: 'about' })}>About Me</button>
                 {WINGS.map(w => (
                   <button key={w.id} style={row(hover === w.id)} onMouseEnter={() => setHover(w.id)} onMouseLeave={() => setHover(null)} onClick={() => museum.set({ menu: w.id })}>{w.title}</button>
                 ))}
+              </>
+            ) : s.menu === 'about' ? (
+              <>
+                <div style={{ color: GOLD, font: `600 12px ${serif}`, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.8 }}>About</div>
+                <div style={{ font: `400 20px ${serif}`, margin: '2px 0 10px' }}>{ABOUT.title}</div>
+                <div style={{ opacity: 0.9, font: `400 14px/1.6 ${serif}` }}>{ABOUT.bio}</div>
               </>
             ) : (
               <>

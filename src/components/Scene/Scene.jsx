@@ -1402,6 +1402,11 @@ function Character() {
           <group ref={armR} position={[0.17, 1.43, 0]}>
             <mesh position={[0, -0.05, 0]} castShadow material={mat.shirt}><sphereGeometry args={[0.07, 10, 8]} /></mesh>
             <mesh position={[0, -0.36, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.04, 0.6, 5, 10]} /></mesh>
+            {/* tiny burgundy audio guide held in the hand (swings with the arm) */}
+            <group position={[0.035, -0.6, 0.05]} rotation={[0.45, 0, 0]}>
+              <mesh castShadow material={mat.belt}><boxGeometry args={[0.052, 0.088, 0.016]} /></mesh>
+              <mesh position={[0, 0.008, 0.011]} material={mat.gold}><boxGeometry args={[0.034, 0.052, 0.004]} /></mesh>
+            </group>
           </group>
         </group>
         {/* pelvis fill between the thigh tops (skin, under the skirt) → no slit/see-through

@@ -87,3 +87,10 @@ export const WINGS = [
 ]
 
 export const wingById = id => WINGS.find(w => w.id === id)
+
+// "About Me" — top of the audio guide; an info card, not a physical wing (no teleport).
+export const ABOUT = {
+  id: 'about', title: 'About Me',
+  bio: 'Abby Kamenetsky — BA Economics + BS Computer Science at the University of Chicago (2025–2029). This museum is a walkable portrait of my work: the projects I have built, the experience I have gained, the research I have explored, and the things I love outside of it all. Wander freely, or use the audio guide to jump to any wing.',
+}
+
