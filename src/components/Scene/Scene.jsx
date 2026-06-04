@@ -69,7 +69,7 @@ function Env() {
         if (!active) return
         tex.mapping = EquirectangularReflectionMapping
         scene.environment = tex
-        if ('environmentIntensity' in scene) scene.environmentIntensity = 0.35
+        if ('environmentIntensity' in scene) scene.environmentIntensity = 0.12
         console.log('[hdri] ok', HDRI)
       },
       undefined,
@@ -152,7 +152,12 @@ function Room({ m }) {
       configure(side, 1, 1, srgb); side.repeat.set(perM, perM)
       assign(front, side)
     })
-    loadWall('BaseColor.jpg', true, (f, s) => { m.wall.map = f; m.wallSide.map = s; m.wall.needsUpdate = m.wallSide.needsUpdate = true })
+    loadWall('BaseColor.jpg', true, (f, s) => {
+      m.wall.map = f; m.wallSide.map = s
+      // warm-green tint so the wallpaper always reads green (never blue-grey when lit)
+      m.wall.color.set('#7e9248'); m.wallSide.color.set('#7e9248')
+      m.wall.needsUpdate = m.wallSide.needsUpdate = true
+    })
     loadWall('Normal.png', false, (f, s) => { m.wall.normalMap = f; m.wallSide.normalMap = s; m.wall.needsUpdate = m.wallSide.needsUpdate = true })
     loadWall('MetalRough.jpg', false, (f, s) => {
       m.wall.roughnessMap = f; m.wallSide.roughnessMap = s
