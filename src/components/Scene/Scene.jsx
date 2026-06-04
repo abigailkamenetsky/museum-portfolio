@@ -1231,7 +1231,7 @@ function Character() {
     s.t += d
     const walkAmt = MathUtils.clamp(spd / 1.6, 0, 1)          // 0 idle → 1 full stride
     s.phase += d * (4.2 + spd * 1.5)                          // cadence rises with speed
-    const A = 0.55 * walkAmt
+    const A = 0.46 * walkAmt   // leg/arm swing (eased so the legs don't part enough to slit the skirt)
     const ease = (ref, tgt) => { if (ref.current) ref.current.rotation.x += (tgt - ref.current.rotation.x) * Math.min(1, 12 * d) }
     ease(thighL, Math.sin(s.phase) * A)
     ease(thighR, Math.sin(s.phase + Math.PI) * A)
@@ -1276,7 +1276,7 @@ function Character() {
         {/* torso + head + hair + arms + skirt (bobs as one during the walk) */}
         <group ref={body}>
           {/* denim mini — ROUND + taller so it fully covers the hips (no skin showing) */}
-          <mesh position={[0, 0.93, 0]} castShadow material={mat.denim}><cylinderGeometry args={[0.142, 0.17, 0.32, 24, 1, true]} /></mesh>
+          <mesh position={[0, 0.91, 0]} castShadow material={mat.denim}><cylinderGeometry args={[0.142, 0.172, 0.36, 24, 1, true]} /></mesh>
           {/* two front patch pockets */}
           {[-1, 1].map(s => <mesh key={'pk' + s} position={[s * 0.06, 0.9, 0.14]} castShadow material={mat.denimDark}><boxGeometry args={[0.06, 0.075, 0.012]} /></mesh>)}
           {/* maroon belt + gold buckle at the waistband */}
@@ -1346,6 +1346,9 @@ function Character() {
             <mesh position={[0, -0.36, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.04, 0.6, 5, 10]} /></mesh>
           </group>
         </group>
+        {/* pelvis fill between the thigh tops (skin, under the skirt) → no slit/see-through
+            up the skirt when the legs swing apart while walking */}
+        <mesh position={[0, 0.9, 0]} scale={[1.15, 0.9, 1]} castShadow material={mat.skin}><sphereGeometry args={[0.11, 14, 12]} /></mesh>
         {/* legs: bare upper leg below the skirt → sock peek → knee-high boot */}
         <group ref={thighL} position={[-0.1, 0.94, 0]}>
           <mesh position={[0, -0.22, 0]} castShadow material={mat.skin}><capsuleGeometry args={[0.062, 0.34, 6, 12]} /></mesh>
