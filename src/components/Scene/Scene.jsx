@@ -16,7 +16,7 @@ import {
   PlaneGeometry, BufferAttribute, TextureLoader, RepeatWrapping, SRGBColorSpace,
   EquirectangularReflectionMapping, Object3D, TorusGeometry, CylinderGeometry,
   SphereGeometry, ConeGeometry, BoxGeometry, Matrix4, DoubleSide, Box3,
-  Vector3, Euler, MathUtils, ACESFilmicToneMapping, PCFSoftShadowMap, ClampToEdgeWrapping,
+  Vector3, Euler, MathUtils, ACESFilmicToneMapping, PCFSoftShadowMap, ClampToEdgeWrapping, CanvasTexture,
 } from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
@@ -1095,7 +1095,7 @@ function Character() {
         const theta = u * Math.PI * 2, phi = Math.acos(2 * v - 1)
         const x = Math.sin(phi) * Math.cos(theta), y = Math.cos(phi), z = Math.sin(phi) * Math.sin(theta)
         if (y < -0.35) continue                             // keep the cap on the cranium
-        if (z > 0.28 && y < 0.32) continue                  // open the face; hairline sits low on the forehead
+        if (z > 0.3 && y < 0.16) continue                   // open only the face; hairline sits low on the forehead
         geos.push(curlTorus(x * rr * 1.05, 1.65 + y * rr * 1.06 + 0.02, z * rr * 0.9 - 0.012, 0.028 + Math.random() * 0.016))
       }
     }
@@ -1112,10 +1112,11 @@ function Character() {
     for (let sec = 0; sec < SECTIONS; sec++) {
       const geos = []
       const center = (-1 + 2 * sec / (SECTIONS - 1)) * 2.0   // -2.0..2.0 rad (back→sides, face open)
-      const strandsN = 5
+      const strandsN = 7
       for (let q = 0; q < strandsN; q++) {
-        const ang = center + (q - (strandsN - 1) / 2) * 0.13
-        const ox = Math.sin(ang) * 0.15, oz = -Math.cos(ang) * 0.12 - 0.02
+        const ang = center + (q - (strandsN - 1) / 2) * 0.11
+        const back = Math.max(0, Math.cos(ang))           // 1 at the back, 0 at the sides
+        const ox = Math.sin(ang) * 0.15, oz = -Math.cos(ang) * 0.13 - 0.03 - back * 0.05   // puff the back out
         const segs = 7 + Math.floor(Math.random() * 3)   // ~3/4 torso length
         const coilR = 0.03 + Math.random() * 0.016
         const tilt = (Math.random() < 0.5 ? 1 : -1) * (0.35 + Math.random() * 0.35)
@@ -1133,6 +1134,15 @@ function Character() {
     return out
   }, [])
 
+  // tiny gold "COACH" label for the boots (canvas → texture)
+  const coachMat = useMemo(() => {
+    const c = document.createElement('canvas'); c.width = 256; c.height = 64
+    const ctx = c.getContext('2d'); ctx.clearRect(0, 0, 256, 64)
+    ctx.fillStyle = '#e8c34a'; ctx.font = 'bold 38px Georgia, "Times New Roman", serif'
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('COACH', 128, 34)
+    const t = new CanvasTexture(c); t.colorSpace = SRGBColorSpace; t.anisotropy = 8
+    return new MeshBasicMaterial({ map: t, transparent: true, alphaTest: 0.3, toneMapped: false })
+  }, [])
   // hair CARDS — curved alpha-mapped strips (real strand detail) layered over the curls
   const hairCardMat = useMemo(() => new MeshStandardMaterial({ color: '#241208', roughness: 0.78, metalness: 0, side: DoubleSide, alphaTest: 0.5 }), [])
   const cardGeo = useMemo(() => {
@@ -1299,9 +1309,10 @@ function Character() {
             return (
               <group key={'hs' + i} ref={el => (hairRefs.current[i] = el)} position={[0, 1.6, -0.05]}>
                 <mesh geometry={geo} castShadow material={mat.hair} />
-                {[-0.12, 0.12].map((o, j) => {
+                {[-0.14, 0, 0.14].map((o, j) => {
                   const a = ang + o
-                  return <mesh key={j} geometry={cardGeo} material={hairCardMat} position={[Math.sin(a) * 0.13, 0.05, -Math.cos(a) * 0.12 - 0.02]} rotation={[0.15, a + Math.PI, 0]} />
+                  const back = Math.max(0, Math.cos(a))
+                  return <mesh key={j} geometry={cardGeo} material={hairCardMat} position={[Math.sin(a) * 0.14, 0.05, -Math.cos(a) * 0.13 - 0.02 - back * 0.04]} rotation={[0.15, a + Math.PI, 0]} />
                 })}
               </group>
             )
@@ -1327,6 +1338,8 @@ function Character() {
             <mesh position={[0, -0.435, 0.055]} castShadow material={mat.boot}><boxGeometry args={[0.074, 0.07, 0.2]} /></mesh>
             <mesh position={[0, -0.45, 0.14]} castShadow material={mat.boot}><boxGeometry args={[0.06, 0.05, 0.06]} /></mesh>
             <mesh position={[0, -0.405, -0.06]} castShadow material={mat.boot}><boxGeometry args={[0.08, 0.13, 0.085]} /></mesh>
+            {/* gold COACH label on the outer side, just below the sock */}
+            <mesh material={coachMat} position={[-0.062, -0.125, 0.01]} rotation={[0, -Math.PI / 2, 0]}><planeGeometry args={[0.07, 0.018]} /></mesh>
           </group>
         </group>
         <group ref={thighR} position={[0.1, 0.94, 0]}>
@@ -1339,6 +1352,8 @@ function Character() {
             <mesh position={[0, -0.435, 0.055]} castShadow material={mat.boot}><boxGeometry args={[0.074, 0.07, 0.2]} /></mesh>
             <mesh position={[0, -0.45, 0.14]} castShadow material={mat.boot}><boxGeometry args={[0.06, 0.05, 0.06]} /></mesh>
             <mesh position={[0, -0.405, -0.06]} castShadow material={mat.boot}><boxGeometry args={[0.08, 0.13, 0.085]} /></mesh>
+            {/* gold COACH label on the outer side, just below the sock */}
+            <mesh material={coachMat} position={[0.062, -0.125, 0.01]} rotation={[0, Math.PI / 2, 0]}><planeGeometry args={[0.07, 0.018]} /></mesh>
           </group>
         </group>
       </group>
