@@ -130,11 +130,16 @@ export const WINGS = [
       blurb: 'Find me here. Let’s connect.',
       items: [], images: [], artwork: 'Pierre-Auguste Renoir - Dance at Le Moulin de la Galette',
       links: [
-        { label: 'LinkedIn', url: 'https://www.linkedin.com/' },
+        { label: 'LinkedIn', url: 'https://www.linkedin.com/in/abigail-kamenetsky' },
         { label: 'GitHub', url: 'https://github.com/abigailkamenetsky' },
-        { label: 'Portfolio', url: '#' },
-        { label: 'Resume', url: '#' },
-        { label: 'Email', url: 'mailto:abbykamenetsky@uchicago.edu' },
+        { label: 'Instagram', url: 'https://www.instagram.com/abigailkamenetsky/' },
+        { label: 'StoryGraph', url: 'https://app.thestorygraph.com/profile/abbykamenetsky' },
+        { label: 'Beli', url: 'https://beliapp.co/app/abbykamenetsky' },
+        { label: 'Resume', pdf: 'Abby_Kamenetsky_Resume.pdf' },
+        { label: 'Email', emails: [
+          { label: 'School (UChicago)', addr: 'abbykamenetsky@uchicago.edu' },
+          { label: 'Personal', addr: 'abigailk725@gmail.com' },
+        ] },
       ],
     },
   },
@@ -164,10 +169,12 @@ function cluster(n) {
     { dz: -2.95, dy: 3.1, w: 2.4, h: 3.0, cls: 0 }, { dz: 0, dy: 3.1, w: 2.4, h: 3.0, cls: 0 }, { dz: 2.95, dy: 3.1, w: 2.4, h: 3.0, cls: 0 },
     { dz: -2.95, dy: -0.7, w: 2.4, h: 3.0, cls: 0 }, { dz: 0, dy: -0.7, w: 2.4, h: 3.0, cls: 0 }, { dz: 2.95, dy: -0.7, w: 2.4, h: 3.0, cls: 0 },
   ]
-  // 7 - four across the top, three across the bottom
+  // 7 - a salon hang for the tall back-right gap: rows of 2 / 3 / 2, large and centered,
+  // lifted off the floor with even vertical separation so the rows read as deliberate
   return [
-    { dz: -3.6, dy: 3.1, w: 2.1, h: 2.6, cls: 0 }, { dz: -1.2, dy: 3.1, w: 2.1, h: 2.6, cls: 0 }, { dz: 1.2, dy: 3.1, w: 2.1, h: 2.6, cls: 0 }, { dz: 3.6, dy: 3.1, w: 2.1, h: 2.6, cls: 0 },
-    { dz: -2.4, dy: -0.7, w: 2.3, h: 2.9, cls: 0 }, { dz: 0, dy: -0.7, w: 2.3, h: 2.9, cls: 0 }, { dz: 2.4, dy: -0.7, w: 2.3, h: 2.9, cls: 0 },
+    { dz: -1.5, dy: 4.9, w: 2.5, h: 2.55, cls: 0 }, { dz: 1.5, dy: 4.9, w: 2.5, h: 2.55, cls: 0 },
+    { dz: -2.6, dy: 1.9, w: 2.4, h: 2.55, cls: 0 }, { dz: 0, dy: 1.9, w: 2.4, h: 2.55, cls: 0 }, { dz: 2.6, dy: 1.9, w: 2.4, h: 2.55, cls: 0 },
+    { dz: -1.5, dy: -1.0, w: 2.5, h: 2.55, cls: 0 }, { dz: 1.5, dy: -1.0, w: 2.5, h: 2.55, cls: 0 },
   ]
 }
 

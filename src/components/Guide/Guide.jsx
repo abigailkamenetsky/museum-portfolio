@@ -79,6 +79,7 @@ export default function Guide() {
   const s = useMuseum()
   const [hover, setHover] = useState(null)
   const [piece, setPiece] = useState(null)   // selected piece within an exhibit card
+  const [emailOpen, setEmailOpen] = useState(false)   // contact: reveal the two email options
   const [isMobile] = useState(() => typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches)
   const advance = () => {
     const m = museum.get()
@@ -124,6 +125,7 @@ export default function Guide() {
   const cat = s.menu && s.menu !== 'home' ? wingById(s.menu) : null
   const cardWing = s.card ? wingById(s.card) : null
   const dim = { position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 30, background: 'rgba(6,8,6,0.5)', backdropFilter: 'blur(3px)' }
+  const linkPill = { padding: '9px 16px', background: 'rgba(227,194,102,0.1)', border: `1px solid ${GOLD}66`, borderRadius: 8, color: GOLD, textDecoration: 'none', font: `500 15px ${serif}`, cursor: 'pointer' }
 
   return (
     <>
@@ -227,7 +229,18 @@ export default function Guide() {
             {obj.items?.length > 0 && <ul style={{ margin: '0 0 14px', paddingLeft: 20, lineHeight: 1.7 }}>{obj.items.map((it, i) => <li key={i} style={{ opacity: 0.92 }}>{it}</li>)}</ul>}
             {obj.links?.length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 6 }}>
-                {obj.links.map(l => <a key={l.label} href={l.url} target="_blank" rel="noreferrer" style={{ padding: '9px 16px', background: 'rgba(227,194,102,0.1)', border: `1px solid ${GOLD}66`, borderRadius: 8, color: GOLD, textDecoration: 'none', font: `500 15px ${serif}` }}>{l.label}</a>)}
+                {obj.links.map(l => {
+                  if (l.emails) return (
+                    <span key={l.label} style={{ display: 'contents' }}>
+                      <button onClick={() => setEmailOpen(o => !o)} style={linkPill}>{l.label}{emailOpen ? ' ▾' : ''}</button>
+                      {emailOpen && l.emails.map(em => (
+                        <a key={em.addr} href={`mailto:${em.addr}`} style={linkPill}>{em.label}</a>
+                      ))}
+                    </span>
+                  )
+                  const href = l.pdf ? ASSET + l.pdf : l.url
+                  return <a key={l.label} href={href} target="_blank" rel="noreferrer" style={linkPill}>{l.label}</a>
+                })}
               </div>
             )}
           </>
