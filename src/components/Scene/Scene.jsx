@@ -1049,7 +1049,7 @@ function Bench({ m }) {
  *    mouse look (both axes), camera-relative movement, smooth accel/decel, body
  *    turns to face travel direction. ── */
 const WALK_SPEED = 4.4, RUN_SPEED = 7.6, ACCEL = 11, DRAG_SENS = 0.006
-const AV_SCALE = 1.65, HEAD_Y = 2.62   // avatar ~half the door height (~5'5"); camera aims at the new head
+const AV_SCALE = 1.9, HEAD_Y = 2.95   // avatar ~half the door height; camera aims at the new head
 const _v1 = new Vector3(), _v2 = new Vector3(), _v3 = new Vector3(), _v4 = new Vector3()
 const _v5 = new Vector3(), _v6 = new Vector3(), _v7 = new Vector3(), _v8 = new Vector3()
 
