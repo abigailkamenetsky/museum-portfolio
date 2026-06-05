@@ -32,7 +32,7 @@ const WALL_T = 0.62                             // thick masonry wall → deep (
 const WIN_Z = [27, 13.5, 0, -13.5, -27]         // window centres down each long wall
 
 // tall arched window openings (the procedural Gothic window fills these fully)
-const WIN_OPEN_W = 3.2, WIN_OPEN_H = 8.4, WIN_CY = 5.4
+const WIN_OPEN_W = 3.2, WIN_OPEN_H = 7.4, WIN_CY = 5.0   // a touch shorter (less uncanny)
 const FEAT_W = 4.4, FEAT_H = 10.4, FEAT_CY = 6.4
 // BASE is '/' on root-domain hosts (Vercel/Netlify) and '/museum-portfolio/'
 // on GitHub Pages — so every asset URL resolves correctly on any host.
