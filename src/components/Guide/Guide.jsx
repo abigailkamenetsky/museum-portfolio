@@ -253,7 +253,7 @@ export default function Guide() {
                     <div style={{ flex: '1 1 260px', minWidth: 230 }}>{detail(d)}</div>
                     {artFile && (
                       <div style={{ flex: '0 0 320px', maxWidth: '100%', margin: '0 auto' }}>
-                        <img src={ASSET + 'art/' + artFile} alt="" style={{ width: '100%', display: 'block', borderRadius: 6, border: `2px solid ${GOLD}55`, boxShadow: '0 12px 34px rgba(0,0,0,0.55)' }} />
+                        <img src={ASSET + 'art/hi/' + artFile} onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = ASSET + 'art/' + artFile }} alt="" style={{ width: '100%', display: 'block', borderRadius: 6, border: `2px solid ${GOLD}55`, boxShadow: '0 12px 34px rgba(0,0,0,0.55)' }} />
                       </div>
                     )}
                   </div>

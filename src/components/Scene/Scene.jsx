@@ -1048,7 +1048,8 @@ function Bench({ m }) {
  *    (swinging arms/legs, bending knees, torso bob) + idle breathing. Pointer-lock
  *    mouse look (both axes), camera-relative movement, smooth accel/decel, body
  *    turns to face travel direction. ── */
-const WALK_SPEED = 4.4, RUN_SPEED = 7.6, ACCEL = 11, DRAG_SENS = 0.006, HEAD_Y = 1.7
+const WALK_SPEED = 4.4, RUN_SPEED = 7.6, ACCEL = 11, DRAG_SENS = 0.006
+const AV_SCALE = 1.65, HEAD_Y = 2.62   // avatar ~half the door height (~5'5"); camera aims at the new head
 const _v1 = new Vector3(), _v2 = new Vector3(), _v3 = new Vector3(), _v4 = new Vector3()
 const _v5 = new Vector3(), _v6 = new Vector3(), _v7 = new Vector3(), _v8 = new Vector3()
 
@@ -1351,7 +1352,7 @@ function Character() {
         <mesh material={arrowMat} position={[0.65, 0.06, 1.15]}><boxGeometry args={[0.11, 0.02, 0.62]} /></mesh>
         <mesh material={arrowMat} position={[0.65, 0.06, 1.72]} rotation={[Math.PI / 2, 0, 0]}><coneGeometry args={[0.21, 0.48, 4]} /></mesh>
       </group>
-      <group ref={modelRef} position={[0, 0.07, 0]}>{/* lift so the heeled boots rest on the floor (no clipping) */}
+      <group ref={modelRef} position={[0, 0.07 * AV_SCALE, 0]} scale={AV_SCALE}>{/* scaled up; lift keeps the heeled boots on the floor */}
         {/* torso + head + hair + arms + skirt (bobs as one during the walk) */}
         <group ref={body}>
           {/* natural A-line denim mini — smooth, gently flared, low-rise on the hips */}
