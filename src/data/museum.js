@@ -9,7 +9,7 @@ const HW = 8.88, PY = 3.6   // wall x-offset, painting hang height
 
 export const WINGS = [
   {
-    id: 'about', title: 'About Me', wing: 'About Me', pos: [L, 34], yaw: YAW_L, sub: null,
+    id: 'about', title: 'About Me', wing: 'About Me Wing', pos: [L, 34], yaw: YAW_L, sub: null,
     art: 'eldersister.jpg', artAspect: 1.35,
     exhibit: {
       blurb: 'Hi, I’m Abby - BA Economics + BS Computer Science at the University of Chicago (2025–2029). This museum is a walkable portrait of my journey and the people who made me.',
@@ -17,7 +17,7 @@ export const WINGS = [
     },
   },
   {
-    id: 'projects', title: 'Projects', wing: 'Projects Hall', pos: [R, 34], yaw: YAW_R, sub: null,
+    id: 'projects', title: 'Projects', wing: 'Projects Wing', pos: [R, 34], yaw: YAW_R, sub: null,
     exhibit: {
       blurb: 'Each painting here is one project. Tap any to learn more.', images: [], links: [],
       pieces: [
@@ -43,7 +43,7 @@ export const WINGS = [
     },
   },
   {
-    id: 'research', title: 'Research Experience', wing: 'Research Gallery', pos: [R, 20.25], yaw: YAW_R, sub: null,
+    id: 'research', title: 'Research Experience', wing: 'Research Experience Wing', pos: [R, 20.25], yaw: YAW_R, sub: null,
     exhibit: {
       blurb: 'Each painting here is one research project. Tap any to learn more.', images: [], links: [],
       pieces: [
@@ -54,7 +54,7 @@ export const WINGS = [
     },
   },
   {
-    id: 'uchicago', title: 'UChicago Programs & Clubs', wing: 'UChicago Programs Exhibit', pos: [L, 6.75], yaw: YAW_L, sub: null,
+    id: 'uchicago', title: 'UChicago Programs and Clubs', wing: 'UChicago Programs and Clubs Wing', pos: [L, 6.75], yaw: YAW_L, sub: null,
     exhibit: {
       blurb: 'Programs, cohorts, and clubs at the University of Chicago.', images: [], links: [],
       pieces: [
@@ -67,7 +67,7 @@ export const WINGS = [
     },
   },
   {
-    id: 'leadership', title: 'Leadership & Activities', wing: 'Leadership Gallery', pos: [R, 6.75], yaw: YAW_R, sub: null,
+    id: 'leadership', title: 'Leadership & Activities', wing: 'Leadership & Activities Wing', pos: [R, 6.75], yaw: YAW_R, sub: null,
     exhibit: {
       blurb: 'Roles where I led people and built things together.', images: [], links: [],
       pieces: [
@@ -79,7 +79,7 @@ export const WINGS = [
     },
   },
   {
-    id: 'awards', title: 'Honors & Awards', wing: 'Honors & Awards Gallery', pos: [L, -6.75], yaw: YAW_L, sub: null,
+    id: 'awards', title: 'Honors & Awards', wing: 'Honors & Awards Wing', pos: [L, -6.75], yaw: YAW_L, sub: null,
     exhibit: {
       blurb: 'Recognitions earned along the way - a small Vermeer gallery.', images: [], links: [],
       pieces: [
@@ -91,7 +91,7 @@ export const WINGS = [
     },
   },
   {
-    id: 'technical', title: 'Technical Skills', wing: 'Technical Skills Exhibit', pos: [R, -6.75], yaw: YAW_R, sub: null,
+    id: 'technical', title: 'Technical Skills', wing: 'Technical Skills Wing', pos: [R, -6.75], yaw: YAW_R, sub: null,
     art: 'vitruvian.jpg', artAspect: 1.36,
     exhibit: {
       blurb: 'Engineering, computer science, mathematics, AI, and technical foundations.',
@@ -100,7 +100,7 @@ export const WINGS = [
     },
   },
   {
-    id: 'soft', title: 'Soft Skills', wing: 'Soft Skills Gallery', pos: [L, -20.25], yaw: YAW_L, sub: null,
+    id: 'soft', title: 'Soft Skills', wing: 'Soft Skills Wing', pos: [L, -20.25], yaw: YAW_L, sub: null,
     art: 'boatingparty.jpg', artAspect: 0.74,
     exhibit: {
       blurb: 'How I work with people and ideas.',
@@ -109,7 +109,7 @@ export const WINGS = [
     },
   },
   {
-    id: 'hobbies', title: 'Hobbies & Interests', wing: 'Hobbies & Interests Gallery', pos: [R, -33.5], yaw: YAW_R, sub: null,
+    id: 'hobbies', title: 'Hobbies & Interests', wing: 'Hobbies & Interests Wing', pos: [R, -33.5], yaw: YAW_R, sub: null,
     exhibit: {
       blurb: 'Life outside the work - what I love.', images: [], links: [],
       pieces: [
@@ -124,7 +124,7 @@ export const WINGS = [
     },
   },
   {
-    id: 'contact', title: 'Socials & Contact', wing: 'Connect With Abigail', pos: [R, -20.25], yaw: YAW_R, sub: null,
+    id: 'contact', title: 'Socials & Contact', wing: 'Socials & Contact Wing', pos: [R, -20.25], yaw: YAW_R, sub: null,
     art: 'dancemoulin.jpg', artAspect: 0.743,
     exhibit: {
       blurb: 'Find me here. Let’s connect.',
@@ -154,8 +154,8 @@ function cluster(n) {
   if (n === 2) return [
     { dz: -2.05, dy: 0.4, w: 2.9, h: 3.7, cls: 0 }, { dz: 2.05, dy: 0.4, w: 2.9, h: 3.7, cls: 0 },
   ]
-  if (n === 3) return [
-    { dz: -2.85, dy: 0.4, w: 2.5, h: 3.4, cls: 0 }, { dz: 0, dy: 0.4, w: 2.5, h: 3.4, cls: 0 }, { dz: 2.85, dy: 0.4, w: 2.5, h: 3.4, cls: 0 },
+  if (n === 3) return [   // Research: three big canvases stacked in a single vertical column
+    { dz: 0, dy: 5.4, w: 4.4, h: 2.9, cls: 0 }, { dz: 0, dy: 1.9, w: 4.4, h: 2.9, cls: 0 }, { dz: 0, dy: -1.6, w: 4.4, h: 2.9, cls: 0 },
   ]
   if (n === 4) return [
     { dz: -2.1, dy: 3.1, w: 2.8, h: 3.2, cls: 0 }, { dz: 2.1, dy: 3.1, w: 2.8, h: 3.2, cls: 0 },
