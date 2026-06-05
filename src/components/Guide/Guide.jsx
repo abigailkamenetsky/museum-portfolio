@@ -217,7 +217,6 @@ export default function Guide() {
         const artFile = piece != null ? pcs[piece].art : (pcs ? null : cardWing.art)   // the painting itself
         const detail = obj => (
           <>
-            {obj.artwork && <div style={{ color: GOLD, opacity: 0.75, font: `italic 400 13px ${serif}`, marginBottom: 8 }}>{obj.artwork}</div>}
             {obj.blurb && <div style={{ opacity: 0.9, lineHeight: 1.55, marginBottom: 14 }}>{obj.blurb}</div>}
             {obj.images?.length > 0 ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 10, marginBottom: 16 }}>
@@ -254,6 +253,7 @@ export default function Guide() {
                     {artFile && (
                       <div style={{ flex: '0 0 320px', maxWidth: '100%', margin: '0 auto' }}>
                         <img src={ASSET + 'art/hi/' + artFile} onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = ASSET + 'art/' + artFile }} alt="" style={{ width: '100%', display: 'block', borderRadius: 6, border: `2px solid ${GOLD}55`, boxShadow: '0 12px 34px rgba(0,0,0,0.55)' }} />
+                        {d.artwork && <div style={{ marginTop: 9, textAlign: 'center', color: GOLD, opacity: 0.8, font: `italic 400 13px ${serif}`, lineHeight: 1.4 }}>{d.artwork}</div>}
                       </div>
                     )}
                   </div>
