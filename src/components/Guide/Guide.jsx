@@ -24,26 +24,26 @@ function guideMe(w) { closeGuide(); museum.set({ guide: { id: w.id, pos: w.pos, 
 function Device({ children, big }) {
   return (
     <div style={{
-      width: big ? 'min(540px,94vw)' : 'min(580px,94vw)', background: 'linear-gradient(165deg,#7d1c2c 0%,#5a1019 60%,#4a0d15 100%)',
-      borderRadius: 38, border: '3px solid #2c0a10', padding: '26px 24px 30px',
+      width: big ? 'min(500px,92vw)' : 'min(530px,92vw)', maxHeight: '96vh', background: 'linear-gradient(165deg,#7d1c2c 0%,#5a1019 60%,#4a0d15 100%)',
+      borderRadius: 34, border: '3px solid #2c0a10', padding: '18px 20px 20px',
       boxShadow: '0 30px 70px rgba(0,0,0,0.6), inset 0 2px 5px rgba(255,255,255,0.12), inset 0 -3px 8px rgba(0,0,0,0.4)',
-      fontFamily: serif,
+      fontFamily: serif, display: 'flex', flexDirection: 'column',
     }}>
       {/* speaker grille + brand */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 9 }}>
         {[0, 1, 2, 3, 4, 5].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: 6, background: '#2c0a10' }} />)}
       </div>
-      <div style={{ textAlign: 'center', color: '#e9c9b0', font: `600 16px ${serif}`, letterSpacing: 4, opacity: 0.7, marginBottom: 14 }}>MUSEUM · AUDIO GUIDE</div>
+      <div style={{ textAlign: 'center', color: '#e9c9b0', font: `600 15px ${serif}`, letterSpacing: 4, opacity: 0.7, marginBottom: 9 }}>MUSEUM · AUDIO GUIDE</div>
       {/* screen */}
       <div style={{
-        background: '#0f120e', border: `1px solid ${GOLD}55`, borderRadius: 16, padding: '22px 22px',
-        minHeight: 460, maxHeight: 'min(74vh, 660px)', overflowY: 'auto', color: '#efe7d6',
+        background: '#0f120e', border: `1px solid ${GOLD}55`, borderRadius: 16, padding: '18px 20px',
+        minHeight: 320, maxHeight: 'min(62vh, 540px)', overflowY: 'auto', color: '#efe7d6',
         boxShadow: 'inset 0 0 20px rgba(0,0,0,0.7)',
       }}>
         {children}
       </div>
       {/* hardware buttons */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 18, marginTop: 14 }}>
         <DeviceBtn label="‹" title="Back" onClick={() => { const m = museum.get().menu; museum.set({ menu: m && m !== 'home' ? 'home' : null }) }} />
         <DeviceBtn label="⌂" title="Home" onClick={() => museum.set({ menu: 'home' })} />
         <DeviceBtn label="✕" title="Close" onClick={closeGuide} />
@@ -55,24 +55,24 @@ function DeviceBtn({ label, title, onClick }) {
   const [h, setH] = useState(false)
   return (
     <button title={title} onClick={onClick} onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)} style={{
-      width: 64, height: 64, borderRadius: 64, cursor: 'pointer',
+      width: 54, height: 54, borderRadius: 54, cursor: 'pointer',
       background: h ? 'radial-gradient(#3a0c12,#240709)' : 'radial-gradient(#320b10,#1f0608)',
-      border: `2px solid ${GOLD}${h ? 'cc' : '77'}`, color: GOLD, font: `500 28px ${serif}`,
+      border: `2px solid ${GOLD}${h ? 'cc' : '77'}`, color: GOLD, font: `500 24px ${serif}`,
       boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.4)',
     }}>{label}</button>
   )
 }
 
 const row = (active) => ({
-  display: 'block', width: '100%', textAlign: 'left', padding: '14px 14px', margin: '5px 0',
+  display: 'block', width: '100%', textAlign: 'left', padding: '12px 13px', margin: '4px 0',
   background: active ? 'rgba(227,194,102,0.16)' : 'transparent', border: 'none',
-  borderBottom: `1px solid ${GOLD}22`, color: '#efe7d6', font: `500 24px ${serif}`,
+  borderBottom: `1px solid ${GOLD}22`, color: '#efe7d6', font: `500 22px ${serif}`,
   cursor: 'pointer', borderRadius: 8,
 })
 const pill = (active) => ({
-  display: 'block', width: '100%', textAlign: 'center', padding: '14px 14px', margin: '9px 0',
+  display: 'block', width: '100%', textAlign: 'center', padding: '12px 13px', margin: '7px 0',
   background: active ? 'rgba(227,194,102,0.2)' : 'rgba(227,194,102,0.06)', border: `1px solid ${GOLD}66`,
-  color: GOLD, font: `600 23px ${serif}`, cursor: 'pointer', borderRadius: 10,
+  color: GOLD, font: `600 21px ${serif}`, cursor: 'pointer', borderRadius: 10,
 })
 
 export default function Guide() {
@@ -192,18 +192,18 @@ export default function Guide() {
           <Device>
             {!cat ? (
               <>
-                <div style={{ color: GOLD, font: `600 19px ${serif}`, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.8 }}>Museum Guide</div>
-                <div style={{ font: `400 28px ${serif}`, margin: '4px 0 16px' }}>Tap on which section you want to go to to get a guide/teleport!</div>
+                <div style={{ color: GOLD, font: `600 18px ${serif}`, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.8 }}>Museum Guide</div>
+                <div style={{ font: `400 24px ${serif}`, margin: '4px 0 12px' }}>Tap on which section you want to go to to get a guide/teleport!</div>
                 {WINGS.map(w => (
                   <button key={w.id} style={row(hover === w.id)} onMouseEnter={() => setHover(w.id)} onMouseLeave={() => setHover(null)} onClick={() => museum.set({ menu: w.id })}>{w.title}</button>
                 ))}
               </>
             ) : (
               <>
-                <div style={{ color: GOLD, font: `600 18px ${serif}`, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.8 }}>{cat.wing}</div>
-                <div style={{ font: `400 32px ${serif}`, margin: '4px 0 18px' }}>{cat.title}</div>
-                {cat.sub && cat.sub.map(t => <div key={t} style={{ font: `400 21px ${serif}`, padding: '6px 0', borderBottom: `1px solid ${GOLD}22`, opacity: 0.85 }}>· {t}</div>)}
-                <div style={{ font: `400 22px ${serif}`, margin: '18px 0 6px', opacity: 0.85 }}>Visit this exhibit:</div>
+                <div style={{ color: GOLD, font: `600 17px ${serif}`, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.8 }}>{cat.wing}</div>
+                <div style={{ font: `400 28px ${serif}`, margin: '4px 0 14px' }}>{cat.title}</div>
+                {cat.sub && cat.sub.map(t => <div key={t} style={{ font: `400 19px ${serif}`, padding: '6px 0', borderBottom: `1px solid ${GOLD}22`, opacity: 0.85 }}>· {t}</div>)}
+                <div style={{ font: `400 20px ${serif}`, margin: '14px 0 6px', opacity: 0.85 }}>Visit this exhibit:</div>
                 <button style={pill(hover === 'gm')} onMouseEnter={() => setHover('gm')} onMouseLeave={() => setHover(null)} onClick={() => guideMe(cat)}>Guide Me</button>
                 <button style={pill(hover === 'tp')} onMouseEnter={() => setHover('tp')} onMouseLeave={() => setHover(null)} onClick={() => teleport(cat)}>Teleport</button>
               </>
