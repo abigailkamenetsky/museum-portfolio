@@ -22,7 +22,7 @@ export const WINGS = [
       blurb: 'Each painting here is one project. Tap any to learn more.', images: [], links: [],
       pieces: [
         { title: 'HelpMynd', artwork: 'Rembrandt - The Return of the Prodigal Son', art: 'prodigal.jpg', artAspect: 1.305, blurb: 'Mental-health platform. Role, stack, reach, and impact.', items: [], images: [], links: [] },
-        { title: 'Museum Portfolio', artwork: 'Henri Matisse - The Goldfish', art: 'goldfish.jpg', artAspect: 0.936, blurb: 'This very museum - an interactive 3D portfolio built in React + Three.js.', items: [], images: [], links: [] },
+        { title: 'Museum Portfolio', artwork: 'Carel Fabritius - The Goldfinch', art: 'goldfinch.jpg', artAspect: 1.527, blurb: 'This very museum - an interactive 3D portfolio built in React + Three.js.', items: [], images: [], links: [] },
         { title: 'Undisclosed Startup App', artwork: 'Salvador Dalí - The Elephants', art: 'elephants.jpg', artAspect: 0.835, blurb: 'Startup app (details to come).', items: [], images: [], links: [] },
         { title: 'Handshake AI Agent', artwork: 'René Magritte - Golconda', art: 'golconda.jpg', artAspect: 0.815, blurb: 'AI agent project.', items: [], images: [], links: [] },
         { title: 'Color Block Jam - Ad Blocker', artwork: 'Edvard Munch - The Scream', art: 'scream.jpg', artAspect: 1.264, blurb: 'Ad-blocking / game project. What it does and how it works.', items: [], images: [], links: [] },
