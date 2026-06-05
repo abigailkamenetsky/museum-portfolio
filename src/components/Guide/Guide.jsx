@@ -214,6 +214,7 @@ export default function Guide() {
         const ex = cardWing.exhibit, pcs = ex.pieces
         const inList = pcs && piece === null
         const d = pcs ? (piece != null ? pcs[piece] : null) : ex
+        const artFile = piece != null ? pcs[piece].art : (pcs ? null : cardWing.art)   // the painting itself
         const detail = obj => (
           <>
             {obj.artwork && <div style={{ color: GOLD, opacity: 0.75, font: `italic 400 13px ${serif}`, marginBottom: 8 }}>{obj.artwork}</div>}
@@ -235,7 +236,7 @@ export default function Guide() {
         )
         return (
           <div style={dim} onClick={e => { if (e.target === e.currentTarget) museum.set({ card: null }) }}>
-            <div style={{ width: 'min(620px,92vw)', maxHeight: '84vh', overflowY: 'auto', background: INK, border: `1px solid ${GOLD}55`, borderRadius: 14, padding: '28px 32px', color: '#efe7d6', fontFamily: serif, boxShadow: '0 24px 70px rgba(0,0,0,0.6)' }}>
+            <div style={{ width: inList ? 'min(600px,92vw)' : 'min(880px,94vw)', maxHeight: '86vh', overflowY: 'auto', background: INK, border: `1px solid ${GOLD}55`, borderRadius: 14, padding: '28px 32px', color: '#efe7d6', fontFamily: serif, boxShadow: '0 24px 70px rgba(0,0,0,0.6)' }}>
               <div style={{ color: GOLD, font: `600 12px ${serif}`, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.8 }}>{cardWing.wing}</div>
               <div style={{ font: `400 28px ${serif}`, margin: '4px 0 12px' }}>{piece != null ? pcs[piece].title : cardWing.title}</div>
               {inList ? (
@@ -248,7 +249,14 @@ export default function Guide() {
               ) : (
                 <>
                   {pcs && <button style={{ marginBottom: 12, padding: '6px 14px', background: 'transparent', border: `1px solid ${GOLD}55`, borderRadius: 8, color: GOLD, font: `500 14px ${serif}`, cursor: 'pointer' }} onClick={() => setPiece(null)}>‹ All of {cardWing.title}</button>}
-                  {detail(d)}
+                  <div style={{ display: 'flex', gap: 26, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                    <div style={{ flex: '1 1 260px', minWidth: 230 }}>{detail(d)}</div>
+                    {artFile && (
+                      <div style={{ flex: '0 0 320px', maxWidth: '100%', margin: '0 auto' }}>
+                        <img src={ASSET + 'art/' + artFile} alt="" style={{ width: '100%', display: 'block', borderRadius: 6, border: `2px solid ${GOLD}55`, boxShadow: '0 12px 34px rgba(0,0,0,0.55)' }} />
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
               <button style={{ marginTop: 18, padding: '8px 18px', background: 'rgba(227,194,102,0.08)', border: `1px solid ${GOLD}66`, borderRadius: 8, color: GOLD, font: `500 15px ${serif}`, cursor: 'pointer' }} onClick={() => museum.set({ card: null })}>Close</button>
