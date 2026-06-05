@@ -127,7 +127,7 @@ export default function Guide() {
 
   return (
     <>
-      {/* LOADING SCREEN — covers everything until assets are ready */}
+      {/* LOADING SCREEN - covers everything until assets are ready */}
       {!ready && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: '#0a0c08', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: serif }}>
           <div style={{ color: GOLD, font: `500 13px ${serif}`, letterSpacing: 5, textTransform: 'uppercase', opacity: 0.8 }}>The Museum of Abby</div>
@@ -151,7 +151,7 @@ export default function Guide() {
         </div>
       )}
 
-      {/* STEP 1 — welcome */}
+      {/* STEP 1 - welcome */}
       {s.phase === 'welcome' && (
         <div onClick={advance} style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 25, cursor: 'pointer', animation: 'fadeIn 1.2s ease' }}>
           <div style={{ textAlign: 'center', maxWidth: 460, padding: '30px 38px', background: 'rgba(8,10,8,0.62)', border: `1px solid ${GOLD}44`, borderRadius: 14, backdropFilter: 'blur(3px)' }}>
@@ -163,7 +163,7 @@ export default function Guide() {
         </div>
       )}
 
-      {/* STEP 2 — how it works (handheld audio guide) */}
+      {/* STEP 2 - how it works (handheld audio guide) */}
       {s.phase === 'howto' && (
         <div onClick={advance} style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 25, cursor: 'pointer', animation: 'fadeIn .8s ease' }}>
           <div style={{ textAlign: 'center', maxWidth: 440, padding: '26px 34px', background: 'rgba(8,10,8,0.62)', border: `1px solid ${GOLD}44`, borderRadius: 14, backdropFilter: 'blur(3px)' }}>
@@ -182,7 +182,7 @@ export default function Guide() {
         </div>
       )}
 
-      {/* THE DEVICE — guide menu */}
+      {/* THE DEVICE - guide menu */}
       {s.menu && (
         <div style={dim} onClick={e => { if (e.target === e.currentTarget) closeGuide() }}>
           <Device>
@@ -197,8 +197,7 @@ export default function Guide() {
             ) : (
               <>
                 <div style={{ color: GOLD, font: `600 11px ${serif}`, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.8 }}>{cat.wing}</div>
-                <div style={{ font: `400 20px ${serif}`, margin: '2px 0 8px' }}>{cat.title}</div>
-                <div style={{ opacity: 0.85, font: `400 14px/1.5 ${serif}`, marginBottom: cat.sub ? 8 : 12 }}>{cat.exhibit.blurb}</div>
+                <div style={{ font: `400 20px ${serif}`, margin: '2px 0 12px' }}>{cat.title}</div>
                 {cat.sub && cat.sub.map(t => <div key={t} style={{ font: `400 13px ${serif}`, padding: '4px 0', borderBottom: `1px solid ${GOLD}22`, opacity: 0.85 }}>· {t}</div>)}
                 <div style={{ font: `400 14px ${serif}`, margin: '12px 0 4px', opacity: 0.85 }}>Visit this exhibit:</div>
                 <button style={pill(hover === 'gm')} onMouseEnter={() => setHover('gm')} onMouseLeave={() => setHover(null)} onClick={() => guideMe(cat)}>Guide Me</button>
@@ -209,7 +208,7 @@ export default function Guide() {
         </div>
       )}
 
-      {/* exhibit card (E) — wings with `pieces` show a list → each piece opens its own detail */}
+      {/* exhibit card (E) - wings with `pieces` show a list → each piece opens its own detail */}
       {cardWing && (() => {
         const ex = cardWing.exhibit, pcs = ex.pieces
         const inList = pcs && piece === null
@@ -223,7 +222,7 @@ export default function Guide() {
                 {obj.images.map((src, i) => <img key={i} src={ASSET + src} alt="" style={{ width: '100%', height: 150, objectFit: 'cover', borderRadius: 8, border: `1px solid ${GOLD}44` }} />)}
               </div>
             ) : cardWing.id === 'about' && (
-              <div style={{ marginBottom: 16, padding: '22px', textAlign: 'center', border: `1px dashed ${GOLD}44`, borderRadius: 8, opacity: 0.6, font: `400 14px ${serif}` }}>Photos coming soon — add them to <code>public/assets/about/</code></div>
+              <div style={{ marginBottom: 16, padding: '22px', textAlign: 'center', border: `1px dashed ${GOLD}44`, borderRadius: 8, opacity: 0.6, font: `400 14px ${serif}` }}>Photos coming soon - add them to <code>public/assets/about/</code></div>
             )}
             {obj.items?.length > 0 && <ul style={{ margin: '0 0 14px', paddingLeft: 20, lineHeight: 1.7 }}>{obj.items.map((it, i) => <li key={i} style={{ opacity: 0.92 }}>{it}</li>)}</ul>}
             {obj.links?.length > 0 && (

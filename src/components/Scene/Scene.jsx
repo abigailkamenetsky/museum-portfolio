@@ -17,6 +17,7 @@ import {
   EquirectangularReflectionMapping, Object3D, TorusGeometry, CylinderGeometry,
   SphereGeometry, ConeGeometry, BoxGeometry, Matrix4, DoubleSide, Box3,
   Vector3, Euler, MathUtils, ACESFilmicToneMapping, PCFSoftShadowMap, ClampToEdgeWrapping, CanvasTexture,
+  LinearFilter, LinearMipmapLinearFilter,
 } from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
@@ -977,6 +978,7 @@ function MuseumWindow({ w, h, m }) {
  * the masonry opening with a plaster reveal and backlit so the stained glass glows. */
 function GothicFeature({ m }) {
   const { scene } = useGLTF(STAINED_URL)
+  const maxAniso = useThree(s => s.gl.capabilities.getMaxAnisotropy())
   const inst = useMemo(() => {
     const c = scene.clone(true)
     c.traverse(o => {
@@ -984,6 +986,17 @@ function GothicFeature({ m }) {
       o.castShadow = false; o.receiveShadow = false
       const mat = o.material
       if (!mat) return
+      // crisp up every texture on the window: max anisotropy + trilinear mipmaps kills
+      // the blocky/pixelated read at the glancing angles you view the far wall from
+      for (const k of ['map', 'emissiveMap', 'normalMap', 'roughnessMap', 'metalnessMap', 'alphaMap']) {
+        const tex = mat[k]
+        if (!tex) continue
+        tex.anisotropy = maxAniso
+        tex.magFilter = LinearFilter
+        tex.minFilter = LinearMipmapLinearFilter
+        tex.generateMipmaps = true
+        tex.needsUpdate = true
+      }
       // the painted-glass panes: make them glow like they're backlit by daylight
       if (mat.emissiveMap || /colou?r|glass|paint|stain/i.test(o.name) || /colou?r|glass|paint|stain/i.test(mat.name || '')) {
         if (mat.emissive) mat.emissiveIntensity = 2.4
@@ -1332,8 +1345,11 @@ function Character() {
     // "Guide Me" — point the front arrow toward the target, flash it, clear on arrival
     if (mu.guide && arrowRef.current) {
       const gx = mu.guide.pos[0] - ch.position.x, gz = mu.guide.pos[1] - ch.position.z
-      if (Math.hypot(gx, gz) < 2.6) museum.set({ guide: null })
-      else {
+      if (Math.hypot(gx, gz) < 3.2) {
+        const t = mu.guide.title                       // arrived → same "Now Entering ___" card as teleport
+        museum.set({ guide: null, titleCard: t })
+        setTimeout(() => { if (museum.get().titleCard === t) museum.set({ titleCard: null }) }, 2800)
+      } else {
         arrowRef.current.visible = true
         arrowRef.current.rotation.y = Math.atan2(gx, gz)
         arrowMat.opacity = 0.3 + 0.6 * (0.5 + 0.5 * Math.sin(s.t * 4.5))
