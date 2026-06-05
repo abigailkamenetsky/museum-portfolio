@@ -124,6 +124,14 @@ export const WINGS = [
     },
   },
   {
+    id: 'licenses', title: 'Licenses and Certifications', wing: 'Licenses and Certifications Wing', pos: [L, -33.5], yaw: YAW_L, sub: null,
+    art: null, artAspect: 1.25, placeholder: true,
+    exhibit: {
+      blurb: 'Certifications coming this summer!',
+      items: [], images: [], links: [], artwork: '',
+    },
+  },
+  {
     id: 'contact', title: 'Socials & Contact', wing: 'Socials & Contact Wing', pos: [R, -20.25], yaw: YAW_R, sub: null,
     art: 'dancemoulin.jpg', artAspect: 0.743,
     exhibit: {
@@ -137,8 +145,8 @@ export const WINGS = [
         { label: 'Beli', url: 'https://beliapp.co/app/abbykamenetsky' },
         { label: 'Resume', pdf: 'Abby_Kamenetsky_Resume.pdf' },
         { label: 'Email', emails: [
-          { label: 'School (UChicago)', addr: 'abbykamenetsky@uchicago.edu' },
-          { label: 'Personal', addr: 'abigailk725@gmail.com' },
+          { label: 'School', addr: 'abbykamenetsky@uchicago.edu' },
+          { label: 'Home', addr: 'abigailk725@gmail.com' },
         ] },
       ],
     },
@@ -191,6 +199,7 @@ export const PAINTINGS = (() => {
       pos: [wallX, PY + p.dy, w.pos[1] + p.dz], ry, w: p.w, h: p.h, cls: p.cls,
       art: pcs ? (pcs[j].art || null) : (w.art || null),
       artAspect: pcs ? (pcs[j].artAspect || 1) : (w.artAspect || 1),
+      placeholder: pcs ? false : (w.placeholder || false),
     }))
   }
   return out

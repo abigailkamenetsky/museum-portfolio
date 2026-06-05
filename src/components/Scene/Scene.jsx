@@ -688,6 +688,7 @@ function Painting({ position, rotation = [0, 0, 0], maxW, maxH, art, cls = 1, wi
 
   const artMat = useMemo(() => new MeshStandardMaterial({ color: '#15100a', roughness: 0.85 }), [])
   useEffect(() => {
+    if (!art.file) { artMat.color.set('#d9cba8'); artMat.map = null; artMat.needsUpdate = true; return }   // intentional placeholder → blank parchment canvas
     new TextureLoader().load(ART_BASE + art.file,
       t => { t.colorSpace = SRGBColorSpace; t.anisotropy = 8; artMat.map = t; artMat.color.set('#ffffff'); artMat.needsUpdate = true },
       undefined, () => console.warn('[art] FAILED (kept dark):', art.file))
@@ -1514,7 +1515,7 @@ function Gallery() {
   // multi-piece wings = an organic salon COLLAGE, each painting → one piece.
   const items = useMemo(() => PAINTINGS.map((p, i) => ({
     key: p.wingId + i, pos: p.pos, rot: [0, p.ry, 0], mw: p.w, mh: p.h,
-    art: p.art ? { file: p.art, aspect: p.artAspect } : pick(i), cls: p.cls, wingId: p.wingId, piece: p.piece,
+    art: p.placeholder ? { file: null, aspect: p.artAspect || 1.25 } : (p.art ? { file: p.art, aspect: p.artAspect } : pick(i)), cls: p.cls, wingId: p.wingId, piece: p.piece,
   })), [])
 
   return (

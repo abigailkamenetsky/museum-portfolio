@@ -80,6 +80,7 @@ export default function Guide() {
   const [hover, setHover] = useState(null)
   const [piece, setPiece] = useState(null)   // selected piece within an exhibit card
   const [emailOpen, setEmailOpen] = useState(false)   // contact: reveal the two email options
+  const [copied, setCopied] = useState(null)          // which email address was just copied
   const [isMobile] = useState(() => typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches)
   const advance = () => {
     const m = museum.get()
@@ -89,6 +90,7 @@ export default function Guide() {
   useEffect(() => {
     const cp = museum.get().cardPiece
     setPiece(cp ?? null)
+    setEmailOpen(false); setCopied(null)
     if (cp != null) museum.set({ cardPiece: null })
   }, [s.card])
 
@@ -231,12 +233,22 @@ export default function Guide() {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 6 }}>
                 {obj.links.map(l => {
                   if (l.emails) return (
-                    <span key={l.label} style={{ display: 'contents' }}>
-                      <button onClick={() => setEmailOpen(o => !o)} style={linkPill}>{l.label}{emailOpen ? ' ▾' : ''}</button>
-                      {emailOpen && l.emails.map(em => (
-                        <a key={em.addr} href={`mailto:${em.addr}`} style={linkPill}>{em.label}</a>
-                      ))}
-                    </span>
+                    <div key={l.label} style={{ position: 'relative' }}>
+                      <button onClick={() => setEmailOpen(o => !o)} style={linkPill}>{l.label} {emailOpen ? '▴' : '▾'}</button>
+                      {emailOpen && (
+                        <div style={{ position: 'absolute', bottom: 'calc(100% + 8px)', left: 0, zIndex: 6, minWidth: 250, background: INK, border: `1px solid ${GOLD}77`, borderRadius: 11, padding: 8, boxShadow: '0 16px 36px rgba(0,0,0,0.6)' }}>
+                          {l.emails.map(em => (
+                            <div key={em.addr} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '8px 8px' }}>
+                              <div style={{ textAlign: 'left', minWidth: 0 }}>
+                                <div style={{ color: GOLD, font: `600 10px ${serif}`, letterSpacing: 1.5, textTransform: 'uppercase', opacity: 0.85 }}>{em.label}</div>
+                                <div style={{ color: '#efe7d6', font: `400 13px ${serif}`, whiteSpace: 'nowrap' }}>{em.addr}</div>
+                              </div>
+                              <button onClick={() => { navigator.clipboard?.writeText(em.addr); setCopied(em.addr); setTimeout(() => setCopied(c => (c === em.addr ? null : c)), 1600) }} style={{ ...linkPill, padding: '5px 12px', font: `600 12px ${serif}`, whiteSpace: 'nowrap', background: copied === em.addr ? 'rgba(227,194,102,0.28)' : 'rgba(227,194,102,0.1)' }}>{copied === em.addr ? 'Copied!' : 'Copy'}</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   )
                   const href = l.pdf ? ASSET + l.pdf : l.url
                   return <a key={l.label} href={href} target="_blank" rel="noreferrer" style={linkPill}>{l.label}</a>
