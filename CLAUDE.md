@@ -20,8 +20,8 @@ An interactive, art-museum-style resume portfolio built as a side-scrolling web 
 - **Animation:** Framer Motion
 - **Audio:** Howler.js
 - **Styling:** CSS Modules
-- **Deployment:** Vercel (auto-deploy on push to main, free tier)
-- **Domain:** Vercel auto-URL for now, custom domain deferred
+- **Deployment:** GitHub Pages via GitHub Actions (`.github/workflows/deploy.yml`, auto-deploy on push to main). The workflow flips the Vite base to `/` when `public/CNAME` exists, else `/museum-portfolio/`.
+- **Domain:** LIVE at https://abbykamenetsky.com (bare apex is primary; `www` and the old `abigailkamenetsky.github.io/museum-portfolio/` URL 301-redirect to it). Cloudflare DNS (grey-cloud CNAMEs → `abigailkamenetsky.github.io`) → GitHub Pages, Let's Encrypt cert, Enforce HTTPS on. `public/CNAME` pins the domain on every deploy. Switch playbook in `DOMAIN.md`.
 - **Node version:** 22 LTS
 
 ## Repository
@@ -78,7 +78,7 @@ Each milestone must reach its definition of done before the next one starts. No 
 
 | # | Name | Status |
 |---|------|--------|
-| 0 | Environment: Node, Git, Vite, GitHub, Vercel live URL | Complete |
+| 0 | Environment: Node, Git, Vite, GitHub, GitHub Pages live URL | Complete |
 | 1 | Static Room: HTML/CSS museum room, no JS logic | Complete |
 | 2 | Character Movement: keyboard-driven, wall collision | Pending |
 | 3 | One Real Painting: Wikimedia image, frame, proximity glow, placard | Pending |
@@ -88,7 +88,7 @@ Each milestone must reach its definition of done before the next one starts. No 
 | 7 | Entrance Screen: title screen, cinematic dissolve into gallery | Pending |
 | 8 | Polish Pass: parallax, footsteps, shadows, minimap, mobile fallback | Pending |
 | 9 | Performance & Reliability: lazy-load, Lighthouse 90+, cross-browser | Pending |
-| 10 | Launch: custom domain, Vercel connected, LinkedIn/resume updated | Pending |
+| 10 | Launch: custom domain (abbykamenetsky.com live via GitHub Pages), LinkedIn/resume updated | In progress (domain done; LinkedIn/resume pending) |
 
 ## Content Map (Resume Sections)
 Room names are TBD — user will supply them. 4 rooms, 2 paintings each = 8 total slots.
