@@ -5,11 +5,11 @@
 
 const L = -6, R = 6
 const YAW_L = -Math.PI / 2, YAW_R = Math.PI / 2
-const HW = 8.88, PY = 3.6, BACKZ = -38.25   // wall x-offset, painting height, back wall
+const HW = 8.88, PY = 3.6, FRONTZ = 38.28   // wall x-offset, painting height, front wall interior face (D/2 - WALL_T)
 
 export const WINGS = [
   {
-    id: 'about', title: 'About Me', wing: 'About Abby', pos: [L, 34], yaw: YAW_L, sub: null,
+    id: 'about', title: 'About Me', wing: 'About Me', pos: [L, 34], yaw: YAW_L, sub: null,
     art: 'eldersister.jpg', artAspect: 1.35,
     exhibit: {
       blurb: 'Hi, I’m Abby — BA Economics + BS Computer Science at the University of Chicago (2025–2029). This museum is a walkable portrait of my journey and the people who made me.',
@@ -109,7 +109,7 @@ export const WINGS = [
     },
   },
   {
-    id: 'hobbies', title: 'Hobbies & Interests', wing: 'Hobbies & Interests Gallery', pos: [R, -20.25], yaw: YAW_R, sub: null,
+    id: 'hobbies', title: 'Hobbies & Interests', wing: 'Hobbies & Interests Gallery', pos: [R, -33], yaw: YAW_R, sub: null,
     exhibit: {
       blurb: 'Life outside the work — what I love.', images: [], links: [],
       pieces: [
@@ -124,7 +124,7 @@ export const WINGS = [
     },
   },
   {
-    id: 'contact', title: 'Socials & Contact', wing: 'Connect With Abigail', pos: [4.8, -35.5], yaw: Math.PI, sub: null,
+    id: 'contact', title: 'Socials & Contact', wing: 'Connect With Abigail', pos: [4.8, 32], yaw: 0, sub: null,
     art: 'dancemoulin.jpg', artAspect: 0.743,
     exhibit: {
       blurb: 'The conclusion of the museum — let’s connect.',
@@ -174,8 +174,8 @@ function cluster(n) {
 export const PAINTINGS = (() => {
   const out = []
   for (const w of WINGS) {
-    if (w.id === 'contact') {   // single painting on the back wall, beside the stained glass
-      out.push({ wingId: 'contact', piece: null, title: w.title, pos: [w.pos[0], PY, BACKZ], ry: 0, w: 2.4, h: 3.3, cls: 1, art: w.art || null, artAspect: w.artAspect || 1 })
+    if (w.id === 'contact') {   // single painting on the front wall, to the right of the door (faces into the gallery)
+      out.push({ wingId: 'contact', piece: null, title: w.title, pos: [w.pos[0], PY, FRONTZ], ry: Math.PI, w: 2.4, h: 3.3, cls: 1, art: w.art || null, artAspect: w.artAspect || 1 })
       continue
     }
     const side = w.pos[0] < 0 ? -1 : 1

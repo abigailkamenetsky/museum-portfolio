@@ -189,7 +189,7 @@ export default function Guide() {
             {!cat ? (
               <>
                 <div style={{ color: GOLD, font: `600 12px ${serif}`, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.8 }}>Museum Guide</div>
-                <div style={{ font: `400 18px ${serif}`, margin: '2px 0 10px' }}>How would you like to explore?</div>
+                <div style={{ font: `400 18px ${serif}`, margin: '2px 0 10px' }}>Tap on which section you want to go to to get a guide/teleport!</div>
                 {WINGS.map(w => (
                   <button key={w.id} style={row(hover === w.id)} onMouseEnter={() => setHover(w.id)} onMouseLeave={() => setHover(null)} onClick={() => museum.set({ menu: w.id })}>{w.title}</button>
                 ))}
