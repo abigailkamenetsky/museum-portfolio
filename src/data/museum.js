@@ -23,10 +23,10 @@ export const WINGS = [
       pieces: [
         { title: 'HelpMynd', artwork: 'Rembrandt - The Return of the Prodigal Son', art: 'prodigal.jpg', artAspect: 1.305, blurb: 'Mental-health platform. Role, stack, reach, and impact.', items: [], images: [], links: [] },
         { title: 'Museum Portfolio', artwork: 'Henri Matisse - The Goldfish', art: 'goldfish.jpg', artAspect: 0.894, blurb: 'This very museum - an interactive 3D portfolio built in React + Three.js.', items: [], images: [], links: [] },
-        { title: 'Undisclosed Startup App', artwork: 'Salvador Dalí - The Elephants', art: null, artAspect: 1.5, blurb: 'Startup app (details to come). [Dalí is under copyright - add image manually.]', items: [], images: [], links: [] },
-        { title: 'Handshake AI Agent', artwork: 'René Magritte - Golconda', art: null, artAspect: 0.67, blurb: 'AI agent project. [Magritte is under copyright - add image manually.]', items: [], images: [], links: [] },
+        { title: 'Undisclosed Startup App', artwork: 'Salvador Dalí - The Elephants', art: 'elephants.jpg', artAspect: 0.835, blurb: 'Startup app (details to come).', items: [], images: [], links: [] },
+        { title: 'Handshake AI Agent', artwork: 'René Magritte - Golconda', art: 'golconda.jpg', artAspect: 0.815, blurb: 'AI agent project.', items: [], images: [], links: [] },
         { title: 'Color Block Jam - Ad Blocker', artwork: 'Edvard Munch - The Scream', art: 'scream.jpg', artAspect: 1.264, blurb: 'Ad-blocking / game project. What it does and how it works.', items: [], images: [], links: [] },
-        { title: 'Transportation App (Lyft/Via style)', artwork: 'J.M.W. Turner - Rain, Steam and Speed', art: 'rainsteamspeed.jpg', artAspect: 0.832, blurb: 'Rideshare-style transportation app. Same project as the UChicago parking showcase.', items: [], images: [], links: [] },
+        { title: 'Transportation App (Lyft/Via style)', artwork: 'J.M.W. Turner - Rain, Steam and Speed', art: 'rainsteamspeed.jpg', artAspect: 0.743, blurb: 'Rideshare-style transportation app. Same project as the UChicago parking showcase.', items: [], images: [], links: [] },
       ],
     },
   },
@@ -47,8 +47,8 @@ export const WINGS = [
     exhibit: {
       blurb: 'Each painting here is one research project. Tap any to learn more.', images: [], links: [],
       pieces: [
-        { title: 'CMU - Rectangle Packing (NP-hard)', artwork: 'M.C. Escher - Relativity', art: null, artAspect: 0.64, blurb: 'Algorithms research, international presentation. [Escher is under copyright - add image manually.]', items: [], images: [], links: [] },
-        { title: 'UCSB - LLM Hallucinations', artwork: 'Salvador Dalí - The Temptation of Saint Anthony', art: null, artAspect: 0.72, blurb: 'Research on LLM hallucinations. [Dalí is under copyright - add image manually.]', items: [], images: [], links: [] },
+        { title: 'CMU - Rectangle Packing (NP-hard)', artwork: 'M.C. Escher - Relativity', art: 'relativity.jpg', artAspect: 0.958, blurb: 'Algorithms research, international presentation.', items: [], images: [], links: [] },
+        { title: 'UCSB - LLM Hallucinations', artwork: 'Salvador Dalí - The Temptation of Saint Anthony', art: 'stanthony.jpg', artAspect: 0.783, blurb: 'Research on LLM hallucinations.', items: [], images: [], links: [] },
         { title: 'Booth - Center for Applied AI', artwork: 'Joseph Wright of Derby - An Experiment on a Bird in the Air Pump', art: 'airpump.jpg', artAspect: 0.749, blurb: 'Applied AI research at Chicago Booth. Topic, methods, findings.', items: [], images: [], links: [] },
       ],
     },
