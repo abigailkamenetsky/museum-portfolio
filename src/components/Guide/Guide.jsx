@@ -218,9 +218,15 @@ export default function Guide() {
         const inList = pcs && piece === null
         const d = pcs ? (piece != null ? pcs[piece] : null) : ex
         const artFile = piece != null ? pcs[piece].art : (pcs ? null : cardWing.art)   // the painting itself
+        const Blocks = ({ data }) => {
+          const blocks = Array.isArray(data) ? data : (data ? [data] : [])
+          return blocks.map((blk, i) => Array.isArray(blk)
+            ? <ul key={i} style={{ margin: '0 0 16px', paddingLeft: 28, lineHeight: 1.6 }}>{blk.map((it, j) => <li key={j} style={{ opacity: 0.92, marginBottom: 5 }}>{it}</li>)}</ul>
+            : <p key={i} style={{ opacity: 0.9, lineHeight: 1.6, margin: '0 0 16px' }}>{blk}</p>)
+        }
         const detail = obj => (
           <>
-            {obj.blurb && <div style={{ opacity: 0.9, lineHeight: 1.55, marginBottom: 20 }}>{obj.blurb}</div>}
+            <Blocks data={obj.blurb} />
             {obj.images?.length > 0 ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 14, marginBottom: 22 }}>
                 {obj.images.map((src, i) => <img key={i} src={ASSET + src} alt="" style={{ width: '100%', height: 220, objectFit: 'cover', borderRadius: 8, border: `1px solid ${GOLD}44` }} />)}
@@ -229,6 +235,12 @@ export default function Guide() {
               <div style={{ marginBottom: 22, padding: '32px', textAlign: 'center', border: `1px dashed ${GOLD}44`, borderRadius: 8, opacity: 0.6, font: `400 22px ${serif}` }}>Photos coming soon - add them to <code>public/assets/about/</code></div>
             )}
             {obj.items?.length > 0 && <ul style={{ margin: '0 0 20px', paddingLeft: 28, lineHeight: 1.7 }}>{obj.items.map((it, i) => <li key={i} style={{ opacity: 0.92 }}>{it}</li>)}</ul>}
+            {obj.why && (
+              <div style={{ marginTop: 10, marginBottom: 8, padding: '18px 22px 6px', background: 'rgba(227,194,102,0.06)', borderLeft: `3px solid ${GOLD}99`, borderRadius: 8 }}>
+                <div style={{ color: GOLD, font: `600 16px ${serif}`, letterSpacing: 1.5, textTransform: 'uppercase', opacity: 0.85, marginBottom: 10 }}>Why this painting?</div>
+                <Blocks data={obj.why} />
+              </div>
+            )}
             {obj.links?.length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 8 }}>
                 {obj.links.map(l => {
