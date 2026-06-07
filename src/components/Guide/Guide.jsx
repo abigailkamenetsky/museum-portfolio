@@ -24,7 +24,7 @@ function guideMe(w) { closeGuide(); museum.set({ guide: { id: w.id, pos: w.pos, 
 function Device({ children, big }) {
   return (
     <div style={{
-      width: big ? 'min(500px,92vw)' : 'min(530px,92vw)', maxHeight: '96vh', background: 'linear-gradient(165deg,#7d1c2c 0%,#5a1019 60%,#4a0d15 100%)',
+      width: big ? 'min(740px,94vw)' : 'min(500px,92vw)', maxHeight: '96vh', background: 'linear-gradient(165deg,#7d1c2c 0%,#5a1019 60%,#4a0d15 100%)',
       borderRadius: 34, border: '3px solid #2c0a10', padding: '18px 20px 20px',
       boxShadow: '0 30px 70px rgba(0,0,0,0.6), inset 0 2px 5px rgba(255,255,255,0.12), inset 0 -3px 8px rgba(0,0,0,0.4)',
       fontFamily: serif, display: 'flex', flexDirection: 'column',
@@ -64,10 +64,10 @@ function DeviceBtn({ label, title, onClick }) {
 }
 
 const row = (active) => ({
-  display: 'block', width: '100%', textAlign: 'left', padding: '12px 13px', margin: '4px 0',
+  display: 'block', width: '100%', textAlign: 'left', padding: '10px 12px', margin: '3px 0',
   background: active ? 'rgba(227,194,102,0.16)' : 'transparent', border: 'none',
-  borderBottom: `1px solid ${GOLD}22`, color: '#efe7d6', font: `500 22px ${serif}`,
-  cursor: 'pointer', borderRadius: 8,
+  borderBottom: `1px solid ${GOLD}22`, color: '#efe7d6', font: `500 19px ${serif}`,
+  cursor: 'pointer', borderRadius: 8, lineHeight: 1.25,
 })
 const pill = (active) => ({
   display: 'block', width: '100%', textAlign: 'center', padding: '12px 13px', margin: '7px 0',
@@ -189,14 +189,16 @@ export default function Guide() {
       {/* THE DEVICE - guide menu */}
       {s.menu && (
         <div style={dim} onClick={e => { if (e.target === e.currentTarget) closeGuide() }}>
-          <Device>
+          <Device big={!cat}>
             {!cat ? (
               <>
                 <div style={{ color: GOLD, font: `600 18px ${serif}`, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.8 }}>Museum Guide</div>
                 <div style={{ font: `400 22px ${serif}`, margin: '4px 0 14px' }}>Pick a section to visit:</div>
-                {WINGS.map(w => (
-                  <button key={w.id} style={row(hover === w.id)} onMouseEnter={() => setHover(w.id)} onMouseLeave={() => setHover(null)} onClick={() => museum.set({ menu: w.id })}>{w.title}</button>
-                ))}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 18 }}>
+                  {WINGS.map(w => (
+                    <button key={w.id} style={row(hover === w.id)} onMouseEnter={() => setHover(w.id)} onMouseLeave={() => setHover(null)} onClick={() => museum.set({ menu: w.id })}>{w.title}</button>
+                  ))}
+                </div>
               </>
             ) : (
               <>
