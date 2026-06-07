@@ -233,6 +233,14 @@ export default function Guide() {
               </div>
             )}
             {obj.items?.length > 0 && <ul style={{ margin: '0 0 20px', paddingLeft: 28, lineHeight: 1.7 }}>{obj.items.map((it, i) => <li key={i} style={{ opacity: 0.92 }}>{it}</li>)}</ul>}
+            {obj.skills?.length > 0 && (
+              <div style={{ marginTop: 4, marginBottom: 18 }}>
+                <div style={{ color: GOLD, font: `600 14px ${serif}`, letterSpacing: 1.5, textTransform: 'uppercase', opacity: 0.85, marginBottom: 10 }}>Skills I gained</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {obj.skills.map((sk, i) => <span key={i} style={{ padding: '6px 13px', background: 'rgba(227,194,102,0.08)', border: `1px solid ${GOLD}55`, borderRadius: 20, font: `500 16px ${serif}`, opacity: 0.95 }}>{sk}</span>)}
+                </div>
+              </div>
+            )}
             {obj.links?.length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 8 }}>
                 {obj.links.map(l => {
@@ -294,6 +302,20 @@ export default function Guide() {
                   </div>
                 </>
               )}
+              {cardWing.id === 'about' && (() => {
+                const photos = cardWing.exhibit.photos || []
+                const slots = photos.length ? photos : [null, null, null]
+                return (
+                  <div style={{ marginTop: 28 }}>
+                    <div style={{ color: GOLD, font: `600 14px ${serif}`, letterSpacing: 1.5, textTransform: 'uppercase', opacity: 0.85, marginBottom: 12 }}>Me &amp; My Family</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+                      {slots.map((p, i) => p
+                        ? <img key={i} src={ASSET + 'about/' + p} alt="" style={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', borderRadius: 10, border: `2px solid ${GOLD}66` }} />
+                        : <div key={i} style={{ aspectRatio: '4 / 3', borderRadius: 10, border: `2px dashed ${GOLD}55`, background: 'rgba(227,194,102,0.04)' }} />)}
+                    </div>
+                  </div>
+                )
+              })()}
               <button style={{ marginTop: 26, padding: '14px 28px', background: 'rgba(227,194,102,0.08)', border: `1px solid ${GOLD}66`, borderRadius: 10, color: GOLD, font: `500 24px ${serif}`, cursor: 'pointer' }} onClick={() => museum.set({ card: null })}>Close</button>
             </div>
           </div>
