@@ -12,8 +12,17 @@ export const WINGS = [
     id: 'about', title: 'About Me', wing: 'About Me Wing', pos: [L, 34], yaw: YAW_L, sub: null,
     art: 'eldersister.jpg', artAspect: 1.35,
     exhibit: {
-      blurb: 'Hi, I’m Abby - BA Economics + BS Computer Science at the University of Chicago (2025–2029). This museum is a walkable portrait of my journey and the people who made me.',
-      items: [], images: [], links: [], artwork: 'William-Adolphe Bouguereau - The Elder Sister',
+      blurb: [
+        "Hello! My name is Abigail (Abby), I'm 19 years old, and I'm a current undergraduate at UChicago double majoring in Economics & Computer Science with a minor in Astronomy/Astrophysics and possibly English if time lets me.",
+        "I built this because I wanted to showcase what I've done so far in a creative way, and some of my favorite memories are visiting art museums, so I figured why not combine the two.",
+        "Experience: I have strong skills in business development, machine learning, financial modelling, and many AI tools, but I'm also open to any new kind of opportunity that pops up (as you can see in my portfolio).",
+        "More about me: I have a younger brother named Joseph (as seen in the picture on the right), and he's my favorite person in the world. When I have free time, I love to read, crochet, travel, build side projects like this one, cook, and so much more!",
+        "I grew up in Menlo Park, California, and I am happiest when I am learning something new or making something from scratch.",
+        "Please feel free to reach out! Click SOCIALS below to find all of my contact information.",
+      ],
+      why: "I picked The Elder Sister by Bouguereau because it shows an older sister cradling her baby brother, and that is exactly how I feel about my brother Joseph. I chose it because he is my favorite person in the world and I wanted him here with me in this museum.",
+      items: [], images: [], artwork: 'William-Adolphe Bouguereau - The Elder Sister',
+      links: [{ label: 'SOCIALS', jump: 'contact' }],
     },
   },
   {

@@ -227,20 +227,12 @@ export default function Guide() {
         const detail = obj => (
           <>
             <Blocks data={obj.blurb} />
-            {obj.images?.length > 0 ? (
+            {obj.images?.length > 0 && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 14, marginBottom: 22 }}>
                 {obj.images.map((src, i) => <img key={i} src={ASSET + src} alt="" style={{ width: '100%', height: 220, objectFit: 'cover', borderRadius: 8, border: `1px solid ${GOLD}44` }} />)}
               </div>
-            ) : cardWing.id === 'about' && (
-              <div style={{ marginBottom: 22, padding: '32px', textAlign: 'center', border: `1px dashed ${GOLD}44`, borderRadius: 8, opacity: 0.6, font: `400 22px ${serif}` }}>Photos coming soon - add them to <code>public/assets/about/</code></div>
             )}
             {obj.items?.length > 0 && <ul style={{ margin: '0 0 20px', paddingLeft: 28, lineHeight: 1.7 }}>{obj.items.map((it, i) => <li key={i} style={{ opacity: 0.92 }}>{it}</li>)}</ul>}
-            {obj.why && (
-              <div style={{ marginTop: 10, marginBottom: 8, padding: '18px 22px 6px', background: 'rgba(227,194,102,0.06)', borderLeft: `3px solid ${GOLD}99`, borderRadius: 8 }}>
-                <div style={{ color: GOLD, font: `600 16px ${serif}`, letterSpacing: 1.5, textTransform: 'uppercase', opacity: 0.85, marginBottom: 10 }}>Why this painting?</div>
-                <Blocks data={obj.why} />
-              </div>
-            )}
             {obj.links?.length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 8 }}>
                 {obj.links.map(l => {
@@ -262,6 +254,7 @@ export default function Guide() {
                       )}
                     </div>
                   )
+                  if (l.jump) return <button key={l.label} onClick={() => museum.set({ card: l.jump, cardPiece: null })} style={linkPill}>{l.label}</button>
                   const href = l.pdf ? ASSET + l.pdf : l.url
                   return <a key={l.label} href={href} target="_blank" rel="noreferrer" style={linkPill}>{l.label}</a>
                 })}
@@ -290,6 +283,12 @@ export default function Guide() {
                       <div style={{ flex: '0 0 460px', maxWidth: '100%', margin: '0 auto' }}>
                         <img src={ASSET + 'art/hi/' + artFile} onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = ASSET + 'art/' + artFile }} alt="" style={{ width: '100%', display: 'block', borderRadius: 6, border: `2px solid ${GOLD}55`, boxShadow: '0 12px 34px rgba(0,0,0,0.55)' }} />
                         {d.artwork && <div style={{ marginTop: 14, textAlign: 'center', color: GOLD, opacity: 0.8, font: `italic 400 21px ${serif}`, lineHeight: 1.4 }}>{d.artwork}</div>}
+                        {d.why && (
+                          <div style={{ marginTop: 16, padding: '16px 18px', background: 'rgba(227,194,102,0.06)', borderLeft: `3px solid ${GOLD}99`, borderRadius: 8, textAlign: 'left' }}>
+                            <div style={{ color: GOLD, font: `600 14px ${serif}`, letterSpacing: 1.5, textTransform: 'uppercase', opacity: 0.85, marginBottom: 8 }}>Why this painting?</div>
+                            <Blocks data={d.why} />
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
