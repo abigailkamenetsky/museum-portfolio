@@ -180,7 +180,7 @@ export default function Guide() {
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 11 }}>{[0, 1, 2].map(i => <div key={i} style={{ width: 15, height: 15, borderRadius: 15, border: `1px solid ${GOLD}88` }} />)}</div>
               </div>
             </div>
-            <div style={{ color: '#e7ddca', font: `400 24px/1.55 ${serif}`, opacity: 0.92, marginTop: 2 }}>Tap on the paintings to see information for each project! Or use your handheld guide to jump to any wing.</div>
+            <div style={{ color: '#e7ddca', font: `400 24px/1.55 ${serif}`, opacity: 0.92, marginTop: 2 }}>Use your audio guide to jump to any section of the wing, or click "Guide Me" to walk there yourself. When you get there, tap the paintings to see information for each experience!</div>
             <div style={{ color: GOLD, font: `500 24px ${serif}`, marginTop: 26 }}>Tap the screen or press <b>SPACE</b> to open the Audio Guide</div>
           </div>
         </div>
@@ -193,7 +193,7 @@ export default function Guide() {
             {!cat ? (
               <>
                 <div style={{ color: GOLD, font: `600 18px ${serif}`, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.8 }}>Museum Guide</div>
-                <div style={{ font: `400 22px ${serif}`, margin: '4px 0 14px', lineHeight: 1.4 }}>Use your audio guide to jump to any section of the wing, or click "Guide Me" to walk there yourself. When you get there, tap the paintings to see information for each experience!</div>
+                <div style={{ font: `400 22px ${serif}`, margin: '4px 0 14px' }}>Pick a section to visit:</div>
                 {WINGS.map(w => (
                   <button key={w.id} style={row(hover === w.id)} onMouseEnter={() => setHover(w.id)} onMouseLeave={() => setHover(null)} onClick={() => museum.set({ menu: w.id })}>{w.title}</button>
                 ))}
