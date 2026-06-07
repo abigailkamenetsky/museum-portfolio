@@ -1062,7 +1062,7 @@ function Bench({ m }) {
  *    (swinging arms/legs, bending knees, torso bob) + idle breathing. Pointer-lock
  *    mouse look (both axes), camera-relative movement, smooth accel/decel, body
  *    turns to face travel direction. ── */
-const WALK_SPEED = 4.4, RUN_SPEED = 7.6, ACCEL = 11, DRAG_SENS = 0.006
+const WALK_SPEED = 3.6, RUN_SPEED = 6.2, ACCEL = 7, DRAG_SENS = 0.0032   // gentler: slower accel + less mouse look sensitivity
 const AV_SCALE = 1.9, HEAD_Y = 2.95   // avatar ~half the door height; camera aims at the new head
 const _v1 = new Vector3(), _v2 = new Vector3(), _v3 = new Vector3(), _v4 = new Vector3()
 const _v5 = new Vector3(), _v6 = new Vector3(), _v7 = new Vector3(), _v8 = new Vector3()
@@ -1249,8 +1249,8 @@ function Character() {
 
     // smooth the look angles toward their targets (shortest-arc yaw → no spin), elegant
     let dyaw = s.yawT - s.yaw; dyaw = Math.atan2(Math.sin(dyaw), Math.cos(dyaw))
-    s.yaw += dyaw * Math.min(1, 11 * d)
-    s.pitch += (s.pitchT - s.pitch) * Math.min(1, 11 * d)
+    s.yaw += dyaw * Math.min(1, 8 * d)
+    s.pitch += (s.pitchT - s.pitch) * Math.min(1, 8 * d)
     // camera-relative input
     const fwd = locked ? 0 : ((k['KeyW'] || k['ArrowUp'] || s.touchWalk ? 1 : 0) - (k['KeyS'] || k['ArrowDown'] ? 1 : 0))
     const strafe = locked ? 0 : (k['KeyD'] || k['ArrowRight'] ? 1 : 0) - (k['KeyA'] || k['ArrowLeft'] ? 1 : 0)
@@ -1275,7 +1275,7 @@ function Character() {
     if (spd > 0.3) {
       const target = Math.atan2(s.vel.x, s.vel.z)
       let diff = target - s.face; diff = Math.atan2(Math.sin(diff), Math.cos(diff))
-      s.face += diff * Math.min(1, 9 * d)
+      s.face += diff * Math.min(1, 5 * d)   // body turns to face travel more gently (no snap on a tap)
     }
     if (modelRef.current) modelRef.current.rotation.y = s.face
 
@@ -1283,7 +1283,7 @@ function Character() {
     // back behind the character so you keep seeing its back / where you're going
     if (spd > 0.5 && !s.dragging) {
       let dre = s.face - s.yawT; dre = Math.atan2(Math.sin(dre), Math.cos(dre))
-      s.yawT += dre * Math.min(1, 2.2 * d)
+      s.yawT += dre * Math.min(1, 1.3 * d)   // camera swings back behind more slowly
     }
 
     // ── procedural locomotion ──
