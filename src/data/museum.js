@@ -18,11 +18,11 @@ export const WINGS = [
         "I built this because I wanted to showcase what I've done so far in a creative way, and since some of my favorite memories are visiting art museums, I figured why not combine the two.",
         "Experience: I have strong skills in business development, machine learning, financial modelling, and many AI tools, but I'm also open to any new kind of opportunity that pops up (as you can see in my portfolio).",
         "More about me: I have a younger brother named Joseph, and he's my favorite person in the world. You can see us together in the photos below. When I have free time, I love to read, crochet, travel, build side projects like this one, cook, and so much more.",
-        "I'm happiest when I'm learning something new or making something from scratch. Please feel free to reach out, and click SOCIALS below to find all of my contact information!",
+        "I'm happiest when I'm learning something new or making something from scratch. Please feel free to reach out, and click {{SOCIALS}} to find all of my contact information!",
       ],
       why: "I chose this painting because I am an older sister with a (formerly blonde) younger brother. While I am not blonde, this painting reminds me of the two of us as children. See the photos below for reference, because I swear that baby and my baby brother look the same!",
       items: [], images: [], artwork: 'William-Adolphe Bouguereau - The Elder Sister',
-      links: [{ label: 'SOCIALS', jump: 'contact' }],
+      links: [],
     },
   },
   {

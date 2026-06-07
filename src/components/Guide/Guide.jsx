@@ -218,11 +218,19 @@ export default function Guide() {
         const inList = pcs && piece === null
         const d = pcs ? (piece != null ? pcs[piece] : null) : ex
         const artFile = piece != null ? pcs[piece].art : (pcs ? null : cardWing.art)   // the painting itself
+        const renderText = (str) => {
+          const parts = String(str).split('{{SOCIALS}}')
+          if (parts.length === 1) return str
+          return parts.flatMap((p, idx) => idx === 0 ? [p] : [
+            <button key={'sb' + idx} onClick={() => museum.set({ card: 'contact', cardPiece: null })} style={{ ...linkPill, display: 'inline-block', padding: '3px 14px', font: `600 19px ${serif}`, verticalAlign: 'baseline', margin: '0 4px' }}>SOCIALS</button>,
+            p,
+          ])
+        }
         const Blocks = ({ data }) => {
           const blocks = Array.isArray(data) ? data : (data ? [data] : [])
           return blocks.map((blk, i) => Array.isArray(blk)
             ? <ul key={i} style={{ margin: '0 0 16px', paddingLeft: 28, lineHeight: 1.6 }}>{blk.map((it, j) => <li key={j} style={{ opacity: 0.92, marginBottom: 5 }}>{it}</li>)}</ul>
-            : <p key={i} style={{ opacity: 0.9, lineHeight: 1.6, margin: '0 0 16px' }}>{blk}</p>)
+            : <p key={i} style={{ opacity: 0.9, lineHeight: 1.6, margin: '0 0 16px' }}>{renderText(blk)}</p>)
         }
         const detail = obj => (
           <>
