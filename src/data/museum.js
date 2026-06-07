@@ -21,7 +21,15 @@ export const WINGS = [
     exhibit: {
       blurb: 'Each painting here is one project. Tap any to learn more.', images: [], links: [],
       pieces: [
-        { title: 'HelpMynd', artwork: 'Rembrandt - The Return of the Prodigal Son', art: 'prodigal.jpg', artAspect: 1.305, blurb: 'Mental-health platform. Role, stack, reach, and impact.', items: [], images: [], links: [] },
+        { title: 'HelpMynd', artwork: 'Rembrandt - The Return of the Prodigal Son', art: 'prodigal.jpg', artAspect: 1.305,
+          blurb: [
+            "I founded HelpMynd because I cared about mental health and I wanted to build something that actually reached the people who needed support. I started it in February 2023 and I ran it as Founder and CEO until January 2026.",
+            "I grew HelpMynd into a registered 501(c)(3) nonprofit with more than 35 team members across over 130 countries. I secured partnerships with Stanford Hospital and the Jamaican Ministry of Health because I wanted the work to be credible and connected to real medical systems.",
+            "I built and launched a curated global mental health directory so people could find resources near them. I also led international conferences and workshops because I wanted HelpMynd to bring people together in person and not only live online.",
+            "I learned how to recruit people, keep a large remote team motivated, and turn an idea I believed in into an organization that runs across many time zones.",
+          ],
+          why: "I picked The Return of the Prodigal Son by Rembrandt because it is a painting about compassion and being cared for when you are at your lowest. I chose it for HelpMynd because that is exactly the feeling I wanted the organization to give people.",
+          items: [], images: [], links: [] },
         { title: 'Museum Portfolio', artwork: 'Carel Fabritius - The Goldfinch', art: 'goldfinch.jpg', artAspect: 1.527,
           blurb: [
             "This project is an interactive virtual museum designed to replace a traditional portfolio with an explorable digital experience.",
@@ -64,8 +72,22 @@ export const WINGS = [
     exhibit: {
       blurb: 'Each painting here is one internship. Tap any to learn more.', images: [], links: [],
       pieces: [
-        { title: 'AWS - Retail Crime Prediction', artwork: 'Hieronymus Bosch - The Garden of Earthly Delights', art: 'garden.jpg', artAspect: 0.569, blurb: 'ML model for geographic retail-crime risk. Role, dates, impact.', items: [], images: [], links: [{ label: 'Final Presentation', pdf: 'AWS_Final_Presentation.pdf' }] },
-        { title: 'Maroon Cays Consulting', artwork: 'Honoré Daumier - The Chess Players', art: 'chessplayers.jpg', artAspect: 0.774, blurb: 'Consulting / strategy. Role, dates, impact.', items: [], images: [], links: [] },
+        { title: 'AWS - Retail Crime Prediction', artwork: 'Hieronymus Bosch - The Garden of Earthly Delights', art: 'garden.jpg', artAspect: 0.569,
+          blurb: [
+            "I worked as a Computer Science Intern at Amazon Web Services in Seattle during the summer of 2024.",
+            "I built a machine learning model that used geographic datasets to find risk patterns and inform site selection decisions. I spent a lot of my time turning the technical output into clear business insights because the model only mattered if the people making decisions could actually use it.",
+            "I placed second in an international AWS data competition and I presented my findings to senior leadership. I focused on risk forecasting and on explaining my analysis carefully because I wanted the room to trust the numbers.",
+          ],
+          why: "I picked The Garden of Earthly Delights by Hieronymus Bosch because it is a dense map full of patterns and tiny details that only make sense once you study the whole picture. I chose it because that is what working with large geographic datasets felt like to me.",
+          items: [], images: [], links: [{ label: 'Final Presentation', pdf: 'AWS_Final_Presentation.pdf' }] },
+        { title: 'Maroon Cays Consulting', artwork: 'Honoré Daumier - The Chess Players', art: 'chessplayers.jpg', artAspect: 0.774,
+          blurb: [
+            "I worked as a Strategy Consulting Intern with the Winter Metcalf Clinic on the Maroon Cays Innovation Projects in early 2026.",
+            "I conducted market analysis and I evaluated the strategic positioning of a sustainability venture. I built investor-style pitch materials, and I prioritized partnerships based on market opportunity and how well they could scale.",
+            "I liked this work because it let me study a real business and then make concrete recommendations about where it should focus next.",
+          ],
+          why: "I picked The Chess Players by Honoré Daumier because consulting felt like a long game of chess to me. I chose it because good strategy means thinking several moves ahead and deciding which partnership to commit to next.",
+          items: [], images: [], links: [] },
         { title: 'Gigamon - Product Management', artwork: 'Pieter Bruegel the Elder - The Tower of Babel', art: 'babel.jpg', artAspect: 0.732, blurb: 'Product management internship. Role, dates, impact.', items: [], images: [], links: [] },
         { title: 'SDIG - Web Development', artwork: 'Claude Monet - The Bridge at Argenteuil', art: 'argenteuil.jpg', artAspect: 0.761, blurb: 'Web development. Role, dates, impact.', items: [], images: [], links: [] },
       ],
@@ -76,7 +98,14 @@ export const WINGS = [
     exhibit: {
       blurb: 'Each painting here is one research project. Tap any to learn more.', images: [], links: [],
       pieces: [
-        { title: 'CMU - Rectangle Packing (NP-hard)', artwork: 'M.C. Escher - Relativity', art: 'relativity.jpg', artAspect: 0.958, blurb: 'Algorithms research, international presentation.', items: [], images: [], links: [] },
+        { title: 'CMU - Rectangle Packing (NP-hard)', artwork: 'M.C. Escher - Relativity', art: 'relativity.jpg', artAspect: 0.958,
+          blurb: [
+            "I worked as a Research Intern at Carnegie Mellon University from January to November of 2024.",
+            "I designed and optimized algorithms for NP-hard rectangle packing problems. I worked directly with faculty and PhD researchers because the problems were hard and I learned a lot from people who had studied them for years.",
+            "I later presented the research internationally. I am proud of this work because rectangle packing problems are genuinely difficult and I got to push on them alongside serious researchers.",
+          ],
+          why: "I picked Relativity by M.C. Escher because it is built from impossible geometry and careful structure at the same time. I chose it because packing problems ask you to fit shapes together under strict rules, and Escher turns that kind of spatial puzzle into art.",
+          items: [], images: [], links: [] },
         { title: 'UCSB - LLM Hallucinations', artwork: 'Salvador Dalí - The Temptation of Saint Anthony', art: 'stanthony.jpg', artAspect: 0.783, blurb: 'Research on LLM hallucinations.', items: [], images: [], links: [] },
         { title: 'Booth - Center for Applied AI', artwork: 'Joseph Wright of Derby - An Experiment on a Bird in the Air Pump', art: 'airpump.jpg', artAspect: 0.749, blurb: 'Applied AI research at Chicago Booth. Topic, methods, findings.', items: [], images: [], links: [] },
       ],
@@ -141,7 +170,14 @@ export const WINGS = [
     exhibit: {
       blurb: 'Roles where I led people and built things together.', images: [], links: [],
       pieces: [
-        { title: 'Journalism / Newspaper Leadership', artwork: 'Diego Velázquez - Las Meninas', art: 'meninas.jpg', artAspect: 1.151, blurb: 'Editorial leadership on the newspaper.', items: [], images: [], links: [] },
+        { title: 'Journalism / Newspaper Leadership', artwork: 'Diego Velázquez - Las Meninas', art: 'meninas.jpg', artAspect: 1.151,
+          blurb: [
+            "I led my school newspaper, and I earned the NSPA Leadership Award for that work.",
+            "I ran the newsroom because I loved both the writing and the people. I edited stories, I set the direction for our coverage, and I made sure my staff had what they needed to do their best work.",
+            "I learned how to lead a creative team under deadline because a newspaper does not wait for anyone.",
+          ],
+          why: "I picked Las Meninas by Velázquez because it is a painting about who is in the room and who is watching, with the artist standing right inside the scene. I chose it for journalism because editing taught me to pay attention to perspective and to my own place in the story.",
+          items: [], images: [], links: [] },
         { title: 'Pinewood Envoys', artwork: 'Jan van Eyck - The Arnolfini Portrait', art: 'arnolfini.jpg', artAspect: 1.368, blurb: 'Ambassador / envoy program.', items: [], images: [], links: [] },
         { title: 'Peer Tutoring Program', artwork: 'Raphael - The School of Athens', art: 'schoolofathens.jpg', artAspect: 0.775, blurb: 'Peer tutoring and teaching.', items: [], images: [], links: [] },
         { title: 'Drama Club', artwork: 'Edgar Degas - The Singer in Green', art: 'singergreen.jpg', artAspect: 1.297, blurb: 'Theatre and performance.', items: [], images: [], links: [] },
@@ -154,9 +190,27 @@ export const WINGS = [
       blurb: 'Recognitions earned along the way - a small Vermeer gallery.', images: [], links: [],
       pieces: [
         { title: 'AP Scholar / Academic Achievement', artwork: 'Johannes Vermeer - The Astronomer', art: 'astronomer.jpg', artAspect: 1.136, blurb: 'Academic achievement.', items: [], images: [], links: [] },
-        { title: 'NSPA Journalism Recognition', artwork: 'Johannes Vermeer - The Love Letter', art: 'loveletter.jpg', artAspect: 1.16, blurb: 'National journalism recognition.', items: [], images: [], links: [] },
-        { title: 'AWS Recognition', artwork: 'Johannes Vermeer - The Geographer', art: 'geographer.jpg', artAspect: 1.121, blurb: '2nd place, international AWS competition.', items: [], images: [], links: [] },
-        { title: 'Congressional Recognition', artwork: 'Johannes Vermeer - Girl Reading a Letter at an Open Window', art: 'girlletterwindow.jpg', artAspect: 1.308, blurb: 'Congressional recognition.', items: [], images: [], links: [] },
+        { title: 'NSPA Leadership Award', artwork: 'Johannes Vermeer - The Love Letter', art: 'loveletter.jpg', artAspect: 1.16,
+          blurb: [
+            "I received the NSPA Leadership Award for my work in student journalism.",
+            "I earned this because I led a newsroom and I cared about the people on my staff as much as the stories we published.",
+          ],
+          why: "I picked The Love Letter by Vermeer because it is a quiet painting about a message passing between people. I chose it for journalism because writing and editing are how I learned to carry a message carefully from one person to many.",
+          items: [], images: [], links: [] },
+        { title: 'AWS AI Competition (2nd Place)', artwork: 'Johannes Vermeer - The Geographer', art: 'geographer.jpg', artAspect: 1.121,
+          blurb: [
+            "I placed second in an international AWS AI competition.",
+            "I earned this because I built a data model that held up under scrutiny, and because I could explain my analysis clearly to the judges and to senior leadership.",
+          ],
+          why: "I picked The Geographer by Vermeer because he is a person bent over maps and measurements, working to understand the world through data. I chose it because that is exactly how I approached the competition.",
+          items: [], images: [], links: [] },
+        { title: 'Congressional Recognition', artwork: 'Johannes Vermeer - Girl Reading a Letter at an Open Window', art: 'girlletterwindow.jpg', artAspect: 1.308,
+          blurb: [
+            "I received Congressional Recognition from Representative Anna Eshoo.",
+            "I earned this because of work that reached my own community. Being recognized by my representative meant a lot to me because it tied my effort back to the place I am from.",
+          ],
+          why: "I picked Girl Reading a Letter at an Open Window by Vermeer because it shows a private moment of receiving important news. I chose it because that is how the recognition felt to me when I first read it.",
+          items: [], images: [], links: [] },
       ],
     },
   },
@@ -164,8 +218,9 @@ export const WINGS = [
     id: 'technical', title: 'Technical Skills', wing: 'Technical Skills Wing', pos: [R, -6.75], yaw: YAW_R, sub: null,
     art: 'vitruvian.jpg', artAspect: 1.36,
     exhibit: {
-      blurb: 'Engineering, computer science, mathematics, AI, and technical foundations.',
-      items: ['Engineering', 'Computer Science', 'Mathematics', 'Artificial Intelligence', 'Technical foundations'],
+      blurb: ["These are the tools I reach for when I build and analyze things. I picked up each one because it solved a real problem I ran into."],
+      items: ['AI workflow automation with Claude and other LLM tools', 'Financial modeling, including DCF and valuation', 'Python', 'JavaScript', 'Excel', 'Machine learning', 'Market analysis'],
+      why: "I picked Vitruvian Man by Leonardo da Vinci because it is the meeting of mathematics, measurement, and the human body. I chose it because I like using technical tools to understand things precisely.",
       images: [], links: [], artwork: 'Leonardo da Vinci - Vitruvian Man',
     },
   },
