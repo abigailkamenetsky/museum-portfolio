@@ -134,7 +134,7 @@ export default function Guide() {
       {/* LOADING SCREEN - covers everything until assets are ready */}
       {!ready && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: '#0a0c08', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: serif }}>
-          <div style={{ color: GOLD, font: `500 13px ${serif}`, letterSpacing: 5, textTransform: 'uppercase', opacity: 0.8 }}>The Museum of Abby</div>
+          <div style={{ color: GOLD, font: `500 13px ${serif}`, letterSpacing: 5, textTransform: 'uppercase', opacity: 0.8 }}>Abby's Museum</div>
           <div style={{ color: '#f3ecd9', font: `400 26px ${serif}`, margin: '14px 0 18px' }}>Preparing the gallery…</div>
           <div style={{ width: 220, height: 3, background: 'rgba(227,194,102,0.2)', borderRadius: 3, overflow: 'hidden' }}>
             <div style={{ width: `${Math.min(100, Math.round(progress))}%`, height: '100%', background: GOLD, transition: 'width .3s' }} />
@@ -159,8 +159,8 @@ export default function Guide() {
       {s.phase === 'welcome' && (
         <div onClick={advance} style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 25, cursor: 'pointer', animation: 'fadeIn 1.2s ease' }}>
           <div style={{ textAlign: 'center', maxWidth: 'min(720px,92vw)', padding: '48px 58px', background: 'rgba(8,10,8,0.62)', border: `1px solid ${GOLD}44`, borderRadius: 18, backdropFilter: 'blur(3px)' }}>
-            <div style={{ color: GOLD, font: `500 20px ${serif}`, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.85 }}>Welcome to the</div>
-            <div style={{ color: '#f3ecd9', font: `400 clamp(46px,9vw,66px) ${serif}`, margin: '14px 0 20px' }}>Museum of Abby</div>
+            <div style={{ color: GOLD, font: `500 20px ${serif}`, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.85 }}>Welcome to</div>
+            <div style={{ color: '#f3ecd9', font: `400 clamp(46px,9vw,66px) ${serif}`, margin: '14px 0 20px' }}>Abby's Museum</div>
             <div style={{ color: '#e7ddca', font: `400 26px/1.55 ${serif}`, opacity: 0.9 }}>An interactive gallery where each art piece reveals a chapter of my journey: projects, internships, research, and hobbies.</div>
             <div style={{ color: GOLD, font: `500 24px ${serif}`, marginTop: 30, letterSpacing: 0.5 }}>Tap the screen or press <b>SPACE</b> to see how it works</div>
           </div>
@@ -193,7 +193,7 @@ export default function Guide() {
             {!cat ? (
               <>
                 <div style={{ color: GOLD, font: `600 18px ${serif}`, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.8 }}>Museum Guide</div>
-                <div style={{ font: `400 24px ${serif}`, margin: '4px 0 12px' }}>Tap on which section you want to go to to get a guide/teleport!</div>
+                <div style={{ font: `400 22px ${serif}`, margin: '4px 0 14px', lineHeight: 1.4 }}>Use your audio guide to jump to any section of the wing, or click "Guide Me" to walk there yourself. When you get there, tap the paintings to see information for each experience!</div>
                 {WINGS.map(w => (
                   <button key={w.id} style={row(hover === w.id)} onMouseEnter={() => setHover(w.id)} onMouseLeave={() => setHover(null)} onClick={() => museum.set({ menu: w.id })}>{w.title}</button>
                 ))}
