@@ -21,7 +21,7 @@ An interactive, art-museum-style resume portfolio built as a side-scrolling web 
 - **Audio:** Howler.js
 - **Styling:** CSS Modules
 - **Deployment:** GitHub Pages via GitHub Actions (`.github/workflows/deploy.yml`, auto-deploy on push to main). The workflow flips the Vite base to `/` when `public/CNAME` exists, else `/museum-portfolio/`.
-- **Domain:** LIVE at https://abbykamenetsky.com (bare apex is primary; `www` and the old `abigailkamenetsky.github.io/museum-portfolio/` URL 301-redirect to it). Cloudflare DNS (grey-cloud CNAMEs → `abigailkamenetsky.github.io`) → GitHub Pages, Let's Encrypt cert, Enforce HTTPS on. `public/CNAME` pins the domain on every deploy. Switch playbook in `DOMAIN.md`.
+- **Domain:** LIVE at https://portfolio.abbykamenetsky.com (a subdomain). The bare apex `abbykamenetsky.com` is intentionally unused (returns GitHub 404). Cloudflare DNS: CNAME `portfolio` → `abigailkamenetsky.github.io` (grey-cloud / DNS only) → GitHub Pages, Let's Encrypt cert, Enforce HTTPS on. `public/CNAME` (= `portfolio.abbykamenetsky.com`) pins the domain on every deploy. Switch playbook in `DOMAIN.md`.
 - **Node version:** 22 LTS
 
 ## Repository
@@ -88,7 +88,7 @@ Each milestone must reach its definition of done before the next one starts. No 
 | 7 | Entrance Screen: title screen, cinematic dissolve into gallery | Pending |
 | 8 | Polish Pass: parallax, footsteps, shadows, minimap, mobile fallback | Pending |
 | 9 | Performance & Reliability: lazy-load, Lighthouse 90+, cross-browser | Pending |
-| 10 | Launch: custom domain (abbykamenetsky.com live via GitHub Pages), LinkedIn/resume updated | In progress (domain done; LinkedIn/resume pending) |
+| 10 | Launch: custom domain (portfolio.abbykamenetsky.com live via GitHub Pages), LinkedIn/resume updated | In progress (domain done; LinkedIn/resume pending) |
 
 ## Content Map (Resume Sections)
 Room names are TBD — user will supply them. 4 rooms, 2 paintings each = 8 total slots.

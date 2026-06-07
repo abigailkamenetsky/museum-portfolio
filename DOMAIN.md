@@ -1,3 +1,20 @@
+# Custom domain (Cloudflare → GitHub Pages)
+
+**LIVE primary: https://portfolio.abbykamenetsky.com** (subdomain).
+The bare apex `abbykamenetsky.com` is intentionally unused.
+
+Cloudflare DNS record in use:
+`CNAME  portfolio  →  abigailkamenetsky.github.io`  (DNS only / grey cloud)
+
+`public/CNAME` contains `portfolio.abbykamenetsky.com`, which pins the GitHub Pages
+custom domain on every deploy. To move the domain again: add the new DNS record in
+Cloudflare first, then change `public/CNAME` and push, then set the Pages cname via
+`gh api --method PUT repos/abigailkamenetsky/museum-portfolio/pages -f cname='...'`,
+wait for the cert to reach `approved`, then enable Enforce HTTPS.
+
+---
+
+## Original apex setup notes (for reference)
 # Connecting abbykamenetsky.com (Cloudflare → GitHub Pages)
 
 The site is **fully portable**: every asset (textures, GLB models, HDRI, artwork, audio,
