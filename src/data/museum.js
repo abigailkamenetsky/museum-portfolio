@@ -127,8 +127,8 @@ export const WINGS = [
           blurb: [
             "I worked as a Research Intern at Carnegie Mellon University from January to November of 2024.",
             "I designed and optimized algorithms for NP-hard rectangle packing problems. I worked directly with faculty and PhD researchers because the problems were hard and I learned a lot from people who had studied them for years.",
-            "I later presented the research internationally. I am proud of this work because rectangle packing problems are genuinely difficult and I got to push on them alongside serious researchers.",
-            "I built the entire PackIt game, including its full AI mode. I'm credited on page 26 of the published paper, which you can read below, and you can play the game at the link too.",
+            "I built the entire PackIt game, including its full AI mode. The game was presented at the 12th International Conference on Fun with Algorithms on the island of La Maddalena in Sardinia, Italy, in June 2024. I'm credited on page 26 of the published paper, which you can read below, and you can play the game at the link too.",
+            "I am proud of this work because rectangle packing problems are genuinely difficult and I got to push on them alongside serious researchers.",
           ],
           why: "I chose this painting because my research dealt with mathematical optimization, and all of M.C. Escher's work plays with optimization and impossible structure. This one is a personal favorite :)",
           skills: ['Algorithm design', 'Optimization', 'NP-hard problem solving', 'Research collaboration', 'Technical presentation'],
