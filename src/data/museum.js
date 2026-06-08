@@ -259,10 +259,19 @@ export const WINGS = [
     id: 'technical', title: 'Technical Skills', wing: 'Technical Skills Wing', pos: [R, -6.75], yaw: YAW_R, sub: null,
     art: 'vitruvian.jpg', artAspect: 1.36,
     exhibit: {
-      blurb: ["These are the tools I reach for when I build and analyze things. I picked up each one because it solved a real problem I ran into."],
-      items: ['AI workflow automation with Claude and other LLM tools', 'Financial modeling, including DCF and valuation', 'Python', 'JavaScript', 'Excel', 'Machine learning', 'Market analysis'],
+      blurb: ["These are the tools I reach for when I build and analyze things. Tap any skill to jump to where I actually used it."],
+      linkedItems: [
+        { label: 'AI workflow automation (Claude & LLM tools)', jump: 'projects', piece: 3 },
+        { label: 'Financial modeling (DCF, valuation)', jump: 'uchicago', piece: 3 },
+        { label: 'Python', jump: 'professional', piece: 0 },
+        { label: 'JavaScript', jump: 'projects', piece: 1 },
+        { label: 'Excel', jump: 'professional', piece: 1 },
+        { label: 'Machine learning', jump: 'professional', piece: 0 },
+        { label: 'Market analysis', jump: 'professional', piece: 1 },
+      ],
+      coursework: ['Linear Algebra', 'Calculus 3', 'Microeconomics', 'Macroeconomics'],
       why: "I picked Vitruvian Man by Leonardo da Vinci because it is the meeting of mathematics, measurement, and the human body. I chose it because I like using technical tools to understand things precisely.",
-      images: [], links: [], artwork: 'Leonardo da Vinci - Vitruvian Man',
+      items: [], images: [], links: [], artwork: 'Leonardo da Vinci - Vitruvian Man',
     },
   },
   {

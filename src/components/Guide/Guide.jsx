@@ -243,6 +243,22 @@ export default function Guide() {
               </div>
             )}
             {obj.items?.length > 0 && <ul style={{ margin: '0 0 20px', paddingLeft: 28, lineHeight: 1.7 }}>{obj.items.map((it, i) => <li key={i} style={{ opacity: 0.92 }}>{it}</li>)}</ul>}
+            {obj.linkedItems?.length > 0 && (
+              <div style={{ marginTop: 4, marginBottom: 18 }}>
+                <div style={{ color: GOLD, font: `600 14px ${serif}`, letterSpacing: 1.5, textTransform: 'uppercase', opacity: 0.85, marginBottom: 10 }}>Skills (tap to see where I used each)</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {obj.linkedItems.map((sk, i) => <button key={i} onClick={() => museum.set({ card: sk.jump, cardPiece: sk.piece ?? null })} onMouseEnter={() => setHover('sk' + i)} onMouseLeave={() => setHover(null)} style={{ padding: '7px 14px', background: hover === 'sk' + i ? 'rgba(227,194,102,0.22)' : 'rgba(227,194,102,0.08)', border: `1px solid ${GOLD}66`, borderRadius: 20, font: `500 16px ${serif}`, color: '#efe7d6', cursor: 'pointer' }}>{sk.label} ›</button>)}
+                </div>
+              </div>
+            )}
+            {obj.coursework?.length > 0 && (
+              <div style={{ marginTop: 4, marginBottom: 18 }}>
+                <div style={{ color: GOLD, font: `600 14px ${serif}`, letterSpacing: 1.5, textTransform: 'uppercase', opacity: 0.85, marginBottom: 10 }}>Relevant Coursework</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {obj.coursework.map((c, i) => <span key={i} style={{ padding: '6px 13px', background: 'rgba(227,194,102,0.06)', border: `1px solid ${GOLD}44`, borderRadius: 20, font: `500 16px ${serif}`, opacity: 0.95 }}>{c}</span>)}
+                </div>
+              </div>
+            )}
             {obj.skills?.length > 0 && (
               <div style={{ marginTop: 4, marginBottom: 18 }}>
                 <div style={{ color: GOLD, font: `600 14px ${serif}`, letterSpacing: 1.5, textTransform: 'uppercase', opacity: 0.85, marginBottom: 10 }}>Skills I gained</div>
