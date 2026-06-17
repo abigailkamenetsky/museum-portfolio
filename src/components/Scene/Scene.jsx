@@ -775,15 +775,15 @@ function Door({ m }) {
     return { c, size, ctr, minY: box.min.y }
   }, [scene])
   const plaqueMat = useMemo(() => new MeshStandardMaterial({ map: makePlaqueTexture(), roughness: 0.45, metalness: 0.35, emissive: '#1a1407', emissiveIntensity: 0.35 }), [])
-  const frameWood = useMemo(() => new MeshStandardMaterial({ color: '#5c3a1d', roughness: 0.6, metalness: 0 }), [])   // brown surround to match the carved door
+  const copper = useMemo(() => new MeshStandardMaterial({ color: '#9c5a32', roughness: 0.5, metalness: 0.78, envMapIntensity: 0.6 }), [])   // aged copper surround (metallic, dark in the recesses)
 
   const OPEN_W = 3.3, OPEN_H = 6.7
-  const S = (OPEN_H * 0.86) / door.size.y     // auto-fit a touch smaller so the arched top sits fully inside the opening
+  const S = (OPEN_H * 0.93) / door.size.y     // fill the opening (dark recess covers any sliver at the top)
   const PX = OPEN_W / 2 + 0.85                // pilaster centre x
-  const gold = m.gold, stone = frameWood, trim = frameWood
+  const gold = m.gold, stone = copper, trim = copper
 
   const Pilaster = ({ x }) => (
-    <group position={[x, 0, 0.42]}>
+    <group position={[x, 0, 0.52]}>
       <mesh position={[0, 0.3, 0]} material={stone} castShadow receiveShadow><boxGeometry args={[0.85, 0.55, 0.6]} /></mesh>
       <mesh position={[0, OPEN_H / 2 + 0.28, 0]} material={trim} castShadow><cylinderGeometry args={[0.28, 0.32, OPEN_H - 0.5, 20]} /></mesh>
       {/* slim gilded banding instead of a bulky block */}
@@ -794,8 +794,8 @@ function Door({ m }) {
 
   return (
     <group position={[0, 0, D / 2 - 0.02]} rotation={[0, Math.PI, 0]}>
-      {/* deep dark recess behind the leaves so the opening reads as a portal */}
-      <mesh position={[0, OPEN_H / 2, -0.12]} material={m.woodDark}><boxGeometry args={[OPEN_W + 0.2, OPEN_H + 0.2, 0.12]} /></mesh>
+      {/* dark recess JUST IN FRONT of the wall (behind the leaf) so no green shows through the opening */}
+      <mesh position={[0, OPEN_H / 2, 0.05]} material={m.woodDark}><boxGeometry args={[OPEN_W + 0.4, OPEN_H + 0.5, 0.12]} /></mesh>
 
       {/* carved cathedral door, auto-fit + centred in depth so the leaf sits in the opening */}
       <primitive object={door.c} position={[-door.ctr.x * S, -door.minY * S, -door.ctr.z * S + 0.14]} scale={S} rotation={[0, DOOR_MODEL_ROT_Y, 0]} />
@@ -814,13 +814,13 @@ function Door({ m }) {
       <Pilaster x={PX} />
 
       {/* entablature + frieze with engraved museum plaque */}
-      <mesh position={[0, OPEN_H + 0.78, 0.3]} material={trim} castShadow receiveShadow><boxGeometry args={[2 * PX + 1.1, 0.74, 0.72]} /></mesh>
+      <mesh position={[0, OPEN_H + 0.78, 0.34]} material={trim} castShadow receiveShadow><boxGeometry args={[2 * PX + 1.1, 0.74, 0.86]} /></mesh>
       <mesh position={[0, OPEN_H + 0.42, 0.38]} material={gold}><boxGeometry args={[2 * PX + 1.1, 0.07, 0.74]} /></mesh>
-      <mesh position={[0, OPEN_H + 0.78, 0.71]} material={plaqueMat}><boxGeometry args={[2.7, 0.52, 0.04]} /></mesh>
+      <mesh position={[0, OPEN_H + 0.78, 0.79]} material={plaqueMat}><boxGeometry args={[2.7, 0.52, 0.04]} /></mesh>
 
       {/* broken Baroque pediment: two raking cornices with a gap for the crest */}
-      <mesh position={[-1.55, OPEN_H + 1.55, 0.3]} rotation={[0, 0, -0.5]} material={trim} castShadow><boxGeometry args={[2.7, 0.42, 0.62]} /></mesh>
-      <mesh position={[1.55, OPEN_H + 1.55, 0.3]} rotation={[0, 0, 0.5]} material={trim} castShadow><boxGeometry args={[2.7, 0.42, 0.62]} /></mesh>
+      <mesh position={[-1.55, OPEN_H + 1.55, 0.3]} rotation={[0, 0, -0.5]} material={trim} castShadow><boxGeometry args={[2.7, 0.44, 0.74]} /></mesh>
+      <mesh position={[1.55, OPEN_H + 1.55, 0.3]} rotation={[0, 0, 0.5]} material={trim} castShadow><boxGeometry args={[2.7, 0.44, 0.74]} /></mesh>
       {/* intricate gilded vine crest (replaces the egg), curling scrollwork facing the room */}
       <group position={[0, OPEN_H + 1.65, 0.5]}>
         <mesh position={[0, -0.05, 0]} rotation={[0, 0, Math.PI / 2]} material={gold}><cylinderGeometry args={[0.05, 0.06, 0.85, 8]} /></mesh>
