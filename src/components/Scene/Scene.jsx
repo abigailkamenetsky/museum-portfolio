@@ -53,10 +53,8 @@ useGLTF.preload(STAINED_URL)
 const DOOR_URL = BASE + 'assets/models/prague_door.glb'   // ornate cathedral entrance door
 useGLTF.preload(DOOR_URL)
 const CANDELABRA_URL = BASE + 'assets/models/candelabra.glb'; useGLTF.preload(CANDELABRA_URL)
-const CHAIR_URL = BASE + 'assets/models/vintagechair.glb'; useGLTF.preload(CHAIR_URL)
 const STATUE1_URL = BASE + 'assets/models/statue1.glb'; useGLTF.preload(STATUE1_URL)
 const STATUE2_URL = BASE + 'assets/models/statue2.glb'; useGLTF.preload(STATUE2_URL)
-const BENCH_URL = BASE + 'assets/models/bench.glb'; useGLTF.preload(BENCH_URL)
 // stained-glass model native size (from its bbox) → derived in-room size, so the
 // arched wall opening and the model use ONE source of truth and line up.
 const GLB_SG_W = 2.313, GLB_SG_H = 6.633
@@ -779,16 +777,17 @@ function Door({ m }) {
   const plaqueMat = useMemo(() => new MeshStandardMaterial({ map: makePlaqueTexture(), roughness: 0.45, metalness: 0.35, emissive: '#1a1407', emissiveIntensity: 0.35 }), [])
 
   const OPEN_W = 3.3, OPEN_H = 6.7
-  const S = (OPEN_H * 0.97) / door.size.y     // auto-fit the model to the opening height
+  const S = (OPEN_H * 0.86) / door.size.y     // auto-fit a touch smaller so the arched top sits fully inside the opening
   const PX = OPEN_W / 2 + 0.85                // pilaster centre x
   const gold = m.gold, stone = m.sillStone, trim = m.trim
 
   const Pilaster = ({ x }) => (
     <group position={[x, 0, 0.42]}>
-      <mesh position={[0, 0.35, 0]} material={stone} castShadow receiveShadow><boxGeometry args={[0.95, 0.7, 0.62]} /></mesh>
-      <mesh position={[0, OPEN_H / 2 + 0.35, 0]} material={trim} castShadow><cylinderGeometry args={[0.3, 0.34, OPEN_H - 0.7, 20]} /></mesh>
-      <mesh position={[0, OPEN_H + 0.05, 0]} material={gold} castShadow><boxGeometry args={[0.82, 0.5, 0.66]} /></mesh>
-      <mesh position={[0, OPEN_H + 0.05, 0.35]} material={gold} castShadow><sphereGeometry args={[0.16, 16, 12]} /></mesh>
+      <mesh position={[0, 0.3, 0]} material={stone} castShadow receiveShadow><boxGeometry args={[0.85, 0.55, 0.6]} /></mesh>
+      <mesh position={[0, OPEN_H / 2 + 0.28, 0]} material={trim} castShadow><cylinderGeometry args={[0.28, 0.32, OPEN_H - 0.5, 20]} /></mesh>
+      {/* slim gilded banding instead of a bulky block */}
+      <mesh position={[0, OPEN_H - 0.02, 0]} material={gold}><cylinderGeometry args={[0.3, 0.3, 0.08, 24]} /></mesh>
+      <mesh position={[0, OPEN_H + 0.14, 0]} material={gold}><cylinderGeometry args={[0.34, 0.29, 0.1, 24]} /></mesh>
     </group>
   )
 
@@ -1164,19 +1163,40 @@ function GLBModel({ url, height, pos, rotY = 0, gold = false, fabric = null }) {
   )
 }
 
-// all GLB furnishings: ornate bench (solid), gold candelabras, corner statues, wall chairs
+// upright brown slatted museum bench, sized for the avatar (solid; collision in OBSTACLES)
+function MuseumBench() {
+  const brown = useMemo(() => new MeshStandardMaterial({ color: '#5c3a1d', roughness: 0.58, metalness: 0 }), [])
+  const dark = useMemo(() => new MeshStandardMaterial({ color: '#3c2512', roughness: 0.62, metalness: 0 }), [])
+  const L = 3.2, Wd = 1.05, seatY = 0.92, slats = 6
+  const gap = (Wd - 0.16) / slats
+  return (
+    <group position={[0, 0, 2]}>
+      {Array.from({ length: slats }).map((_, i) => (
+        <mesh key={i} position={[0, seatY, -Wd / 2 + 0.08 + (i + 0.5) * gap]} material={brown} castShadow receiveShadow>
+          <boxGeometry args={[L, 0.1, gap * 0.78]} /></mesh>
+      ))}
+      <mesh position={[0, seatY - 0.14, Wd / 2 - 0.1]} material={brown} castShadow><boxGeometry args={[L - 0.2, 0.16, 0.1]} /></mesh>
+      <mesh position={[0, seatY - 0.14, -(Wd / 2 - 0.1)]} material={brown} castShadow><boxGeometry args={[L - 0.2, 0.16, 0.1]} /></mesh>
+      {[-1, 1].map(s => (
+        <group key={s} position={[s * (L / 2 - 0.16), 0, 0]}>
+          <mesh position={[0, seatY / 2, 0]} material={dark} castShadow receiveShadow><boxGeometry args={[0.18, seatY, Wd - 0.04]} /></mesh>
+          <mesh position={[0, 0.09, 0]} material={dark} castShadow><boxGeometry args={[0.26, 0.18, Wd + 0.12]} /></mesh>
+        </group>
+      ))}
+      <mesh position={[0, 0.34, 0]} material={dark} castShadow><boxGeometry args={[L - 0.4, 0.12, 0.14]} /></mesh>
+    </group>
+  )
+}
+
+// furnishings: brown slatted bench, gold candelabras, two corner statues
 function Furnishings() {
-  const CH = '#3e4c40'   // muted green velvet to match the sage walls (replaces the tulip pattern)
   return (
     <group>
-      <GLBModel url={BENCH_URL} height={1.05} pos={[0, 0, 2]} rotY={0} />
+      <MuseumBench />
       {[[-5.5, 26], [5.5, 26], [-5.5, 2], [5.5, 2], [-5.5, -22], [5.5, -22]].map(([x, z], i) =>
         <GLBModel key={'cand' + i} url={CANDELABRA_URL} height={2.6} pos={[x, 0, z]} gold />)}
       <GLBModel url={STATUE1_URL} height={4.0} pos={[-7.3, 0, -36.3]} rotY={0} />
       <GLBModel url={STATUE2_URL} height={4.0} pos={[7.3, 0, -36.3]} rotY={0} />
-      <GLBModel url={CHAIR_URL} height={1.15} pos={[-8.3, 0, 27]} rotY={Math.PI / 2} fabric={CH} />
-      <GLBModel url={CHAIR_URL} height={1.15} pos={[8.3, 0, 13.5]} rotY={-Math.PI / 2} fabric={CH} />
-      <GLBModel url={CHAIR_URL} height={1.15} pos={[-8.3, 0, -13.5]} rotY={Math.PI / 2} fabric={CH} />
     </group>
   )
 }
@@ -1189,7 +1209,7 @@ const WALK_SPEED = 4.4, RUN_SPEED = 7.5, ACCEL = 16, DRAG_SENS = 0.0032   // res
 // solid furniture the player cannot walk through (axis-aligned footprints: centre + half-extents)
 const PLAYER_R = 0.45
 const OBSTACLES = [
-  { x: 0, z: 2, hx: 1.3, hz: 0.55 },        // ornate bench
+  { x: 0, z: 2, hx: 1.6, hz: 0.55 },        // brown slatted bench
   { x: -7.3, z: -36.3, hx: 0.8, hz: 0.8 },  // statue (back-left corner)
   { x: 7.3, z: -36.3, hx: 0.8, hz: 0.8 },   // statue (back-right corner)
 ]
