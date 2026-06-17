@@ -50,6 +50,8 @@ const FRAME_URL = BASE + 'assets/models/frame_gold.glb'   // optimized ornate go
 useGLTF.preload(FRAME_URL)
 const STAINED_URL = BASE + 'assets/models/stained_glass.glb'   // gothic window with painted glass
 useGLTF.preload(STAINED_URL)
+const DOOR_URL = BASE + 'assets/models/prague_door.glb'   // ornate cathedral entrance door
+useGLTF.preload(DOOR_URL)
 // stained-glass model native size (from its bbox) → derived in-room size, so the
 // arched wall opening and the model use ONE source of truth and line up.
 const GLB_SG_W = 2.313, GLB_SG_H = 6.633
@@ -744,13 +746,86 @@ function PictureLight({ pos, target, rotY = 0, m }) {
 }
 
 /* ── FURNISHINGS ──────────────────────────────────────────── */
+// engraved brass museum plaque (canvas → texture)
+function makePlaqueTexture() {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 120
+  const x = c.getContext('2d')
+  x.fillStyle = '#0e0d0a'; x.fillRect(0, 0, 512, 120)
+  x.fillStyle = '#d8b552'; x.textAlign = 'center'; x.textBaseline = 'middle'
+  x.font = "600 46px Georgia, 'Times New Roman', serif"
+  x.fillText("ABBY'S MUSEUM", 256, 62)
+  const t = new CanvasTexture(c); t.colorSpace = SRGBColorSpace; t.anisotropy = 8
+  return t
+}
+
+const DOOR_MODEL_ROT_Y = 0   // flip to Math.PI if the carved face ends up toward the wall
+
+// monumental Baroque museum entrance: carved GLB door set in a layered ornate portal
 function Door({ m }) {
-  // tall pedimented doorway, raised proportionally with the grand ceiling
+  const { scene } = useGLTF(DOOR_URL)
+  const door = useMemo(() => {
+    const c = scene.clone(true)
+    c.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } })
+    const box = new Box3().setFromObject(c)
+    const size = new Vector3(); box.getSize(size)
+    const ctr = new Vector3(); box.getCenter(ctr)
+    return { c, size, ctr, minY: box.min.y }
+  }, [scene])
+  const plaqueMat = useMemo(() => new MeshStandardMaterial({ map: makePlaqueTexture(), roughness: 0.45, metalness: 0.35, emissive: '#1a1407', emissiveIntensity: 0.35 }), [])
+
+  const OPEN_W = 3.3, OPEN_H = 6.7
+  const S = (OPEN_H * 0.97) / door.size.y     // auto-fit the model to the opening height
+  const PX = OPEN_W / 2 + 0.85                // pilaster centre x
+  const gold = m.gold, stone = m.sillStone, trim = m.trim
+
+  const Pilaster = ({ x }) => (
+    <group position={[x, 0, 0.42]}>
+      <mesh position={[0, 0.35, 0]} material={stone} castShadow receiveShadow><boxGeometry args={[0.95, 0.7, 0.62]} /></mesh>
+      <mesh position={[0, OPEN_H / 2 + 0.35, 0]} material={trim} castShadow><cylinderGeometry args={[0.3, 0.34, OPEN_H - 0.7, 20]} /></mesh>
+      <mesh position={[0, OPEN_H + 0.05, 0]} material={gold} castShadow><boxGeometry args={[0.82, 0.5, 0.66]} /></mesh>
+      <mesh position={[0, OPEN_H + 0.05, 0.35]} material={gold} castShadow><sphereGeometry args={[0.16, 16, 12]} /></mesh>
+    </group>
+  )
+
   return (
-    <group position={[0, 0, D / 2 - 0.04]} rotation={[0, Math.PI, 0]}>
-      <mesh position={[0, 3.2, -0.02]} material={m.trim} castShadow><boxGeometry args={[2.9, 6.4, 0.22]} /></mesh>
-      <mesh position={[0, 3.0, 0.06]} material={m.wood} castShadow><boxGeometry args={[2.3, 5.9, 0.10]} /></mesh>
-      <mesh position={[0, 6.5, 0.04]} material={m.trim} castShadow><boxGeometry args={[3.4, 0.34, 0.38]} /></mesh>
+    <group position={[0, 0, D / 2 - 0.02]} rotation={[0, Math.PI, 0]}>
+      {/* deep dark recess behind the leaves so the opening reads as a portal */}
+      <mesh position={[0, OPEN_H / 2, -0.12]} material={m.woodDark}><boxGeometry args={[OPEN_W + 0.2, OPEN_H + 0.2, 0.12]} /></mesh>
+
+      {/* carved cathedral door, auto-fit + recessed inside the surround */}
+      <primitive object={door.c} position={[-door.ctr.x * S, -door.minY * S, 0.1]} scale={S} rotation={[0, DOOR_MODEL_ROT_Y, 0]} />
+
+      {/* stone surround (jambs + head), wider than the opening, projecting forward */}
+      <mesh position={[-(OPEN_W / 2 + 0.3), OPEN_H / 2, 0.18]} material={stone} castShadow receiveShadow><boxGeometry args={[0.6, OPEN_H + 0.6, 0.52]} /></mesh>
+      <mesh position={[(OPEN_W / 2 + 0.3), OPEN_H / 2, 0.18]} material={stone} castShadow receiveShadow><boxGeometry args={[0.6, OPEN_H + 0.6, 0.52]} /></mesh>
+      <mesh position={[0, OPEN_H + 0.3, 0.18]} material={stone} castShadow receiveShadow><boxGeometry args={[OPEN_W + 1.2, 0.6, 0.52]} /></mesh>
+      {/* thin gold sight-rim around the opening */}
+      <mesh position={[-(OPEN_W / 2 + 0.02), OPEN_H / 2, 0.46]} material={gold}><boxGeometry args={[0.08, OPEN_H + 0.05, 0.05]} /></mesh>
+      <mesh position={[(OPEN_W / 2 + 0.02), OPEN_H / 2, 0.46]} material={gold}><boxGeometry args={[0.08, OPEN_H + 0.05, 0.05]} /></mesh>
+      <mesh position={[0, OPEN_H + 0.04, 0.46]} material={gold}><boxGeometry args={[OPEN_W + 0.12, 0.08, 0.05]} /></mesh>
+
+      {/* flanking pilasters with gilded capitals */}
+      <Pilaster x={-PX} />
+      <Pilaster x={PX} />
+
+      {/* entablature + frieze with engraved museum plaque */}
+      <mesh position={[0, OPEN_H + 0.78, 0.3]} material={trim} castShadow receiveShadow><boxGeometry args={[2 * PX + 1.1, 0.74, 0.72]} /></mesh>
+      <mesh position={[0, OPEN_H + 0.42, 0.38]} material={gold}><boxGeometry args={[2 * PX + 1.1, 0.07, 0.74]} /></mesh>
+      <mesh position={[0, OPEN_H + 0.78, 0.71]} material={plaqueMat}><boxGeometry args={[2.7, 0.52, 0.04]} /></mesh>
+
+      {/* broken Baroque pediment: two raking cornices with a gap for the crest */}
+      <mesh position={[-1.55, OPEN_H + 1.55, 0.3]} rotation={[0, 0, -0.5]} material={trim} castShadow><boxGeometry args={[2.7, 0.42, 0.62]} /></mesh>
+      <mesh position={[1.55, OPEN_H + 1.55, 0.3]} rotation={[0, 0, 0.5]} material={trim} castShadow><boxGeometry args={[2.7, 0.42, 0.62]} /></mesh>
+      {/* gilded cartouche centerpiece + laurel sprigs, projecting toward the room */}
+      <mesh position={[0, OPEN_H + 2.0, 0.55]} material={gold} castShadow scale={[1, 1.35, 0.55]}><sphereGeometry args={[0.5, 22, 16]} /></mesh>
+      <mesh position={[-0.52, OPEN_H + 1.72, 0.55]} rotation={[0, 0, 0.6]} material={gold}><torusGeometry args={[0.28, 0.05, 8, 22, 3.2]} /></mesh>
+      <mesh position={[0.52, OPEN_H + 1.72, 0.55]} rotation={[0, 0, -0.6]} material={gold}><torusGeometry args={[0.28, 0.05, 8, 22, 3.2]} /></mesh>
+
+      {/* warm accent lighting — grazes the carvings + gilding, no harsh spotlight */}
+      <pointLight position={[0, 4.0, 1.9]} intensity={9} distance={9} decay={2} color="#ffd9a0" />
+      <pointLight position={[0, OPEN_H + 2.0, 1.5]} intensity={5} distance={6} decay={2} color="#ffe7bd" />
+      <pointLight position={[-PX, 1.1, 1.1]} intensity={3} distance={5} decay={2} color="#ffd9a0" />
+      <pointLight position={[PX, 1.1, 1.1]} intensity={3} distance={5} decay={2} color="#ffd9a0" />
     </group>
   )
 }
