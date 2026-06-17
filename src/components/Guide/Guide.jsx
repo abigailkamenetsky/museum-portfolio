@@ -237,6 +237,13 @@ export default function Guide() {
         const detail = obj => (
           <>
             <Blocks data={obj.blurb} />
+            {obj.photos && (
+              <div style={{ margin: '6px 0 16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                {(obj.photos.length ? obj.photos : [null, null, null]).map((p, i) => p
+                  ? <img key={i} src={ASSET + 'hobbies/' + p} alt="" style={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', borderRadius: 8, border: `2px solid ${GOLD}66` }} />
+                  : <div key={i} style={{ aspectRatio: '4 / 3', borderRadius: 8, border: `2px dashed ${GOLD}55`, background: 'rgba(227,194,102,0.04)' }} />)}
+              </div>
+            )}
             {obj.images?.length > 0 && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 14, marginBottom: 22 }}>
                 {obj.images.map((src, i) => <img key={i} src={ASSET + src} alt="" style={{ width: '100%', height: 220, objectFit: 'cover', borderRadius: 8, border: `1px solid ${GOLD}44` }} />)}
