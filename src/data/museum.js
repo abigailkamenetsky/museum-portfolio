@@ -143,6 +143,13 @@ export const WINGS = [
         { title: 'Booth - Center for Applied AI', artwork: 'Joseph Wright of Derby - An Experiment on a Bird in the Air Pump', art: 'airpump.jpg', artAspect: 0.749, blurb: 'Applied AI research at Chicago Booth. Topic, methods, findings.',
           why: "Details TBD! I just really like this painting.",
           items: [], images: [], links: [] },
+        { title: 'UChicago HealthLab - Housing & Health', artwork: 'Luke Fildes - The Doctor', art: 'doctor.jpg', artAspect: 0.677,
+          blurb: [
+            "Excited to be joining the University of Chicago Section of Hospital Medicine as a Research Assistant under Dr. Jong-Wook Ban. I will be contributing to research on the intersection of health and housing instability, including literature reviews, systematic reviews and meta-analyses, data analysis, and projects that examine how research priorities identified by affected communities compare to those prioritized by experts and existing research.",
+            "The goal of this work is to help ensure that future research and policy efforts better reflect the needs of people experiencing housing instability.",
+          ],
+          why: "I chose The Doctor by Luke Fildes because it shows a physician watching over a sick child inside a humble home, which is exactly where this work lives: the place where health and housing meet. The painting centers the dignity and care owed to vulnerable families, which is the heart of research meant to reflect what affected communities actually need.",
+          items: [], images: [], links: [] },
       ],
     },
   },
