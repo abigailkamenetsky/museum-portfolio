@@ -242,6 +242,11 @@ export const WINGS = [
           why: "I chose The Singer in Green by Degas because it catches a performer in her moment on stage, and Drama Club was all about helping kids find that same confidence in the spotlight.",
           skills: ['Performance', 'Public speaking', 'Collaboration', 'Stage presence'],
           items: [], images: [], links: [] },
+        { title: 'Starbucks Barista', artwork: 'Édouard Manet - A Bar at the Folies-Bergère', art: 'foliesbar.jpg', artAspect: 0.747,
+          blurb: "I worked as a Starbucks barista in high school for about four and a half months. I prepared drinks, worked 12+ hour weekends, restocked supplies, and worked with a team of 10+ people across all ages. It was a fast-paced, customer-facing job where I kept the quality and the experience high even under pressure.",
+          why: "I chose A Bar at the Folies-Bergère by Édouard Manet because it shows a young woman standing behind a busy bar, serving drinks and holding her composure in the middle of the rush. That was me behind the Starbucks counter on a packed weekend.",
+          skills: ['Customer service', 'Teamwork', 'Working under pressure', 'Multitasking'],
+          items: [], images: [], links: [] },
       ],
     },
   },
@@ -346,14 +351,15 @@ export const WINGS = [
   },
   {
     id: 'licenses', title: 'Licenses, Certifications, and Speaker Series Events', wing: 'Licenses, Certifications & Speaker Series Wing', pos: [L, -33.5], yaw: YAW_L, sub: null,
-    art: null, artAspect: 1.25, placeholder: true,
+    art: 'orrery.jpg', artAspect: 0.740,
     exhibit: {
       blurb: [
         "Licenses and certifications are coming this summer.",
         "Speaker series events I have attended:",
       ],
       items: ['Point72 Spring Academy Sessions', 'McKinsey Insight series'],
-      images: [], links: [], artwork: '',
+      why: "I chose A Philosopher Lecturing on the Orrery by Joseph Wright of Derby because it shows a room of people gathered around a speaker, lit up as they learn something new. That is exactly what these speaker series events feel like, and it fits a section about building knowledge and credentials.",
+      images: [], links: [], artwork: 'Joseph Wright of Derby - A Philosopher Lecturing on the Orrery',
     },
   },
   {
