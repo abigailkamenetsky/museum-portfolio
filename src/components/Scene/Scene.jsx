@@ -52,6 +52,11 @@ const STAINED_URL = BASE + 'assets/models/stained_glass.glb'   // gothic window 
 useGLTF.preload(STAINED_URL)
 const DOOR_URL = BASE + 'assets/models/prague_door.glb'   // ornate cathedral entrance door
 useGLTF.preload(DOOR_URL)
+const CANDELABRA_URL = BASE + 'assets/models/candelabra.glb'; useGLTF.preload(CANDELABRA_URL)
+const CHAIR_URL = BASE + 'assets/models/vintagechair.glb'; useGLTF.preload(CHAIR_URL)
+const STATUE1_URL = BASE + 'assets/models/statue1.glb'; useGLTF.preload(STATUE1_URL)
+const STATUE2_URL = BASE + 'assets/models/statue2.glb'; useGLTF.preload(STATUE2_URL)
+const BENCH_URL = BASE + 'assets/models/bench.glb'; useGLTF.preload(BENCH_URL)
 // stained-glass model native size (from its bbox) → derived in-room size, so the
 // arched wall opening and the model use ONE source of truth and line up.
 const GLB_SG_W = 2.313, GLB_SG_H = 6.633
@@ -792,8 +797,8 @@ function Door({ m }) {
       {/* deep dark recess behind the leaves so the opening reads as a portal */}
       <mesh position={[0, OPEN_H / 2, -0.12]} material={m.woodDark}><boxGeometry args={[OPEN_W + 0.2, OPEN_H + 0.2, 0.12]} /></mesh>
 
-      {/* carved cathedral door, auto-fit + recessed inside the surround */}
-      <primitive object={door.c} position={[-door.ctr.x * S, -door.minY * S, 0.1]} scale={S} rotation={[0, DOOR_MODEL_ROT_Y, 0]} />
+      {/* carved cathedral door, auto-fit + centred in depth so the leaf sits in the opening */}
+      <primitive object={door.c} position={[-door.ctr.x * S, -door.minY * S, -door.ctr.z * S + 0.14]} scale={S} rotation={[0, DOOR_MODEL_ROT_Y, 0]} />
 
       {/* stone surround (jambs + head), wider than the opening, projecting forward */}
       <mesh position={[-(OPEN_W / 2 + 0.3), OPEN_H / 2, 0.18]} material={stone} castShadow receiveShadow><boxGeometry args={[0.6, OPEN_H + 0.6, 0.52]} /></mesh>
@@ -816,10 +821,19 @@ function Door({ m }) {
       {/* broken Baroque pediment: two raking cornices with a gap for the crest */}
       <mesh position={[-1.55, OPEN_H + 1.55, 0.3]} rotation={[0, 0, -0.5]} material={trim} castShadow><boxGeometry args={[2.7, 0.42, 0.62]} /></mesh>
       <mesh position={[1.55, OPEN_H + 1.55, 0.3]} rotation={[0, 0, 0.5]} material={trim} castShadow><boxGeometry args={[2.7, 0.42, 0.62]} /></mesh>
-      {/* gilded cartouche centerpiece + laurel sprigs, projecting toward the room */}
-      <mesh position={[0, OPEN_H + 2.0, 0.55]} material={gold} castShadow scale={[1, 1.35, 0.55]}><sphereGeometry args={[0.5, 22, 16]} /></mesh>
-      <mesh position={[-0.52, OPEN_H + 1.72, 0.55]} rotation={[0, 0, 0.6]} material={gold}><torusGeometry args={[0.28, 0.05, 8, 22, 3.2]} /></mesh>
-      <mesh position={[0.52, OPEN_H + 1.72, 0.55]} rotation={[0, 0, -0.6]} material={gold}><torusGeometry args={[0.28, 0.05, 8, 22, 3.2]} /></mesh>
+      {/* intricate gilded vine crest (replaces the egg), curling scrollwork facing the room */}
+      <group position={[0, OPEN_H + 1.65, 0.5]}>
+        <mesh position={[0, -0.05, 0]} rotation={[0, 0, Math.PI / 2]} material={gold}><cylinderGeometry args={[0.05, 0.06, 0.85, 8]} /></mesh>
+        {[-1, 1].map(s => (
+          <group key={s} scale={[s, 1, 1]}>
+            <mesh position={[0.05, 0.05, 0]} rotation={[0, 0, 0.2]} material={gold} castShadow><torusGeometry args={[0.34, 0.05, 10, 28, 4.4]} /></mesh>
+            <mesh position={[0.5, 0.45, 0]} rotation={[0, 0, 1.2]} material={gold} castShadow><torusGeometry args={[0.2, 0.045, 10, 22, 4.8]} /></mesh>
+            <mesh position={[0.66, 0.05, 0]} rotation={[0, 0, -0.6]} material={gold} castShadow><torusGeometry args={[0.16, 0.04, 10, 20, 4.2]} /></mesh>
+            <mesh position={[0.32, 0.62, 0]} material={gold} scale={[0.45, 1, 0.5]}><sphereGeometry args={[0.1, 10, 8]} /></mesh>
+          </group>
+        ))}
+        <mesh position={[0, 0.58, 0]} material={gold} castShadow><sphereGeometry args={[0.12, 14, 12]} /></mesh>
+      </group>
 
       {/* warm accent lighting — grazes the carvings + gilding, no harsh spotlight */}
       <pointLight position={[0, 4.0, 1.9]} intensity={9} distance={9} decay={2} color="#ffd9a0" />
@@ -1122,13 +1136,47 @@ function SideGothicWindows({ m, side }) {
     </group>
   )
 }
-function Bench({ m }) {
+// generic placed GLB: auto-fit to a target height, centred on its footprint, base on the floor
+function GLBModel({ url, height, pos, rotY = 0, gold = false, fabric = null }) {
+  const { scene } = useGLTF(url)
+  const inst = useMemo(() => {
+    const c = scene.clone(true)
+    c.traverse(o => {
+      if (!o.isMesh) return
+      o.castShadow = true; o.receiveShadow = true
+      if (gold) {
+        o.material = new MeshStandardMaterial({ color: '#8a6f28', roughness: 0.5, metalness: 0.9, envMapIntensity: 0.85 })
+      } else if (fabric && (o.material?.map || /fabric|seat|cushion|tulip|cloth|uphol|textile|pattern|velvet/i.test(o.material?.name || ''))) {
+        o.material = o.material.clone(); o.material.map = null; o.material.color.set(fabric)
+        o.material.roughness = 0.85; o.material.metalness = 0; o.material.needsUpdate = true
+      }
+    })
+    const box = new Box3().setFromObject(c)
+    const size = new Vector3(); box.getSize(size)
+    const ctr = new Vector3(); box.getCenter(ctr)
+    return { c, size, ctr, minY: box.min.y }
+  }, [scene])
+  const S = height / inst.size.y
   return (
-    <group position={[0, 0, 2]}>
-      <mesh position={[0, 0.62, 0]} material={m.wood} castShadow><boxGeometry args={[3.0, 0.16, 0.9]} /></mesh>
-      {[[-1.4, 0.36], [1.4, 0.36], [-1.4, -0.36], [1.4, -0.36]].map(([x, z], i) => (
-        <mesh key={i} position={[x, 0.28, z]} material={m.woodDark} castShadow><boxGeometry args={[0.16, 0.58, 0.16]} /></mesh>
-      ))}
+    <group position={pos} rotation={[0, rotY, 0]}>
+      <primitive object={inst.c} position={[-inst.ctr.x * S, -inst.minY * S, -inst.ctr.z * S]} scale={S} />
+    </group>
+  )
+}
+
+// all GLB furnishings: ornate bench (solid), gold candelabras, corner statues, wall chairs
+function Furnishings() {
+  const CH = '#3e4c40'   // muted green velvet to match the sage walls (replaces the tulip pattern)
+  return (
+    <group>
+      <GLBModel url={BENCH_URL} height={1.05} pos={[0, 0, 2]} rotY={0} />
+      {[[-5.5, 26], [5.5, 26], [-5.5, 2], [5.5, 2], [-5.5, -22], [5.5, -22]].map(([x, z], i) =>
+        <GLBModel key={'cand' + i} url={CANDELABRA_URL} height={2.6} pos={[x, 0, z]} gold />)}
+      <GLBModel url={STATUE1_URL} height={4.0} pos={[-7.3, 0, -36.3]} rotY={0} />
+      <GLBModel url={STATUE2_URL} height={4.0} pos={[7.3, 0, -36.3]} rotY={0} />
+      <GLBModel url={CHAIR_URL} height={1.15} pos={[-8.3, 0, 27]} rotY={Math.PI / 2} fabric={CH} />
+      <GLBModel url={CHAIR_URL} height={1.15} pos={[8.3, 0, 13.5]} rotY={-Math.PI / 2} fabric={CH} />
+      <GLBModel url={CHAIR_URL} height={1.15} pos={[-8.3, 0, -13.5]} rotY={Math.PI / 2} fabric={CH} />
     </group>
   )
 }
@@ -1138,6 +1186,13 @@ function Bench({ m }) {
  *    mouse look (both axes), camera-relative movement, smooth accel/decel, body
  *    turns to face travel direction. ── */
 const WALK_SPEED = 4.4, RUN_SPEED = 7.5, ACCEL = 16, DRAG_SENS = 0.0032   // responsive accel (snappy start/stop) + low mouse-look sensitivity
+// solid furniture the player cannot walk through (axis-aligned footprints: centre + half-extents)
+const PLAYER_R = 0.45
+const OBSTACLES = [
+  { x: 0, z: 2, hx: 1.3, hz: 0.55 },        // ornate bench
+  { x: -7.3, z: -36.3, hx: 0.8, hz: 0.8 },  // statue (back-left corner)
+  { x: 7.3, z: -36.3, hx: 0.8, hz: 0.8 },   // statue (back-right corner)
+]
 const AV_SCALE = 1.9, HEAD_Y = 2.95   // avatar ~half the door height; camera aims at the new head
 const _v1 = new Vector3(), _v2 = new Vector3(), _v3 = new Vector3(), _v4 = new Vector3()
 const _v5 = new Vector3(), _v6 = new Vector3(), _v7 = new Vector3(), _v8 = new Vector3()
@@ -1344,6 +1399,19 @@ function Character() {
     ch.position.x = MathUtils.clamp(ch.position.x, -W / 2 + 0.7, W / 2 - 0.7)
     ch.position.z = MathUtils.clamp(ch.position.z, -D / 2 + 0.7, D / 2 - 0.7)
     ch.position.y = 0
+    // push the player out of any solid furniture (AABB, least-penetration axis)
+    for (const o of OBSTACLES) {
+      const minx = o.x - o.hx - PLAYER_R, maxx = o.x + o.hx + PLAYER_R
+      const minz = o.z - o.hz - PLAYER_R, maxz = o.z + o.hz + PLAYER_R
+      if (ch.position.x > minx && ch.position.x < maxx && ch.position.z > minz && ch.position.z < maxz) {
+        const dl = ch.position.x - minx, dr = maxx - ch.position.x, dn = ch.position.z - minz, df = maxz - ch.position.z
+        const mn = Math.min(dl, dr, dn, df)
+        if (mn === dl) ch.position.x = minx
+        else if (mn === dr) ch.position.x = maxx
+        else if (mn === dn) ch.position.z = minz
+        else ch.position.z = maxz
+      }
+    }
 
     // body faces travel direction (smooth shortest-arc)
     const spd = s.vel.length()
@@ -1603,7 +1671,7 @@ function Gallery() {
       <Suspense fallback={null}><GothicFeature m={m} /></Suspense>
       <Suspense fallback={null}><SideGothicWindows m={m} side={-1} /></Suspense>
       <Suspense fallback={null}><SideGothicWindows m={m} side={1} /></Suspense>
-      <Bench m={m} />
+      <Suspense fallback={null}><Furnishings /></Suspense>
       <Suspense fallback={null}><Character /></Suspense>
 
       <Suspense fallback={null}><Paintings items={items} m={m} /></Suspense>
