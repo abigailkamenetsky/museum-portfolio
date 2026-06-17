@@ -775,11 +775,12 @@ function Door({ m }) {
     return { c, size, ctr, minY: box.min.y }
   }, [scene])
   const plaqueMat = useMemo(() => new MeshStandardMaterial({ map: makePlaqueTexture(), roughness: 0.45, metalness: 0.35, emissive: '#1a1407', emissiveIntensity: 0.35 }), [])
+  const frameWood = useMemo(() => new MeshStandardMaterial({ color: '#5c3a1d', roughness: 0.6, metalness: 0 }), [])   // brown surround to match the carved door
 
   const OPEN_W = 3.3, OPEN_H = 6.7
   const S = (OPEN_H * 0.86) / door.size.y     // auto-fit a touch smaller so the arched top sits fully inside the opening
   const PX = OPEN_W / 2 + 0.85                // pilaster centre x
-  const gold = m.gold, stone = m.sillStone, trim = m.trim
+  const gold = m.gold, stone = frameWood, trim = frameWood
 
   const Pilaster = ({ x }) => (
     <group position={[x, 0, 0.42]}>
