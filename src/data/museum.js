@@ -146,8 +146,9 @@ export const WINGS = [
           skills: ['LLM evaluation', 'Research methods', 'Data analysis', 'Technical writing'],
           why: "I chose this painting because my literature review focused on LLM hallucination rates, methods for mitigating those hallucinations, and what they mean for using LLMs in mental health and psychiatry. Dalí's surreal, almost hallucinogenic paintings felt like the perfect match.",
           items: [], images: [], links: [{ label: 'Presentation', pdf: 'UCSB_Prompting_Techniques.pdf' }] },
-        { title: 'Booth - Center for Applied AI', artwork: 'Joseph Wright of Derby - An Experiment on a Bird in the Air Pump', art: 'airpump.jpg', artAspect: 0.749, blurb: 'Applied AI research at Chicago Booth. Topic, methods, findings.',
-          why: "Details TBD! I just really like this painting.",
+        { title: 'Booth - Center for Applied AI', artwork: 'Joseph Wright of Derby - An Experiment on a Bird in the Air Pump', art: 'airpump.jpg', artAspect: 0.749,
+          blurb: "At the University of Chicago Booth Center for Applied AI, I am helping with data collection for a research project that Professor Levy and Anna Costello are working on. More details to come!",
+          why: "I chose this painting because it shows a group gathered around a live scientific experiment, watching the evidence unfold by candlelight. That mix of curiosity and careful observation is exactly what data collection and applied AI research feel like to me.",
           items: [], images: [], links: [] },
         { title: 'UChicago HealthLab - Housing & Health', artwork: 'Luke Fildes - The Doctor', art: 'doctor.jpg', artAspect: 0.677,
           blurb: [
@@ -301,7 +302,10 @@ export const WINGS = [
     exhibit: {
       blurb: 'Life outside the work - what I love.', images: [], links: [],
       pieces: [
-        { title: 'Reading', artwork: 'Jean-Honoré Fragonard - The Reader', art: 'readinggirl.jpg', artAspect: 1.257, blurb: 'Books and reading.', items: [], images: [], links: [] },
+        { title: 'Reading', artwork: 'Jean-Honoré Fragonard - The Reader', art: 'readinggirl.jpg', artAspect: 1.257,
+          blurb: "I absolutely love to read, specifically classic literature. If I have any free time, I am most likely reading. Check out my StoryGraph!",
+          why: "I chose this painting because it is simply a girl lost in a book, which is me on most afternoons. Reading is my favorite way to spend free time, so it felt right to have a reader watching over this corner of the museum.",
+          items: [], images: [], links: [{ label: 'My StoryGraph', url: 'https://app.thestorygraph.com/profile/abbykamenetsky' }] },
         { title: 'Cooking', artwork: 'Johannes Vermeer - The Milkmaid', art: 'milkmaid.jpg', artAspect: 1.121, blurb: 'Cooking.', items: [], images: [], links: [] },
         { title: 'Crocheting', artwork: 'Berthe Morisot - Young Woman Knitting', art: 'knitting.jpg', artAspect: 0.835, blurb: 'Crocheting and making.', items: [], images: [], links: [] },
         { title: 'Thrifting', artwork: 'Carl Spitzweg - Der Stellwagen (street scene)', art: 'spitzweg.jpg', artAspect: 1.583, blurb: 'Thrifting and vintage finds.', items: [], images: [], links: [] },
