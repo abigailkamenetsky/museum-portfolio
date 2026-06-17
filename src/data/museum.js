@@ -139,8 +139,9 @@ export const WINGS = [
           ] },
         { title: 'UCSB - LLM Hallucinations', artwork: 'Salvador Dalí - The Temptation of Saint Anthony', art: 'stanthony.jpg', artAspect: 0.783,
           blurb: [
-            "I wrote a literature review paper on LLM hallucinations: how often they occur, the techniques used to reduce them, and what they mean for safely using large language models in mental health and clinical psychology.",
-            "My paper focused on prompting techniques to reduce LLM hallucinations in clinical psychology settings. The full paper is being kept private while it is prepared for submission, so I'm sharing the presentation that walks through the work below.",
+            "I wrote a literature review paper on LLM hallucinations: how often they occur, the techniques used to reduce them, and what they mean for safely using large language models in mental health and clinical psychology. My paper focused on prompting techniques to reduce LLM hallucinations in clinical psychology settings.",
+            "I presented this paper at a UCSB international academic conference, where I was ranked in the top 10% of presenters out of more than 700, and I earned 2 UCSB academic credits for presenting it as a high schooler.",
+            "The full paper is being kept private while it is prepared for submission, so I'm sharing the presentation that walks through the work below.",
           ],
           skills: ['LLM evaluation', 'Research methods', 'Data analysis', 'Technical writing'],
           why: "I chose this painting because my literature review focused on LLM hallucination rates, methods for mitigating those hallucinations, and what they mean for using LLMs in mental health and psychiatry. Dalí's surreal, almost hallucinogenic paintings felt like the perfect match.",
