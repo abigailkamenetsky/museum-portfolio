@@ -50,8 +50,6 @@ const FRAME_URL = BASE + 'assets/models/frame_gold.glb'   // optimized ornate go
 useGLTF.preload(FRAME_URL)
 const STAINED_URL = BASE + 'assets/models/stained_glass.glb'   // gothic window with painted glass
 useGLTF.preload(STAINED_URL)
-const DOOR_URL = BASE + 'assets/models/prague_door.glb'   // ornate cathedral entrance door
-useGLTF.preload(DOOR_URL)
 const CANDELABRA_URL = BASE + 'assets/models/candelabra.glb'; useGLTF.preload(CANDELABRA_URL)
 const STATUE1_URL = BASE + 'assets/models/statue1.glb'; useGLTF.preload(STATUE1_URL)
 const STATUE2_URL = BASE + 'assets/models/statue2.glb'; useGLTF.preload(STATUE2_URL)
@@ -761,24 +759,15 @@ function makePlaqueTexture() {
   return t
 }
 
-const DOOR_MODEL_ROT_Y = 0   // flip to Math.PI if the carved face ends up toward the wall
-
-// monumental Baroque museum entrance: carved GLB door set in a layered ornate portal
+// monumental Baroque museum entrance: a detailed PROCEDURAL double-door in a layered ornate portal
 function Door({ m }) {
-  const { scene } = useGLTF(DOOR_URL)
-  const door = useMemo(() => {
-    const c = scene.clone(true)
-    c.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } })
-    const box = new Box3().setFromObject(c)
-    const size = new Vector3(); box.getSize(size)
-    const ctr = new Vector3(); box.getCenter(ctr)
-    return { c, size, ctr, minY: box.min.y }
-  }, [scene])
   const plaqueMat = useMemo(() => new MeshStandardMaterial({ map: makePlaqueTexture(), roughness: 0.45, metalness: 0.35, emissive: '#1a1407', emissiveIntensity: 0.35 }), [])
-  const copper = useMemo(() => new MeshStandardMaterial({ color: '#9c5a32', roughness: 0.5, metalness: 0.78, envMapIntensity: 0.6 }), [])   // aged copper surround (metallic, dark in the recesses)
+  const copper = useMemo(() => new MeshStandardMaterial({ color: '#9c5a32', roughness: 0.5, metalness: 0.78, envMapIntensity: 0.6 }), [])   // aged copper surround
+  const doorWood = useMemo(() => new MeshStandardMaterial({ color: '#7a4a2a', roughness: 0.5, metalness: 0.35, envMapIntensity: 0.45 }), [])   // bronze-walnut leaf, complements the copper
+  const doorDark = useMemo(() => new MeshStandardMaterial({ color: '#3a2412', roughness: 0.62, metalness: 0.2 }), [])
 
   const OPEN_W = 3.3, OPEN_H = 6.7
-  const S = (OPEN_H * 0.93) / door.size.y     // fill the opening (dark recess covers any sliver at the top)
+  const DH = OPEN_H - 0.12, LW = (OPEN_W - 0.18) / 2, sZ = 0.1   // door leaf dims + slab depth
   const PX = OPEN_W / 2 + 0.85                // pilaster centre x
   const gold = m.gold, stone = copper, trim = copper
 
@@ -792,13 +781,41 @@ function Door({ m }) {
     </group>
   )
 
+  // a raised carved panel: recessed field + beveled raised center + gilt arch + rosette boss
+  const Panel = ({ py, pw, ph }) => (
+    <group position={[0, py, 0]}>
+      <mesh position={[0, 0, sZ + 0.06]} material={doorDark}><boxGeometry args={[pw, ph, 0.04]} /></mesh>
+      <mesh position={[0, 0, sZ + 0.11]} material={doorWood} castShadow><boxGeometry args={[pw - 0.14, ph - 0.14, 0.05]} /></mesh>
+      <mesh position={[0, ph / 2 - 0.24, sZ + 0.17]} material={gold}><torusGeometry args={[pw * 0.26, 0.022, 8, 22, Math.PI]} /></mesh>
+      <mesh position={[0, 0, sZ + 0.17]} material={gold}><sphereGeometry args={[0.055, 12, 10]} /></mesh>
+    </group>
+  )
+  // one door leaf: slab + raised stiles/rails + three carved panels
+  const Leaf = ({ lx }) => {
+    const ph = (DH - 0.72) / 3
+    return (
+      <group position={[lx, 0, 0]}>
+        <mesh position={[0, DH / 2, sZ]} material={doorDark} castShadow receiveShadow><boxGeometry args={[LW, DH, 0.1]} /></mesh>
+        <mesh position={[-LW / 2 + 0.09, DH / 2, sZ + 0.06]} material={doorWood} castShadow><boxGeometry args={[0.18, DH, 0.06]} /></mesh>
+        <mesh position={[LW / 2 - 0.09, DH / 2, sZ + 0.06]} material={doorWood} castShadow><boxGeometry args={[0.18, DH, 0.06]} /></mesh>
+        <mesh position={[0, DH - 0.12, sZ + 0.06]} material={doorWood} castShadow><boxGeometry args={[LW, 0.24, 0.06]} /></mesh>
+        <mesh position={[0, 0.12, sZ + 0.06]} material={doorWood} castShadow><boxGeometry args={[LW, 0.24, 0.06]} /></mesh>
+        {[0, 1, 2].map(i => <Panel key={i} py={0.24 + ph / 2 + i * (ph + 0.12)} pw={LW - 0.34} ph={ph} />)}
+      </group>
+    )
+  }
+
   return (
     <group position={[0, 0, D / 2 - 0.02]} rotation={[0, Math.PI, 0]}>
       {/* dark recess JUST IN FRONT of the wall (behind the leaf) so no green shows through the opening */}
       <mesh position={[0, OPEN_H / 2, 0.05]} material={m.woodDark}><boxGeometry args={[OPEN_W + 0.4, OPEN_H + 0.5, 0.12]} /></mesh>
 
-      {/* carved cathedral door, auto-fit + centred in depth so the leaf sits in the opening */}
-      <primitive object={door.c} position={[-door.ctr.x * S, -door.minY * S, -door.ctr.z * S + 0.14]} scale={S} rotation={[0, DOOR_MODEL_ROT_Y, 0]} />
+      {/* detailed double-door: bronze-walnut leaves with raised carved panels (sits cleanly in the opening) */}
+      <Leaf lx={-(LW / 2 + 0.03)} />
+      <Leaf lx={LW / 2 + 0.03} />
+      {/* gilded knobs at the meeting stile */}
+      <mesh position={[-0.16, 3.0, sZ + 0.2]} material={gold}><sphereGeometry args={[0.09, 14, 12]} /></mesh>
+      <mesh position={[0.16, 3.0, sZ + 0.2]} material={gold}><sphereGeometry args={[0.09, 14, 12]} /></mesh>
 
       {/* stone surround (jambs + head), wider than the opening, projecting forward */}
       <mesh position={[-(OPEN_W / 2 + 0.3), OPEN_H / 2, 0.18]} material={stone} castShadow receiveShadow><boxGeometry args={[0.6, OPEN_H + 0.6, 0.52]} /></mesh>
@@ -1197,7 +1214,6 @@ function Furnishings() {
   const sconces = [
     [-3.7, 4.6, 38.2, Math.PI], [3.7, 4.6, 38.2, Math.PI],       // front wall, flanking the door
     [-3.2, 4.6, -37.9, 0], [3.2, 4.6, -37.9, 0],                 // back wall, flanking the stained glass
-    [-8.62, 4.6, 36.5, Math.PI / 2], [8.62, 4.6, 36.5, -Math.PI / 2],   // side walls near the entrance
   ]
   return (
     <group>
