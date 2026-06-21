@@ -1147,7 +1147,7 @@ function GLBModel({ url, height, pos, rotY = 0, gold = false, marble = false, fa
       if (gold) {
         o.material = new MeshStandardMaterial({ color: '#8a6f28', roughness: 0.5, metalness: 0.9, envMapIntensity: 0.85 })
       } else if (marble) {
-        o.material = new MeshStandardMaterial({ color: '#ece8de', roughness: 0.85, metalness: 0 })
+        o.material = new MeshStandardMaterial({ color: '#ece8de', roughness: 0.7, metalness: 0, envMapIntensity: 0.25 })
       } else if (fabric && (o.material?.map || /fabric|seat|cushion|tulip|cloth|uphol|textile|pattern|velvet/i.test(o.material?.name || ''))) {
         o.material = o.material.clone(); o.material.map = null; o.material.color.set(fabric)
         o.material.roughness = 0.85; o.material.metalness = 0; o.material.needsUpdate = true
@@ -1204,8 +1204,11 @@ function Furnishings() {
       <MuseumBench />
       {sconces.map(([x, y, z, r], i) =>
         <GLBModel key={'sc' + i} url={CANDELABRA_URL} height={1.9} pos={[x, y, z]} rotY={r} gold />)}
-      <GLBModel url={STATUE1_URL} height={6.0} pos={[-7.3, 0, -36.3]} rotY={0} marble />
-      <GLBModel url={STATUE2_URL} height={6.0} pos={[7.3, 0, -36.3]} rotY={0} marble />
+      <GLBModel url={STATUE1_URL} height={7.5} pos={[-6.1, 0, -35.5]} rotY={0} marble />
+      <GLBModel url={STATUE2_URL} height={7.5} pos={[6.1, 0, -35.5]} rotY={0} marble />
+      {/* warm raking uplight per statue → reveals the carved relief (grazing light + N8AO crevice shading) */}
+      <pointLight position={[-6.1, 1.0, -34.0]} intensity={16} distance={12} decay={2} color="#ffe6c0" />
+      <pointLight position={[6.1, 1.0, -34.0]} intensity={16} distance={12} decay={2} color="#ffe6c0" />
     </group>
   )
 }
@@ -1219,8 +1222,8 @@ const WALK_SPEED = 4.4, RUN_SPEED = 7.5, ACCEL = 16, DRAG_SENS = 0.0032   // res
 const PLAYER_R = 0.45
 const OBSTACLES = [
   { x: 0, z: 2, hx: 1.6, hz: 0.55 },        // brown slatted bench
-  { x: -7.3, z: -36.3, hx: 1.0, hz: 1.0 },  // statue (back-left corner)
-  { x: 7.3, z: -36.3, hx: 1.0, hz: 1.0 },   // statue (back-right corner)
+  { x: -6.1, z: -35.5, hx: 1.1, hz: 1.1 },  // statue (back-left)
+  { x: 6.1, z: -35.5, hx: 1.1, hz: 1.1 },   // statue (back-right)
 ]
 const AV_SCALE = 1.9, HEAD_Y = 2.95   // avatar ~half the door height; camera aims at the new head
 const _v1 = new Vector3(), _v2 = new Vector3(), _v3 = new Vector3(), _v4 = new Vector3()
