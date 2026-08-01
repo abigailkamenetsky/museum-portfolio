@@ -1198,16 +1198,17 @@ function BakedHall() {
     c.traverse(o => {
       if (!o.isMesh) return
       const src = o.material
-      const map = src.emissiveMap || src.map || null
-      if (map) map.colorSpace = SRGBColorSpace
-      o.material = new MeshBasicMaterial({
-        map,
-        color: map ? 0xffffff : (src.color ? src.color.clone() : 0xffffff),
-        transparent: src.transparent,
-        opacity: src.opacity,
-        side: FrontSide,
-        toneMapped: true,
-      })
+      // Only the shell carries a baked lightmap (emissiveTexture) — that one goes
+      // unlit so the bake reads exactly as rendered. Props were never baked, so
+      // they keep a lit material and are shaded by the scene lights instead.
+      if (src.emissiveMap) {
+        src.emissiveMap.colorSpace = SRGBColorSpace
+        o.material = new MeshBasicMaterial({ map: src.emissiveMap, side: FrontSide })
+      } else {
+        src.emissive?.setScalar(0)
+        src.roughness = src.roughness ?? 0.6
+        src.needsUpdate = true
+      }
       o.castShadow = o.receiveShadow = false
     })
     return c
