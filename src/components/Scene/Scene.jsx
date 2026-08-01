@@ -1746,7 +1746,7 @@ export default function Scene() {
       camera={{ position: [0, 2.8, 12], fov: 68 }}
       gl={{ toneMapping: ACESFilmicToneMapping, toneMappingExposure: 0.98, antialias: true, powerPreference: 'high-performance' }}
       onCreated={() => console.log('[Scene] Canvas created, renderer ready')}
-      style={{ width: '100vw', height: '100vh', display: 'block' }}
+      style={{ width: '100vw', height: '100dvh', display: 'block', touchAction: 'none', WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}
     >
       <color attach="background" args={['#090806']} />
 

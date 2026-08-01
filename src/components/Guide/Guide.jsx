@@ -127,7 +127,7 @@ export default function Guide() {
   const cat = s.menu && s.menu !== 'home' ? wingById(s.menu) : null
   const cardWing = s.card ? wingById(s.card) : null
   const dim = { position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 30, background: 'rgba(6,8,6,0.5)', backdropFilter: 'blur(3px)' }
-  const linkPill = { padding: '14px 24px', background: 'rgba(227,194,102,0.1)', border: `1px solid ${GOLD}66`, borderRadius: 10, color: GOLD, textDecoration: 'none', font: `500 23px ${serif}`, cursor: 'pointer' }
+  const linkPill = { padding: 'clamp(10px,2.6vw,14px) clamp(16px,3.4vw,24px)', background: 'rgba(227,194,102,0.1)', border: `1px solid ${GOLD}66`, borderRadius: 10, color: GOLD, textDecoration: 'none', font: `500 clamp(16px,3.8vw,23px) ${serif}`, cursor: 'pointer' }
 
   return (
     <>
@@ -148,9 +148,9 @@ export default function Guide() {
       {/* "Now Entering" title card */}
       {s.titleCard && (
         <div style={{ position: 'fixed', top: '15%', left: 0, right: 0, textAlign: 'center', zIndex: 35, pointerEvents: 'none', animation: 'fadeIn .7s ease' }}>
-          <div style={{ display: 'inline-block', padding: '20px 46px', background: INK, border: `1px solid ${GOLD}66`, borderRadius: 12 }}>
-            <div style={{ color: GOLD, font: `600 20px ${serif}`, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.8 }}>Now Entering</div>
-            <div style={{ color: '#f3ecd9', font: `400 46px ${serif}`, marginTop: 6 }}>{s.titleCard}</div>
+          <div style={{ display: 'inline-block', maxWidth: '92vw', padding: 'clamp(14px,3.5vw,20px) clamp(22px,6vw,46px)', background: INK, border: `1px solid ${GOLD}66`, borderRadius: 12 }}>
+            <div style={{ color: GOLD, font: `600 clamp(14px,3.4vw,20px) ${serif}`, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.8 }}>Now Entering</div>
+            <div style={{ color: '#f3ecd9', font: `400 clamp(28px,7vw,46px) ${serif}`, marginTop: 6 }}>{s.titleCard}</div>
           </div>
         </div>
       )}
@@ -158,11 +158,11 @@ export default function Guide() {
       {/* STEP 1 - welcome */}
       {s.phase === 'welcome' && (
         <div onClick={advance} style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 25, cursor: 'pointer', animation: 'fadeIn 1.2s ease' }}>
-          <div style={{ textAlign: 'center', maxWidth: 'min(720px,92vw)', padding: '48px 58px', background: 'rgba(8,10,8,0.62)', border: `1px solid ${GOLD}44`, borderRadius: 18, backdropFilter: 'blur(3px)' }}>
-            <div style={{ color: GOLD, font: `500 20px ${serif}`, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.85 }}>Welcome to</div>
-            <div style={{ color: '#f3ecd9', font: `400 clamp(46px,9vw,66px) ${serif}`, margin: '14px 0 20px' }}>Abby's Museum</div>
-            <div style={{ color: '#e7ddca', font: `400 26px/1.55 ${serif}`, opacity: 0.9 }}>An interactive gallery where each art piece reveals a chapter of my journey: projects, internships, research, and hobbies.</div>
-            <div style={{ color: GOLD, font: `500 24px ${serif}`, marginTop: 30, letterSpacing: 0.5 }}>Tap the screen or press <b>SPACE</b> to see how it works</div>
+          <div style={{ textAlign: 'center', maxWidth: 'min(720px,92vw)', padding: 'clamp(26px,5vw,48px) clamp(20px,5vw,58px)', background: 'rgba(8,10,8,0.62)', border: `1px solid ${GOLD}44`, borderRadius: 18, backdropFilter: 'blur(3px)' }}>
+            <div style={{ color: GOLD, font: `500 clamp(15px,3.6vw,20px) ${serif}`, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.85 }}>Welcome to</div>
+            <div style={{ color: '#f3ecd9', font: `400 clamp(38px,9vw,66px) ${serif}`, margin: '14px 0 20px' }}>Abby's Museum</div>
+            <div style={{ color: '#e7ddca', font: `400 clamp(17px,4.4vw,26px)/1.55 ${serif}`, opacity: 0.9 }}>An interactive gallery where each art piece reveals a chapter of my journey: projects, internships, research, and hobbies.</div>
+            <div style={{ color: GOLD, font: `500 clamp(16px,4.2vw,24px) ${serif}`, marginTop: 30, letterSpacing: 0.5 }}>{isMobile ? 'Tap the screen' : <>Tap the screen or press <b>SPACE</b></>} to see how it works</div>
           </div>
         </div>
       )}
@@ -170,8 +170,8 @@ export default function Guide() {
       {/* STEP 2 - how it works (handheld audio guide) */}
       {s.phase === 'howto' && (
         <div onClick={advance} style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 25, cursor: 'pointer', animation: 'fadeIn .8s ease' }}>
-          <div style={{ textAlign: 'center', maxWidth: 'min(700px,92vw)', padding: '44px 54px', background: 'rgba(8,10,8,0.62)', border: `1px solid ${GOLD}44`, borderRadius: 18, backdropFilter: 'blur(3px)' }}>
-            <div style={{ color: GOLD, font: `500 20px ${serif}`, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.85 }}>Your Audio Guide</div>
+          <div style={{ textAlign: 'center', maxWidth: 'min(700px,92vw)', padding: 'clamp(24px,5vw,44px) clamp(20px,5vw,54px)', background: 'rgba(8,10,8,0.62)', border: `1px solid ${GOLD}44`, borderRadius: 18, backdropFilter: 'blur(3px)' }}>
+            <div style={{ color: GOLD, font: `500 clamp(15px,3.6vw,20px) ${serif}`, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.85 }}>Your Audio Guide</div>
             {/* small centered device icon */}
             <div style={{ display: 'flex', justifyContent: 'center', margin: '26px 0' }}>
               <div style={{ width: 140, background: 'linear-gradient(165deg,#7d1c2c,#4a0d15)', border: '2px solid #2c0a10', borderRadius: 22, padding: '13px 12px 16px', boxShadow: '0 14px 30px rgba(0,0,0,0.5)' }}>
@@ -180,8 +180,8 @@ export default function Guide() {
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 11 }}>{[0, 1, 2].map(i => <div key={i} style={{ width: 15, height: 15, borderRadius: 15, border: `1px solid ${GOLD}88` }} />)}</div>
               </div>
             </div>
-            <div style={{ color: '#e7ddca', font: `400 24px/1.55 ${serif}`, opacity: 0.92, marginTop: 2 }}>Use your audio guide to jump to any section of the wing, or click "Guide Me" to walk there yourself. When you get there, tap the paintings to see information for each experience!</div>
-            <div style={{ color: GOLD, font: `500 24px ${serif}`, marginTop: 26 }}>Tap the screen or press <b>SPACE</b> to open the Audio Guide</div>
+            <div style={{ color: '#e7ddca', font: `400 clamp(16px,4.2vw,24px)/1.55 ${serif}`, opacity: 0.92, marginTop: 2 }}>Use your audio guide to jump to any section of the wing, or click "Guide Me" to walk there yourself. When you get there, tap the paintings to see information for each experience!</div>
+            <div style={{ color: GOLD, font: `500 clamp(16px,4.2vw,24px) ${serif}`, marginTop: 26 }}>{isMobile ? 'Tap the screen' : <>Tap the screen or press <b>SPACE</b></>} to open the Audio Guide</div>
           </div>
         </div>
       )}
@@ -194,7 +194,7 @@ export default function Guide() {
               <>
                 <div style={{ color: GOLD, font: `600 18px ${serif}`, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.8 }}>Museum Guide</div>
                 <div style={{ font: `400 22px ${serif}`, margin: '4px 0 14px' }}>Pick a section to visit:</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 18 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', columnGap: 18 }}>
                   {WINGS.map(w => (
                     <button key={w.id} style={row(hover === w.id)} onMouseEnter={() => setHover(w.id)} onMouseLeave={() => setHover(null)} onClick={() => museum.set({ menu: w.id })}>{w.title}</button>
                   ))}
@@ -281,12 +281,12 @@ export default function Guide() {
                     <div key={l.label} style={{ position: 'relative' }}>
                       <button onClick={() => setEmailOpen(o => !o)} style={linkPill}>{l.label} {emailOpen ? '▴' : '▾'}</button>
                       {emailOpen && (
-                        <div style={{ position: 'absolute', bottom: 'calc(100% + 10px)', left: 0, zIndex: 6, minWidth: 340, background: INK, border: `1px solid ${GOLD}77`, borderRadius: 13, padding: 12, boxShadow: '0 16px 36px rgba(0,0,0,0.6)' }}>
+                        <div style={{ position: 'absolute', bottom: 'calc(100% + 10px)', left: 0, zIndex: 6, width: 'max-content', minWidth: 'min(340px,80vw)', maxWidth: '86vw', background: INK, border: `1px solid ${GOLD}77`, borderRadius: 13, padding: 12, boxShadow: '0 16px 36px rgba(0,0,0,0.6)' }}>
                           {l.emails.map(em => (
                             <div key={em.addr} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '12px 10px' }}>
                               <div style={{ textAlign: 'left', minWidth: 0 }}>
                                 <div style={{ color: GOLD, font: `600 16px ${serif}`, letterSpacing: 1.5, textTransform: 'uppercase', opacity: 0.85 }}>{em.label}</div>
-                                <div style={{ color: '#efe7d6', font: `400 21px ${serif}`, whiteSpace: 'nowrap' }}>{em.addr}</div>
+                                <div style={{ color: '#efe7d6', font: `400 clamp(15px,3.6vw,21px) ${serif}`, overflowWrap: 'anywhere' }}>{em.addr}</div>
                               </div>
                               <button onClick={() => { navigator.clipboard?.writeText(em.addr); setCopied(em.addr); setTimeout(() => setCopied(c => (c === em.addr ? null : c)), 1600) }} style={{ ...linkPill, padding: '8px 18px', font: `600 19px ${serif}`, whiteSpace: 'nowrap', background: copied === em.addr ? 'rgba(227,194,102,0.28)' : 'rgba(227,194,102,0.1)' }}>{copied === em.addr ? 'Copied!' : 'Copy'}</button>
                             </div>
@@ -305,23 +305,23 @@ export default function Guide() {
         )
         return (
           <div style={dim} onClick={e => { if (e.target === e.currentTarget) museum.set({ card: null }) }}>
-            <div style={{ width: inList ? 'min(860px,94vw)' : 'min(1240px,96vw)', maxHeight: '88vh', overflowY: 'auto', background: INK, border: `1px solid ${GOLD}55`, borderRadius: 18, padding: '44px 52px', color: '#efe7d6', fontFamily: serif, fontSize: 22, boxShadow: '0 24px 70px rgba(0,0,0,0.6)' }}>
+            <div style={{ width: inList ? 'min(860px,94vw)' : 'min(1240px,96vw)', maxHeight: '90dvh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', background: INK, border: `1px solid ${GOLD}55`, borderRadius: 18, padding: 'clamp(20px,4.5vw,44px) clamp(16px,4.5vw,52px)', color: '#efe7d6', fontFamily: serif, fontSize: 'clamp(15px,3.8vw,22px)', boxShadow: '0 24px 70px rgba(0,0,0,0.6)' }}>
               <div style={{ color: GOLD, font: `600 19px ${serif}`, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.8 }}>{cardWing.wing}</div>
-              <div style={{ font: `400 48px ${serif}`, margin: '6px 0 18px' }}>{piece != null ? pcs[piece].title : cardWing.title}</div>
+              <div style={{ font: `400 clamp(28px,6.5vw,48px) ${serif}`, margin: '6px 0 18px', lineHeight: 1.15, overflowWrap: 'break-word' }}>{piece != null ? pcs[piece].title : cardWing.title}</div>
               {inList ? (
                 <>
                   <div style={{ opacity: 0.9, lineHeight: 1.55, marginBottom: 24 }}>{ex.blurb}</div>
                   {pcs.map((p, i) => (
-                    <button key={i} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '20px 24px', margin: '10px 0', background: hover === 'pc' + i ? 'rgba(227,194,102,0.16)' : 'rgba(227,194,102,0.05)', border: `1px solid ${GOLD}44`, borderRadius: 11, color: '#efe7d6', font: `500 27px ${serif}`, cursor: 'pointer' }} onMouseEnter={() => setHover('pc' + i)} onMouseLeave={() => setHover(null)} onClick={() => setPiece(i)}>{p.title} ›</button>
+                    <button key={i} style={{ display: 'block', width: '100%', textAlign: 'left', padding: 'clamp(14px,3vw,20px) clamp(16px,3vw,24px)', margin: '10px 0', background: hover === 'pc' + i ? 'rgba(227,194,102,0.16)' : 'rgba(227,194,102,0.05)', border: `1px solid ${GOLD}44`, borderRadius: 11, color: '#efe7d6', font: `500 clamp(18px,4.4vw,27px) ${serif}`, cursor: 'pointer' }} onMouseEnter={() => setHover('pc' + i)} onMouseLeave={() => setHover(null)} onClick={() => setPiece(i)}>{p.title} ›</button>
                   ))}
                 </>
               ) : (
                 <>
-                  {pcs && <button style={{ marginBottom: 18, padding: '10px 20px', background: 'transparent', border: `1px solid ${GOLD}55`, borderRadius: 10, color: GOLD, font: `500 22px ${serif}`, cursor: 'pointer' }} onClick={() => setPiece(null)}>‹ All of {cardWing.title}</button>}
-                  <div style={{ display: 'flex', gap: 34, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                    <div style={{ flex: '1 1 360px', minWidth: 300 }}>{detail(d)}</div>
+                  {pcs && <button style={{ marginBottom: 18, padding: '10px 20px', background: 'transparent', border: `1px solid ${GOLD}55`, borderRadius: 10, color: GOLD, font: `500 clamp(16px,3.6vw,22px) ${serif}`, cursor: 'pointer' }} onClick={() => setPiece(null)}>‹ All of {cardWing.title}</button>}
+                  <div style={{ display: 'flex', gap: 'clamp(18px,3vw,34px)', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                    <div style={{ flex: '1 1 300px', minWidth: 0 }}>{detail(d)}</div>
                     {artFile && (
-                      <div style={{ flex: '0 0 460px', maxWidth: '100%', margin: '0 auto' }}>
+                      <div style={{ flex: '1 1 320px', minWidth: 0, maxWidth: '100%', margin: '0 auto' }}>
                         <img src={ASSET + 'art/hi/' + artFile} onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = ASSET + 'art/' + artFile }} alt="" style={{ width: '100%', display: 'block', borderRadius: 6, border: `2px solid ${GOLD}55`, boxShadow: '0 12px 34px rgba(0,0,0,0.55)' }} />
                         {d.artwork && <div style={{ marginTop: 14, textAlign: 'center', color: GOLD, opacity: 0.8, font: `italic 400 21px ${serif}`, lineHeight: 1.4 }}>{d.artwork}</div>}
                         {d.why && (
@@ -349,7 +349,7 @@ export default function Guide() {
                   </div>
                 )
               })()}
-              <button style={{ marginTop: 26, padding: '14px 28px', background: 'rgba(227,194,102,0.08)', border: `1px solid ${GOLD}66`, borderRadius: 10, color: GOLD, font: `500 24px ${serif}`, cursor: 'pointer' }} onClick={() => museum.set({ card: null })}>Close</button>
+              <button style={{ marginTop: 26, padding: '14px 28px', background: 'rgba(227,194,102,0.08)', border: `1px solid ${GOLD}66`, borderRadius: 10, color: GOLD, font: `500 clamp(17px,4vw,24px) ${serif}`, cursor: 'pointer' }} onClick={() => museum.set({ card: null })}>Close</button>
             </div>
           </div>
         )
@@ -357,7 +357,7 @@ export default function Guide() {
 
       {/* hover label when near/looking at a painting (tap it to open) */}
       {!s.menu && !s.card && s.phase === 'explore' && s.focus && (
-        <button onClick={() => museum.set({ card: s.focus.wingId, cardPiece: s.focus.piece })} style={{ position: 'fixed', left: '50%', bottom: isMobile ? 78 : 64, transform: 'translateX(-50%)', zIndex: 23, padding: '14px 26px', background: INK, border: `1px solid ${GOLD}77`, borderRadius: 11, color: GOLD, font: `500 23px ${serif}`, cursor: 'pointer', animation: 'fadeIn .25s ease', whiteSpace: 'nowrap' }}>Tap each painting to see different projects</button>
+        <button onClick={() => museum.set({ card: s.focus.wingId, cardPiece: s.focus.piece })} style={{ position: 'fixed', left: '50%', bottom: isMobile ? 78 : 64, transform: 'translateX(-50%)', zIndex: 23, maxWidth: '92vw', padding: 'clamp(11px,3vw,14px) clamp(18px,4vw,26px)', background: INK, border: `1px solid ${GOLD}77`, borderRadius: 11, color: GOLD, font: `500 clamp(15px,3.8vw,23px) ${serif}`, cursor: 'pointer', animation: 'fadeIn .25s ease', textAlign: 'center' }}>Tap each painting to see different projects</button>
       )}
 
       {/* desktop-only bottom hint (hidden on mobile) */}
