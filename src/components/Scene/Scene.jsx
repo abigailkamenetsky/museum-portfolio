@@ -15,7 +15,7 @@ import {
   MeshStandardMaterial, MeshPhysicalMaterial, MeshBasicMaterial, ExtrudeGeometry, ShapeGeometry, Shape, Path, Vector2,
   PlaneGeometry, BufferAttribute, TextureLoader, RepeatWrapping, SRGBColorSpace,
   EquirectangularReflectionMapping, Object3D, TorusGeometry, CylinderGeometry,
-  SphereGeometry, ConeGeometry, BoxGeometry, Matrix4, DoubleSide, Box3,
+  SphereGeometry, ConeGeometry, BoxGeometry, Matrix4, DoubleSide, FrontSide, Box3,
   Vector3, Euler, MathUtils, ACESFilmicToneMapping, PCFSoftShadowMap, ClampToEdgeWrapping, CanvasTexture,
   LinearFilter, LinearMipmapLinearFilter,
 } from 'three'
@@ -51,6 +51,8 @@ useGLTF.preload(FRAME_URL)
 const STAINED_URL = BASE + 'assets/models/stained_glass.glb'   // gothic window with painted glass
 useGLTF.preload(STAINED_URL)
 const CANDELABRA_URL = BASE + 'assets/models/candelabra.glb'; useGLTF.preload(CANDELABRA_URL)
+const BAKED_URL = BASE + 'assets/models/hall_baked.glb'   // Blender room with baked GI (preview: ?baked=1)
+const USE_BAKED = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('baked')
 const STATUE1_URL = BASE + 'assets/models/statue1.glb'; useGLTF.preload(STATUE1_URL)
 const STATUE2_URL = BASE + 'assets/models/statue2.glb'; useGLTF.preload(STATUE2_URL)
 // stained-glass model native size (from its bbox) → derived in-room size, so the
@@ -1184,6 +1186,37 @@ function GLBModel({ url, height, pos, rotY = 0, gold = false, marble = false, fa
 }
 
 // upright brown slatted museum bench, sized for the avatar (solid; collision in OBSTACLES)
+/**
+ * Blender-built hall with lighting baked into a lightmap. Because the light is
+ * already in the texture, every surface renders unlit (MeshBasicMaterial) which
+ * is both faster and truer to the Cycles render than re-lighting it here.
+ */
+function BakedHall() {
+  const { scene } = useGLTF(BAKED_URL)
+  const inst = useMemo(() => {
+    const c = scene.clone(true)
+    c.traverse(o => {
+      if (!o.isMesh) return
+      const src = o.material
+      const map = src.emissiveMap || src.map || null
+      if (map) map.colorSpace = SRGBColorSpace
+      o.material = new MeshBasicMaterial({
+        map,
+        color: map ? 0xffffff : (src.color ? src.color.clone() : 0xffffff),
+        transparent: src.transparent,
+        opacity: src.opacity,
+        side: FrontSide,
+        toneMapped: true,
+      })
+      o.castShadow = o.receiveShadow = false
+    })
+    return c
+  }, [scene])
+  // Blender +Y (door end) maps to -Z on export, so spin it to match the R3F hall
+  return <primitive object={inst} rotation={[0, Math.PI, 0]} />
+}
+useGLTF.preload(BAKED_URL)
+
 function MuseumBench() {
   const brown = useMemo(() => new MeshStandardMaterial({ color: '#5c3a1d', roughness: 0.58, metalness: 0 }), [])
   const dark = useMemo(() => new MeshStandardMaterial({ color: '#3c2512', roughness: 0.62, metalness: 0 }), [])
@@ -1710,14 +1743,20 @@ function Gallery() {
   return (
     <group>
       <Env />
-      <Room m={m} />
-      <CofferedCeiling m={m} />
-      <Trim m={m} />
-      <Door m={m} />
-      <Suspense fallback={null}><GothicFeature m={m} /></Suspense>
-      <Suspense fallback={null}><SideGothicWindows m={m} side={-1} /></Suspense>
-      <Suspense fallback={null}><SideGothicWindows m={m} side={1} /></Suspense>
-      <Suspense fallback={null}><Furnishings /></Suspense>
+      {USE_BAKED ? (
+        <Suspense fallback={null}><BakedHall /></Suspense>
+      ) : (
+        <>
+          <Room m={m} />
+          <CofferedCeiling m={m} />
+          <Trim m={m} />
+          <Door m={m} />
+          <Suspense fallback={null}><GothicFeature m={m} /></Suspense>
+          <Suspense fallback={null}><SideGothicWindows m={m} side={-1} /></Suspense>
+          <Suspense fallback={null}><SideGothicWindows m={m} side={1} /></Suspense>
+          <Suspense fallback={null}><Furnishings /></Suspense>
+        </>
+      )}
       <Suspense fallback={null}><Character /></Suspense>
 
       <Suspense fallback={null}><Paintings items={items} m={m} /></Suspense>
