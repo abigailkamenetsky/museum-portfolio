@@ -54,7 +54,7 @@ const CANDELABRA_URL = BASE + 'assets/models/candelabra.glb'; useGLTF.preload(CA
 // Version tag = first 8 chars of the GLB's sha256. The file is served from a fixed
 // path with max-age=600, so without this a browser keeps showing a stale room.
 // Bump this whenever hall_baked.glb is re-exported.
-const BAKED_VERSION = 'd8061198'
+const BAKED_VERSION = 'e49985ff'
 const BAKED_URL = `${BASE}assets/models/hall_baked.glb?v=${BAKED_VERSION}`   // Blender room with baked GI (preview: ?baked=1)
 const USE_BAKED = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('baked')
 const STATUE1_URL = BASE + 'assets/models/statue1.glb'; useGLTF.preload(STATUE1_URL)
@@ -1195,6 +1195,25 @@ function GLBModel({ url, height, pos, rotY = 0, gold = false, marble = false, fa
  * already in the texture, every surface renders unlit (MeshBasicMaterial) which
  * is both faster and truer to the Cycles render than re-lighting it here.
  */
+/**
+ * The floor is NOT baked. It is 18x78m and would get only a fraction of the
+ * 2048 lightmap, which averaged the herringbone grain away entirely and, since
+ * baked surfaces cannot reflect, also killed the polished sheen. Drawing it
+ * live with the scanned walnut PBR set restores both.
+ */
+function BakedFloor({ m }) {
+  const geo = useMemo(() => planeUV2(W, D), [])
+  useEffect(() => {
+    const loader = new TextureLoader()
+    const FR = 3
+    loadInto(loader, WALNUT + 'BaseColor.jpg', t => { configure(t, FR, true); m.floor.map = t; m.floor.color.set('#ffffff'); m.floor.needsUpdate = true })
+    loadInto(loader, WALNUT + 'NormalGL.jpg', t => { configure(t, FR, false); m.floor.normalMap = t; m.floor.normalScale.set(1.0, 1.0); m.floor.needsUpdate = true })
+    loadInto(loader, WALNUT + 'Roughness.jpg', t => { configure(t, FR, false); m.floor.roughnessMap = t; m.floor.roughness = 1; m.floor.needsUpdate = true })
+    loadInto(loader, WALNUT + 'AO.jpg', t => { configure(t, FR, false); m.floor.aoMap = t; m.floor.needsUpdate = true })
+  }, [m])
+  return <mesh geometry={geo} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} material={m.floor} />
+}
+
 function BakedHall() {
   const { scene } = useGLTF(BAKED_URL)
   const inst = useMemo(() => {
@@ -1766,7 +1785,10 @@ function Gallery() {
     <group>
       <Env />
       {USE_BAKED ? (
-        <Suspense fallback={null}><BakedHall /></Suspense>
+        <>
+          <Suspense fallback={null}><BakedHall /></Suspense>
+          <BakedFloor m={m} />
+        </>
       ) : (
         <>
           <Room m={m} />
