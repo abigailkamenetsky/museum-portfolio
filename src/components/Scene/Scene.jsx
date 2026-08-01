@@ -42,6 +42,7 @@ const TEX = BASE + 'assets/textures/'
 const WALNUT = TEX + 'walnut/'   // real CC0 scanned dark walnut (Artaley3D)
 const WALLP = TEX + 'wallpaper/'   // dark-green baroque damask (from GLB)
 const CEILP = TEX + 'ceilingplaster/Plaster001_1K-JPG_'   // ceiling plaster PBR
+const FRESCO_TEX = TEX + 'fresco_vienna.jpg'   // real Daniel Gran ceiling fresco, Vienna Prunksaal
 const SG_TEX = TEX + 'stainedglass_real.jpg'   // real Sainte-Chapelle glass, rectified from stock footage
 const JACQ = TEX + 'jacquard_'   // Poly Haven floral jacquard: real damask weave + normal/roughness
 const HDRI = BASE + 'assets/hdri/gallery.hdr'
@@ -1322,6 +1323,41 @@ function useJacquard(repX, repY) {
   return mat
 }
 
+/**
+ * Real photographed baroque fresco panels along the vault crown, sitting just
+ * under the plaster. Discrete panels rather than a tiled texture: a photo tiled
+ * across a 78m vault shows obvious seams, and real baroque vaults are painted
+ * as a sequence of framed panels anyway.
+ */
+function LiveFrescoes() {
+  const PW = 7.2, PD = PW / 2.45          // matches the crop's aspect
+  const mat = useMemo(() => new MeshStandardMaterial({
+    color: '#ffffff', roughness: 0.94, metalness: 0,
+    emissive: new Color('#ffffff'), emissiveIntensity: 0.34,
+    envMapIntensity: 0.1, side: DoubleSide,
+  }), [])
+  useEffect(() => {
+    const loader = new TextureLoader()
+    loadInto(loader, FRESCO_TEX, t => {
+      t.colorSpace = SRGBColorSpace
+      t.anisotropy = 8
+      mat.map = t
+      mat.emissiveMap = t
+      mat.needsUpdate = true
+    })
+  }, [mat])
+  // the vault reaches y=17.12 at x=+-3.6, so 17.02 tucks just beneath it
+  const zs = Array.from({ length: 9 }, (_, i) => -35 + i * 8.75)
+  return (
+    <>
+      {zs.map((z, i) => (
+        <mesh key={i} position={[0, 17.02, z]} rotation={[Math.PI / 2, 0, 0]} material={mat}>
+          <planeGeometry args={[PW, PD]} /></mesh>
+      ))}
+    </>
+  )
+}
+
 function LiveDamaskWalls() {
   const TW = 1.15, TH = 1.75            // physical size of one damask tile
   const GAP = 3.4, SIDE_W = 9 - GAP, HEAD_Y = 10.6
@@ -1965,6 +2001,7 @@ function Gallery() {
           <BakedFloor m={m} />
           <LiveVault />
           <LiveDamaskWalls />
+          <LiveFrescoes />
           {/* lights the DOWNWARD-facing vault without touching the floor, which faces up */}
           <hemisphereLight args={['#14140f', '#f3e6c6', 1.15]} />
         </>
