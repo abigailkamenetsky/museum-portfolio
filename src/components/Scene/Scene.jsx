@@ -42,7 +42,8 @@ const TEX = BASE + 'assets/textures/'
 const WALNUT = TEX + 'walnut/'   // real CC0 scanned dark walnut (Artaley3D)
 const WALLP = TEX + 'wallpaper/'   // dark-green baroque damask (from GLB)
 const CEILP = TEX + 'ceilingplaster/Plaster001_1K-JPG_'   // ceiling plaster PBR
-const FRESCO_TEX = TEX + 'fresco_vienna.jpg'   // real Daniel Gran ceiling fresco, Vienna Prunksaal
+const FRESCO_TEX = TEX + 'fresco_ref.jpg'        // dark baroque fresco, cropped from Abby's reference
+const VAULT_ORN = TEX + 'vault_ornament_v2.jpg'     // gilt rinceau ornament, same reference
 const SG_TEX = TEX + 'stainedglass_real.jpg'   // real Sainte-Chapelle glass, rectified from stock footage
 const JACQ = TEX + 'jacquard_'   // Poly Haven floral jacquard: real damask weave + normal/roughness
 const HDRI = BASE + 'assets/hdri/gallery.hdr'
@@ -57,7 +58,7 @@ const CANDELABRA_URL = BASE + 'assets/models/candelabra.glb'; useGLTF.preload(CA
 // Version tag = first 8 chars of the GLB's sha256. The file is served from a fixed
 // path with max-age=600, so without this a browser keeps showing a stale room.
 // Bump this whenever hall_baked.glb is re-exported.
-const BAKED_VERSION = '49420f25'
+const BAKED_VERSION = '4e750f7e'
 const BAKED_URL = `${BASE}assets/models/hall_baked.glb?v=${BAKED_VERSION}`   // Blender room with baked GI (preview: ?baked=1)
 const USE_BAKED = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('baked')
 const STATUE1_URL = BASE + 'assets/models/statue1.glb'; useGLTF.preload(STATUE1_URL)
@@ -1253,8 +1254,8 @@ function vaultGeometry(inset) {
       pos[p++] = x - inset * nx / L
       pos[p++] = y - inset * ny / L
       pos[p++] = z
-      uv[q++] = (i / NX) * 9
-      uv[q++] = (j / NZ) * 34
+      uv[q++] = (i / NX) * 6
+      uv[q++] = (j / NZ) * 26
     }
   }
   for (let j = 0; j < NZ; j++) {
@@ -1274,10 +1275,10 @@ function vaultGeometry(inset) {
 function LiveVault() {
   const geo = useMemo(() => vaultGeometry(0.07), [])
   const mat = useMemo(() => new MeshStandardMaterial({
-    color: '#cdc4ad', roughness: 0.96, metalness: 0,
+    color: '#ffffff', roughness: 0.94, metalness: 0,
     // a faint self-glow guarantees the ceiling can never read as a black hole,
     // and matches how a real cove-lit vault sits brighter than the room
-    emissive: new Color('#2a2418'), emissiveIntensity: 1,
+    emissive: new Color('#ffffff'), emissiveIntensity: 0.09,
     envMapIntensity: 0.12, side: DoubleSide,
   }), [])
   useEffect(() => {
@@ -1287,9 +1288,8 @@ function LiveVault() {
       t.anisotropy = 8
       if (srgb) t.colorSpace = SRGBColorSpace
     }
-    loadInto(loader, CEILP + 'Color.jpg', t => { cfg(t, true); mat.map = t; mat.needsUpdate = true })
-    loadInto(loader, CEILP + 'NormalGL.jpg', t => { cfg(t, false); mat.normalMap = t; mat.normalScale.set(0.7, 0.7); mat.needsUpdate = true })
-    loadInto(loader, CEILP + 'Roughness.jpg', t => { cfg(t, false); mat.roughnessMap = t; mat.roughness = 1; mat.needsUpdate = true })
+    loadInto(loader, VAULT_ORN, t => { cfg(t, true); mat.map = t; mat.emissiveMap = t; mat.needsUpdate = true })
+    loadInto(loader, CEILP + 'NormalGL.jpg', t => { cfg(t, false); mat.normalMap = t; mat.normalScale.set(0.5, 0.5); mat.needsUpdate = true })
   }, [mat])
   return <mesh geometry={geo} material={mat} />
 }
@@ -1330,10 +1330,10 @@ function useJacquard(repX, repY) {
  * as a sequence of framed panels anyway.
  */
 function LiveFrescoes() {
-  const PW = 7.2, PD = PW / 2.45          // matches the crop's aspect
+  const PW = 7.2, PD = PW / 1.20          // matches the crop's aspect
   const mat = useMemo(() => new MeshStandardMaterial({
     color: '#ffffff', roughness: 0.94, metalness: 0,
-    emissive: new Color('#ffffff'), emissiveIntensity: 0.34,
+    emissive: new Color('#ffffff'), emissiveIntensity: 0.5,
     envMapIntensity: 0.1, side: DoubleSide,
   }), [])
   useEffect(() => {
@@ -1360,29 +1360,32 @@ function LiveFrescoes() {
 
 function LiveDamaskWalls() {
   const TW = 1.15, TH = 1.75            // physical size of one damask tile
-  const GAP = 3.4, SIDE_W = 9 - GAP, HEAD_Y = 10.6
-  // separate materials: repeat lives on the texture, so meshes of different
-  // widths cannot share one or the motif scale goes wrong
-  const matSide = useJacquard(D / TW, 13.2 / TH)
-  const matEnd = useJacquard(SIDE_W / TW, 13.2 / TH)
-  const matHead = useJacquard((GAP * 2) / TW, (13.2 - HEAD_Y) / TH)
-  // 1cm inside the shell, so the dado, reveals and trim still read in front.
-  // End walls are split around the central opening so the door and the
-  // stained glass are never covered.
+  const GAP = 3.4, SIDE_W = 9 - GAP, HEAD_Y = 10.6, WALL_H = 13.2
+  // A single full-height plane per side sealed over the five window openings.
+  // Reuse the room's holed-wall builder so the openings stay clear; its UVs are
+  // already in metres, so one damask tile is TW x TH regardless of wall length.
+  const BAKED_WIN = useMemo(
+    () => WIN_Z.map(z => [z, 4.2, 2.15, 9.95]),   // measured from the Blender reveals, plus clearance
+    [])
+  const geo = useMemo(() => holedWallGeo(D, BAKED_WIN), [BAKED_WIN])
+  const matSide = useJacquard(1 / TW, 1 / TH)
+  const matEnd = useJacquard(SIDE_W / TW, WALL_H / TH)
+  const matHead = useJacquard((GAP * 2) / TW, (WALL_H - HEAD_Y) / TH)
   return (
     <>
-      <mesh position={[-8.99, 6.6, 0]} rotation={[0, Math.PI / 2, 0]} material={matSide}>
-        <planeGeometry args={[D, 13.2]} /></mesh>
-      <mesh position={[8.99, 6.6, 0]} rotation={[0, -Math.PI / 2, 0]} material={matSide}>
-        <planeGeometry args={[D, 13.2]} /></mesh>
+      {[-1, 1].map(side => (
+        <mesh key={side} geometry={geo} material={matSide}
+          position={[side * 8.99, 0, 0]}
+          rotation={[0, side > 0 ? Math.PI / 2 : -Math.PI / 2, 0]} />
+      ))}
       {[-1, 1].map(s => (
-        <group key={s}>
+        <group key={'end' + s}>
           <mesh position={[-(GAP + SIDE_W / 2), 6.6, s * 38.99]} rotation={[0, s > 0 ? Math.PI : 0, 0]} material={matEnd}>
-            <planeGeometry args={[SIDE_W, 13.2]} /></mesh>
+            <planeGeometry args={[SIDE_W, WALL_H]} /></mesh>
           <mesh position={[GAP + SIDE_W / 2, 6.6, s * 38.99]} rotation={[0, s > 0 ? Math.PI : 0, 0]} material={matEnd}>
-            <planeGeometry args={[SIDE_W, 13.2]} /></mesh>
-          <mesh position={[0, (HEAD_Y + 13.2) / 2, s * 38.99]} rotation={[0, s > 0 ? Math.PI : 0, 0]} material={matHead}>
-            <planeGeometry args={[GAP * 2, 13.2 - HEAD_Y]} /></mesh>
+            <planeGeometry args={[SIDE_W, WALL_H]} /></mesh>
+          <mesh position={[0, (HEAD_Y + WALL_H) / 2, s * 38.99]} rotation={[0, s > 0 ? Math.PI : 0, 0]} material={matHead}>
+            <planeGeometry args={[GAP * 2, WALL_H - HEAD_Y]} /></mesh>
         </group>
       ))}
     </>
@@ -2003,7 +2006,7 @@ function Gallery() {
           <LiveDamaskWalls />
           <LiveFrescoes />
           {/* lights the DOWNWARD-facing vault without touching the floor, which faces up */}
-          <hemisphereLight args={['#14140f', '#f3e6c6', 1.15]} />
+          <hemisphereLight args={['#14140f', '#e8d8b4', 0.5]} />
         </>
       ) : (
         <>
