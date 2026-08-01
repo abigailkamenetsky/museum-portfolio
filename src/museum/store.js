@@ -15,6 +15,11 @@ const state = {
   fade: 0,             // black overlay opacity 0..1 (teleport transitions)
 }
 
+// High-frequency mobile movement input from the on-screen joystick.
+// Mutated in place and read every frame in Scene; kept OFF the version counter
+// on purpose so dragging the stick never triggers React re-renders.
+export const touchInput = { x: 0, z: 0 }   // x: strafe (-1 left … +1 right), z: forward (+1 push up … -1 pull down)
+
 let version = 0
 const listeners = new Set()
 

@@ -23,7 +23,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 import { makeLandscapeTexture } from './textures'
 import { ARTWORKS, ART_BASE } from '../../data/artworks'
-import { museum } from '../../museum/store'
+import { museum, touchInput } from '../../museum/store'
 import { WINGS, PAINTINGS } from '../../data/museum'
 
 /* ── DIMENSIONS — long rectangular palace gallery (~2:1) ────── */
@@ -1261,7 +1261,7 @@ function Character() {
   const hairRefs = useRef([])   // per-section hair groups (each sways individually)
   const arrowRef = useRef()     // "Guide Me" floor arrow
   const keys = useRef({})
-  const st = useRef({ yaw: Math.PI, yawT: Math.PI, pitch: 0.12, pitchT: 0.12, vel: new Vector3(), face: Math.PI, phase: 0, t: 0, dist: 6.2, dragging: false, touchWalk: false })
+  const st = useRef({ yaw: Math.PI, yawT: Math.PI, pitch: 0.12, pitchT: 0.12, vel: new Vector3(), face: Math.PI, phase: 0, t: 0, dist: 6.2, dragging: false })
   const arrowMat = useMemo(() => new MeshBasicMaterial({ color: '#ecc657', transparent: true, opacity: 0.6, depthWrite: false, toneMapped: false }), [])
   const mat = useMemo(() => ({
     skin: new MeshStandardMaterial({ color: '#c8996f', roughness: 0.72, metalness: 0 }),
@@ -1378,14 +1378,10 @@ function Character() {
     const dn = e => { keys.current[e.code] = true; if (e.code.startsWith('Arrow')) e.preventDefault() }
     const up = e => { keys.current[e.code] = false }
     const canvas = document.querySelector('canvas')
-    // DRAG-TO-LOOK: hold and drag to orbit; release stops. No pointer lock, no Esc.
-    // MOBILE: holding the screen ≥150ms walks forward (drag still steers the camera).
-    const coarse = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches
-    let dragging = false, lx = 0, ly = 0, walkTimer = null
-    const down = e => {
-      dragging = true; st.current.dragging = true; lx = e.clientX; ly = e.clientY
-      if (coarse) { clearTimeout(walkTimer); walkTimer = setTimeout(() => { st.current.touchWalk = true }, 150) }
-    }
+    // DRAG-TO-LOOK: hold and drag anywhere on the canvas to orbit; release stops.
+    // Movement is keyboard (desktop) or the on-screen joystick (mobile) — see touchInput.
+    let dragging = false, lx = 0, ly = 0
+    const down = e => { dragging = true; st.current.dragging = true; lx = e.clientX; ly = e.clientY }
     const move = e => {
       if (!dragging) return
       const s = st.current
@@ -1393,7 +1389,7 @@ function Character() {
       s.pitchT = MathUtils.clamp(s.pitchT - (e.clientY - ly) * DRAG_SENS, -1.48, 1.48)  // vertical → tilt (±~85°)
       lx = e.clientX; ly = e.clientY
     }
-    const end = () => { dragging = false; st.current.dragging = false; clearTimeout(walkTimer); st.current.touchWalk = false }
+    const end = () => { dragging = false; st.current.dragging = false }
     const wheel = e => { e.preventDefault(); st.current.dist = MathUtils.clamp(st.current.dist + e.deltaY * 0.004, 3.5, 9) }
     window.addEventListener('keydown', dn); window.addEventListener('keyup', up)
     canvas && canvas.addEventListener('pointerdown', down)
@@ -1429,9 +1425,11 @@ function Character() {
     let dyaw = s.yawT - s.yaw; dyaw = Math.atan2(Math.sin(dyaw), Math.cos(dyaw))
     s.yaw += dyaw * (1 - Math.exp(-12 * d))
     s.pitch += (s.pitchT - s.pitch) * (1 - Math.exp(-12 * d))
-    // camera-relative input
-    const fwd = locked ? 0 : ((k['KeyW'] || k['ArrowUp'] || s.touchWalk ? 1 : 0) - (k['KeyS'] || k['ArrowDown'] ? 1 : 0))
-    const strafe = locked ? 0 : (k['KeyD'] || k['ArrowRight'] ? 1 : 0) - (k['KeyA'] || k['ArrowLeft'] ? 1 : 0)
+    // camera-relative input: keyboard (desktop) + on-screen joystick (mobile), blended
+    let fwd = locked ? 0 : (k['KeyW'] || k['ArrowUp'] ? 1 : 0) - (k['KeyS'] || k['ArrowDown'] ? 1 : 0) + touchInput.z
+    let strafe = locked ? 0 : (k['KeyD'] || k['ArrowRight'] ? 1 : 0) - (k['KeyA'] || k['ArrowLeft'] ? 1 : 0) + touchInput.x
+    fwd = MathUtils.clamp(fwd, -1, 1); strafe = MathUtils.clamp(strafe, -1, 1)
+    const inputMag = Math.min(1, Math.hypot(fwd, strafe))    // analog: partial joystick tilt → slower walk
     const run = !locked && (k['ShiftLeft'] || k['ShiftRight'])
     const sin = Math.sin(s.yaw), cos = Math.cos(s.yaw)
     const moveDir = _v3.set(0, 0, 0)
@@ -1439,7 +1437,7 @@ function Character() {
       .addScaledVector(_v2.set(-cos, 0, sin), strafe)    // right = screen-right (Left key → left, Right key → right)
     const moving = moveDir.lengthSq() > 1e-4
     if (moving) moveDir.normalize()
-    const desired = _v4.copy(moveDir).multiplyScalar(moving ? (run ? RUN_SPEED : WALK_SPEED) : 0)
+    const desired = _v4.copy(moveDir).multiplyScalar(moving ? (run ? RUN_SPEED : WALK_SPEED) * inputMag : 0)
     s.vel.lerp(desired, 1 - Math.exp(-ACCEL * d))
 
     const ch = root.current

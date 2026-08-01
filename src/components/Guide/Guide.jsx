@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useProgress } from '@react-three/drei'
-import { museum, useMuseum, openGuide, closeGuide } from '../../museum/store'
+import { museum, touchInput, useMuseum, openGuide, closeGuide } from '../../museum/store'
 import { WINGS, wingById } from '../../data/museum'
 
 const ASSET = import.meta.env.BASE_URL + 'assets/'
@@ -63,6 +63,48 @@ function DeviceBtn({ label, title, onClick }) {
   )
 }
 
+/* ── mobile movement joystick (thumb-stick, bottom-left) ───── */
+function Joystick() {
+  const baseRef = useRef(null)
+  const active = useRef(false)
+  const [knob, setKnob] = useState({ x: 0, y: 0 })
+  const R = 46   // max knob travel from center (px)
+
+  const setFrom = (clientX, clientY) => {
+    const el = baseRef.current; if (!el) return
+    const r = el.getBoundingClientRect()
+    let dx = clientX - (r.left + r.width / 2), dy = clientY - (r.top + r.height / 2)
+    const mag = Math.hypot(dx, dy)
+    if (mag > R) { dx = (dx / mag) * R; dy = (dy / mag) * R }
+    setKnob({ x: dx, y: dy })
+    touchInput.x = dx / R          // strafe: right positive
+    touchInput.z = -dy / R         // forward: pushing up (screen -y) is positive
+  }
+  const start = e => { active.current = true; e.currentTarget.setPointerCapture?.(e.pointerId); setFrom(e.clientX, e.clientY) }
+  const move = e => { if (active.current) setFrom(e.clientX, e.clientY) }
+  const stop = () => { active.current = false; setKnob({ x: 0, y: 0 }); touchInput.x = 0; touchInput.z = 0 }
+  useEffect(() => () => { touchInput.x = 0; touchInput.z = 0 }, [])   // reset if unmounted mid-drag
+
+  return (
+    <div ref={baseRef} onPointerDown={start} onPointerMove={move} onPointerUp={stop} onPointerCancel={stop} onLostPointerCapture={stop}
+      style={{
+        position: 'fixed', left: 24, bottom: 34, zIndex: 24, width: 128, height: 128, borderRadius: '50%',
+        background: 'radial-gradient(circle at 50% 40%, rgba(227,194,102,0.12), rgba(10,12,9,0.5))',
+        border: `1px solid ${GOLD}55`, boxShadow: '0 6px 20px rgba(0,0,0,0.45)',
+        touchAction: 'none', userSelect: 'none', WebkitUserSelect: 'none',
+      }}>
+      <div style={{
+        position: 'absolute', left: '50%', top: '50%',
+        transform: `translate(calc(-50% + ${knob.x}px), calc(-50% + ${knob.y}px))`,
+        width: 58, height: 58, borderRadius: '50%',
+        background: 'radial-gradient(circle at 42% 36%, #c39a4e, #6d4f1f)',
+        border: `1px solid ${GOLD}aa`, boxShadow: '0 3px 9px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.18)',
+        transition: knob.x === 0 && knob.y === 0 ? 'transform .12s ease' : 'none',
+      }} />
+    </div>
+  )
+}
+
 const row = (active) => ({
   display: 'block', width: '100%', textAlign: 'left', padding: '10px 12px', margin: '3px 0',
   background: active ? 'rgba(227,194,102,0.16)' : 'transparent', border: 'none',
@@ -99,7 +141,7 @@ export default function Guide() {
   const [ready, setReady] = useState(false)
   useEffect(() => {
     if (ready || active || progress < 100) return
-    const t = setTimeout(() => { setReady(true); museum.set({ phase: 'welcome' }) }, 900)  // grace for non-Suspense textures
+    const t = setTimeout(() => { setReady(true); museum.set({ phase: 'welcome' }) }, 300)  // brief grace for non-Suspense textures
     return () => clearTimeout(t)
   }, [active, progress, ready])
   useEffect(() => {   // safety: never get stuck on the loader
@@ -181,6 +223,7 @@ export default function Guide() {
               </div>
             </div>
             <div style={{ color: '#e7ddca', font: `400 clamp(16px,4.2vw,24px)/1.55 ${serif}`, opacity: 0.92, marginTop: 2 }}>Use your audio guide to jump to any section of the wing, or click "Guide Me" to walk there yourself. When you get there, tap the paintings to see information for each experience!</div>
+            {isMobile && <div style={{ color: GOLD, font: `400 clamp(14px,3.8vw,19px)/1.5 ${serif}`, opacity: 0.85, marginTop: 16 }}>To explore on your own: use the <b>joystick</b> (bottom-left) to walk, and drag anywhere to look around.</div>}
             <div style={{ color: GOLD, font: `500 clamp(16px,4.2vw,24px) ${serif}`, marginTop: 26 }}>{isMobile ? 'Tap the screen' : <>Tap the screen or press <b>SPACE</b></>} to open the Audio Guide</div>
           </div>
         </div>
@@ -357,7 +400,7 @@ export default function Guide() {
 
       {/* hover label when near/looking at a painting (tap it to open) */}
       {!s.menu && !s.card && s.phase === 'explore' && s.focus && (
-        <button onClick={() => museum.set({ card: s.focus.wingId, cardPiece: s.focus.piece })} style={{ position: 'fixed', left: '50%', bottom: isMobile ? 78 : 64, transform: 'translateX(-50%)', zIndex: 23, maxWidth: '92vw', padding: 'clamp(11px,3vw,14px) clamp(18px,4vw,26px)', background: INK, border: `1px solid ${GOLD}77`, borderRadius: 11, color: GOLD, font: `500 clamp(15px,3.8vw,23px) ${serif}`, cursor: 'pointer', animation: 'fadeIn .25s ease', textAlign: 'center' }}>Tap each painting to see different projects</button>
+        <button onClick={() => museum.set({ card: s.focus.wingId, cardPiece: s.focus.piece })} style={{ position: 'fixed', left: '50%', ...(isMobile ? { top: 84 } : { bottom: 64 }), transform: 'translateX(-50%)', zIndex: 23, maxWidth: '92vw', padding: 'clamp(11px,3vw,14px) clamp(18px,4vw,26px)', background: INK, border: `1px solid ${GOLD}77`, borderRadius: 11, color: GOLD, font: `500 clamp(15px,3.8vw,23px) ${serif}`, cursor: 'pointer', animation: 'fadeIn .25s ease', textAlign: 'center' }}>Tap each painting to see different projects</button>
       )}
 
       {/* desktop-only bottom hint (hidden on mobile) */}
@@ -375,6 +418,9 @@ export default function Guide() {
           <div style={{ color: GOLD, font: `600 7px ${serif}`, textAlign: 'center', marginTop: 5, letterSpacing: 1.5 }}>GUIDE</div>
         </button>
       )}
+
+      {/* mobile-only movement joystick (bottom-left) */}
+      {isMobile && ready && !s.menu && !s.card && s.phase === 'explore' && <Joystick />}
 
       <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`}</style>
     </>
