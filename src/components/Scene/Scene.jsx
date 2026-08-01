@@ -1796,27 +1796,42 @@ export default function Scene() {
       {/* GRAND OVERCAST SKYLIGHT — bright diffuse daylight, no beams/patches.
           Strong warm-neutral ambient lifts the whole room (walls stay dark green
           via their material; ambient just makes them readable). */}
-      <ambientLight intensity={0.95} color="#ede6d6" />
-      <hemisphereLight intensity={0.55} color="#e8ecf2" groundColor="#1c160d" />
-      {/* soft grazing fill on the centerpiece bay to reveal carving depth */}
-      <pointLight position={[-4, CEIL - 2.4, 0]} intensity={8} distance={12} decay={2} color="#f3e0a8" />
-      <pointLight position={[4, CEIL - 2.4, 0]} intensity={8} distance={12} decay={2} color="#f3e0a8" />
-      {/* CEILING WASH — the ceiling is the brightest architectural element.
-          A row of soft warm fills just below the ceiling along the whole hall
-          so coffers/carving read from anywhere; light points up into the plaster. */}
-      {[-28, -14, 0, 14, 28].map((z, i) => (
-        <pointLight key={'cw' + i} position={[0, CEIL - 1.6, z]} intensity={9} distance={16} decay={2} color="#f7e6b0" />
-      ))}
-      {/* warm keys at the hall ends — fill the room volume */}
-      {[-26, 26].map((z, i) => (
-        <pointLight key={i} position={[0, CEIL - 4.0, z]} intensity={20} distance={48} color="#f6dd84" />
-      ))}
-      {/* soft cool OVERCAST DAYLIGHT fills high near the window walls — large,
-          gentle, set high so they wash the upper walls + ceiling, not the floor;
-          point lights = smooth round gradients, never rectangles/beams */}
-      {[-16, 16].flatMap(z => [-1, 1].map(s => (
-        <pointLight key={'dl' + s + z} position={[s * (W / 2 - 1.0), 8.6, z]} intensity={4.0} distance={19} decay={2} color="#dde4ee" />
-      )))}
+      {USE_BAKED ? (
+        /* The baked room carries its own light, so these only need to light the
+           paintings and the avatar — warm and dim so they sit in the same room. */
+        <>
+          <ambientLight intensity={0.34} color="#e8d9bb" />
+          <hemisphereLight intensity={0.2} color="#e2d6bd" groundColor="#140f08" />
+          {[-33.5, -20.25, -6.75, 6.75, 20.25, 34].flatMap(z => [-1, 1].map(s => (
+            <pointLight key={'bp' + s + z} position={[s * (W / 2 - 1.9), 6.5, z]}
+              intensity={5.5} distance={11} decay={2} color="#ffca7a" />
+          )))}
+        </>
+      ) : (
+        <>
+          <ambientLight intensity={0.95} color="#ede6d6" />
+          <hemisphereLight intensity={0.55} color="#e8ecf2" groundColor="#1c160d" />
+          {/* soft grazing fill on the centerpiece bay to reveal carving depth */}
+          <pointLight position={[-4, CEIL - 2.4, 0]} intensity={8} distance={12} decay={2} color="#f3e0a8" />
+          <pointLight position={[4, CEIL - 2.4, 0]} intensity={8} distance={12} decay={2} color="#f3e0a8" />
+          {/* CEILING WASH — the ceiling is the brightest architectural element.
+              A row of soft warm fills just below the ceiling along the whole hall
+              so coffers/carving read from anywhere; light points up into the plaster. */}
+          {[-28, -14, 0, 14, 28].map((z, i) => (
+            <pointLight key={'cw' + i} position={[0, CEIL - 1.6, z]} intensity={9} distance={16} decay={2} color="#f7e6b0" />
+          ))}
+          {/* warm keys at the hall ends — fill the room volume */}
+          {[-26, 26].map((z, i) => (
+            <pointLight key={i} position={[0, CEIL - 4.0, z]} intensity={20} distance={48} color="#f6dd84" />
+          ))}
+          {/* soft cool OVERCAST DAYLIGHT fills high near the window walls — large,
+              gentle, set high so they wash the upper walls + ceiling, not the floor;
+              point lights = smooth round gradients, never rectangles/beams */}
+          {[-16, 16].flatMap(z => [-1, 1].map(s => (
+            <pointLight key={'dl' + s + z} position={[s * (W / 2 - 1.0), 8.6, z]} intensity={4.0} distance={19} decay={2} color="#dde4ee" />
+          )))}
+        </>
+      )}
 
       <Gallery />
       <Logger />
