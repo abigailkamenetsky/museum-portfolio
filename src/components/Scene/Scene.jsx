@@ -1278,11 +1278,20 @@ function Furnishings() {
 const WALK_SPEED = 4.4, RUN_SPEED = 7.5, ACCEL = 16, DRAG_SENS = 0.0032   // responsive accel (snappy start/stop) + low mouse-look sensitivity
 // solid furniture the player cannot walk through (axis-aligned footprints: centre + half-extents)
 const PLAYER_R = 0.45
-const OBSTACLES = [
-  { x: 0, z: 2, hx: 1.6, hz: 0.55 },        // brown slatted bench
-  { x: -6.1, z: -35.5, hx: 1.1, hz: 1.1 },  // statue (back-left)
-  { x: 6.1, z: -35.5, hx: 1.1, hz: 1.1 },   // statue (back-right)
-]
+// Collision must match whichever room is actually rendered. The Blender hall has
+// no bench, its statues stand further back, and it adds a table on the carpet.
+const OBSTACLES = USE_BAKED
+  ? [
+      { x: -5.4, z: -33.0, hx: 0.9, hz: 0.9 },  // statue pedestal (back-left)
+      { x: 5.4, z: -33.0, hx: 0.9, hz: 0.9 },   // statue pedestal (back-right)
+      { x: -6.6, z: 35.8, hx: 0.7, hz: 0.7 },   // bust pedestal by the door
+      { x: 0, z: -6.0, hx: 0.9, hz: 0.55 },     // table on the carpet
+    ]
+  : [
+      { x: 0, z: 2, hx: 1.6, hz: 0.55 },        // brown slatted bench
+      { x: -6.1, z: -35.5, hx: 1.1, hz: 1.1 },  // statue (back-left)
+      { x: 6.1, z: -35.5, hx: 1.1, hz: 1.1 },   // statue (back-right)
+    ]
 const AV_SCALE = 1.9, HEAD_Y = 2.95   // avatar ~half the door height; camera aims at the new head
 const _v1 = new Vector3(), _v2 = new Vector3(), _v3 = new Vector3(), _v4 = new Vector3()
 const _v5 = new Vector3(), _v6 = new Vector3(), _v7 = new Vector3(), _v8 = new Vector3()
