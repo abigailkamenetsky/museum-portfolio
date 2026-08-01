@@ -13,7 +13,7 @@ import { BlendFunction } from 'postprocessing'
 import { Suspense, useRef, useEffect, useMemo } from 'react'
 import {
   MeshStandardMaterial, MeshPhysicalMaterial, MeshBasicMaterial, ExtrudeGeometry, ShapeGeometry, Shape, Path, Vector2,
-  PlaneGeometry, BufferAttribute, TextureLoader, RepeatWrapping, SRGBColorSpace,
+  PlaneGeometry, BufferGeometry, BufferAttribute, TextureLoader, RepeatWrapping, SRGBColorSpace,
   EquirectangularReflectionMapping, Object3D, TorusGeometry, CylinderGeometry,
   SphereGeometry, ConeGeometry, BoxGeometry, Matrix4, DoubleSide, FrontSide, Box3, Color,
   Vector3, Euler, MathUtils, ACESFilmicToneMapping, PCFSoftShadowMap, ClampToEdgeWrapping, CanvasTexture,
@@ -42,6 +42,7 @@ const TEX = BASE + 'assets/textures/'
 const WALNUT = TEX + 'walnut/'   // real CC0 scanned dark walnut (Artaley3D)
 const WALLP = TEX + 'wallpaper/'   // dark-green baroque damask (from GLB)
 const CEILP = TEX + 'ceilingplaster/Plaster001_1K-JPG_'   // ceiling plaster PBR
+const JACQ = TEX + 'jacquard_'   // Poly Haven floral jacquard: real damask weave + normal/roughness
 const HDRI = BASE + 'assets/hdri/gallery.hdr'
 const DENIM_TEX = TEX + 'denim/'           // real denim fabric (skirt)
 const LEATHER_TEX = TEX + 'leather/'       // brown leather (boots)
@@ -1223,6 +1224,154 @@ function BakedFloor({ m }) {
   return <mesh geometry={geo} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} material={m.floor} />
 }
 
+/**
+ * The vault and the wall field are NOT taken from the bake.
+ * Measured on the shipped lightmap, 68% of the visible vault area sampled
+ * near-black: the Blender shell is an accretion of rebuilt geometry whose
+ * lightmap islands never resolved. These two surfaces are drawn live instead,
+ * exactly like the floor, so they cannot come out black and the damask keeps a
+ * real normal/roughness response instead of a flat painted-on look.
+ */
+const VAULT_SPRING = 13.0, VAULT_RISE = 4.5, VAULT_HW = 9.0
+
+function vaultGeometry(inset) {
+  const NX = 44, NZ = 130
+  const pos = new Float32Array((NX + 1) * (NZ + 1) * 3)
+  const uv = new Float32Array((NX + 1) * (NZ + 1) * 2)
+  const idx = []
+  let p = 0, q = 0
+  for (let j = 0; j <= NZ; j++) {
+    const z = -D / 2 + D * (j / NZ)
+    for (let i = 0; i <= NX; i++) {
+      const x = -VAULT_HW + 2 * VAULT_HW * (i / NX)
+      const t = Math.max(0, 1 - (x / VAULT_HW) ** 2)
+      const y = VAULT_SPRING + VAULT_RISE * Math.sqrt(t)
+      const nx = x / (VAULT_HW * VAULT_HW), ny = (y - VAULT_SPRING) / (VAULT_RISE * VAULT_RISE)
+      const L = Math.hypot(nx, ny) || 1
+      pos[p++] = x - inset * nx / L
+      pos[p++] = y - inset * ny / L
+      pos[p++] = z
+      uv[q++] = (i / NX) * 9
+      uv[q++] = (j / NZ) * 34
+    }
+  }
+  for (let j = 0; j < NZ; j++) {
+    for (let i = 0; i < NX; i++) {
+      const a = j * (NX + 1) + i, b = a + 1, c = a + NX + 1, d = c + 1
+      idx.push(a, c, b, b, c, d)
+    }
+  }
+  const g = new BufferGeometry()
+  g.setAttribute('position', new BufferAttribute(pos, 3))
+  g.setAttribute('uv', new BufferAttribute(uv, 2))
+  g.setIndex(idx)
+  g.computeVertexNormals()
+  return g
+}
+
+function LiveVault() {
+  const geo = useMemo(() => vaultGeometry(0.07), [])
+  const mat = useMemo(() => new MeshStandardMaterial({
+    color: '#cdc4ad', roughness: 0.96, metalness: 0,
+    // a faint self-glow guarantees the ceiling can never read as a black hole,
+    // and matches how a real cove-lit vault sits brighter than the room
+    emissive: new Color('#2a2418'), emissiveIntensity: 1,
+    envMapIntensity: 0.12, side: DoubleSide,
+  }), [])
+  useEffect(() => {
+    const loader = new TextureLoader()
+    const cfg = (t, srgb) => {
+      t.wrapS = t.wrapT = RepeatWrapping
+      t.anisotropy = 8
+      if (srgb) t.colorSpace = SRGBColorSpace
+    }
+    loadInto(loader, CEILP + 'Color.jpg', t => { cfg(t, true); mat.map = t; mat.needsUpdate = true })
+    loadInto(loader, CEILP + 'NormalGL.jpg', t => { cfg(t, false); mat.normalMap = t; mat.normalScale.set(0.7, 0.7); mat.needsUpdate = true })
+    loadInto(loader, CEILP + 'Roughness.jpg', t => { cfg(t, false); mat.roughnessMap = t; mat.roughness = 1; mat.needsUpdate = true })
+  }, [mat])
+  return <mesh geometry={geo} material={mat} />
+}
+
+function useJacquard(repX, repY) {
+  const mat = useMemo(() => new MeshStandardMaterial({
+    color: '#ffffff', roughness: 0.88, metalness: 0,
+    // the green is baked into the map, so the colour stays neutral here
+    emissive: new Color('#ffffff'), emissiveIntensity: 0.20,
+    envMapIntensity: 0.2, side: DoubleSide,
+  }), [])
+  useEffect(() => {
+    const loader = new TextureLoader()
+    const cfg = (t, srgb) => {
+      t.wrapS = t.wrapT = RepeatWrapping
+      t.repeat.set(repX, repY)
+      t.anisotropy = 16
+      if (srgb) t.colorSpace = SRGBColorSpace
+    }
+    // green.jpg is the Poly Haven scan recoloured to the gallery green: the raw
+    // scan is near-black charcoal, so tinting it green just produced mud
+    loadInto(loader, JACQ + 'green.jpg', t => {
+      cfg(t, true); mat.map = t
+      // emissive follows the weave, so the pattern still reads in the dim
+      // upper wall instead of being flooded by a flat colour
+      mat.emissiveMap = t; mat.needsUpdate = true
+    })
+    loadInto(loader, JACQ + 'nor.jpg', t => { cfg(t, false); mat.normalMap = t; mat.normalScale.set(1.3, 1.3); mat.needsUpdate = true })
+    loadInto(loader, JACQ + 'rough.jpg', t => { cfg(t, false); mat.roughnessMap = t; mat.roughness = 1; mat.needsUpdate = true })
+  }, [mat, repX, repY])
+  return mat
+}
+
+function LiveDamaskWalls() {
+  const TW = 1.15, TH = 1.75            // physical size of one damask tile
+  const GAP = 3.4, SIDE_W = 9 - GAP, HEAD_Y = 10.6
+  // separate materials: repeat lives on the texture, so meshes of different
+  // widths cannot share one or the motif scale goes wrong
+  const matSide = useJacquard(D / TW, 13.2 / TH)
+  const matEnd = useJacquard(SIDE_W / TW, 13.2 / TH)
+  const matHead = useJacquard((GAP * 2) / TW, (13.2 - HEAD_Y) / TH)
+  // 1cm inside the shell, so the dado, reveals and trim still read in front.
+  // End walls are split around the central opening so the door and the
+  // stained glass are never covered.
+  return (
+    <>
+      <mesh position={[-8.99, 6.6, 0]} rotation={[0, Math.PI / 2, 0]} material={matSide}>
+        <planeGeometry args={[D, 13.2]} /></mesh>
+      <mesh position={[8.99, 6.6, 0]} rotation={[0, -Math.PI / 2, 0]} material={matSide}>
+        <planeGeometry args={[D, 13.2]} /></mesh>
+      {[-1, 1].map(s => (
+        <group key={s}>
+          <mesh position={[-(GAP + SIDE_W / 2), 6.6, s * 38.99]} rotation={[0, s > 0 ? Math.PI : 0, 0]} material={matEnd}>
+            <planeGeometry args={[SIDE_W, 13.2]} /></mesh>
+          <mesh position={[GAP + SIDE_W / 2, 6.6, s * 38.99]} rotation={[0, s > 0 ? Math.PI : 0, 0]} material={matEnd}>
+            <planeGeometry args={[SIDE_W, 13.2]} /></mesh>
+          <mesh position={[0, (HEAD_Y + 13.2) / 2, s * 38.99]} rotation={[0, s > 0 ? Math.PI : 0, 0]} material={matHead}>
+            <planeGeometry args={[GAP * 2, 13.2 - HEAD_Y]} /></mesh>
+        </group>
+      ))}
+    </>
+  )
+}
+
+/**
+ * ?cam=x,y,z,pitchDeg,yawDeg pins the camera for verification screenshots.
+ * The intro/player camera is usually aimed at the floor, which made it
+ * impossible to confirm ceiling fixes from a headless screenshot.
+ */
+const DEBUG_CAM = typeof window !== 'undefined'
+  ? new URLSearchParams(window.location.search).get('cam') : null
+
+function DebugCam() {
+  const { camera } = useThree()
+  const parts = useMemo(() => (DEBUG_CAM || '').split(',').map(Number), [])
+  useFrame(() => {
+    if (!DEBUG_CAM || parts.length < 5 || parts.some(Number.isNaN)) return
+    camera.position.set(parts[0], parts[1], parts[2])
+    camera.rotation.order = 'YXZ'
+    camera.rotation.set(MathUtils.degToRad(parts[3]), MathUtils.degToRad(parts[4]), 0)
+  }, 100)
+  return null
+}
+
 function BakedHall() {
   const { scene } = useGLTF(BAKED_URL)
   const inst = useMemo(() => {
@@ -1793,10 +1942,15 @@ function Gallery() {
   return (
     <group>
       <Env />
+      <DebugCam />
       {USE_BAKED ? (
         <>
           <Suspense fallback={null}><BakedHall /></Suspense>
           <BakedFloor m={m} />
+          <LiveVault />
+          <LiveDamaskWalls />
+          {/* lights the DOWNWARD-facing vault without touching the floor, which faces up */}
+          <hemisphereLight args={['#14140f', '#f3e6c6', 1.15]} />
         </>
       ) : (
         <>
