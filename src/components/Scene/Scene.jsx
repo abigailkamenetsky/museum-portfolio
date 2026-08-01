@@ -54,7 +54,7 @@ const CANDELABRA_URL = BASE + 'assets/models/candelabra.glb'; useGLTF.preload(CA
 // Version tag = first 8 chars of the GLB's sha256. The file is served from a fixed
 // path with max-age=600, so without this a browser keeps showing a stale room.
 // Bump this whenever hall_baked.glb is re-exported.
-const BAKED_VERSION = '5e98a106'
+const BAKED_VERSION = 'd3adec0f'
 const BAKED_URL = `${BASE}assets/models/hall_baked.glb?v=${BAKED_VERSION}`   // Blender room with baked GI (preview: ?baked=1)
 const USE_BAKED = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('baked')
 const STATUE1_URL = BASE + 'assets/models/statue1.glb'; useGLTF.preload(STATUE1_URL)
@@ -1204,16 +1204,19 @@ function GLBModel({ url, height, pos, rotY = 0, gold = false, marble = false, fa
 function BakedFloor({ m }) {
   const geo = useMemo(() => planeUV2(W, D), [])
   useEffect(() => {
-    // glossy polished walnut: dark, but wet-looking with a real clearcoat
-    m.floor.color.set('#ffffff')
-    m.floor.roughness = 0.18
+    // glossy polished walnut: dark and wet-looking, with the grain and dark
+    // figuring kept visible (FR lowered so the planks read larger, AO left in
+    // to give the dirt/variation that flat gloss otherwise washes out)
+    m.floor.color.set('#8a6a4c')          // tint the scan darker without killing its detail
+    m.floor.roughness = 0.12
     m.floor.clearcoat = 1.0
-    m.floor.clearcoatRoughness = 0.10
-    m.floor.envMapIntensity = 1.5
+    m.floor.clearcoatRoughness = 0.06
+    m.floor.envMapIntensity = 2.2
+    m.floor.aoMapIntensity = 1.6
     m.floor.needsUpdate = true
     const loader = new TextureLoader()
-    const FR = 3
-    loadInto(loader, WALNUT + 'BaseColor.jpg', t => { configure(t, FR, true); m.floor.map = t; m.floor.color.set('#ffffff'); m.floor.needsUpdate = true })
+    const FR = 1.7                        // bigger planks -> grain and knots actually read
+    loadInto(loader, WALNUT + 'BaseColor.jpg', t => { configure(t, FR, true); m.floor.map = t; m.floor.needsUpdate = true })
     loadInto(loader, WALNUT + 'NormalGL.jpg', t => { configure(t, FR, false); m.floor.normalMap = t; m.floor.normalScale.set(1.0, 1.0); m.floor.needsUpdate = true })
     loadInto(loader, WALNUT + 'AO.jpg', t => { configure(t, FR, false); m.floor.aoMap = t; m.floor.needsUpdate = true })
   }, [m])
