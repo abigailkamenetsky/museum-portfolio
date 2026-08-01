@@ -1203,8 +1203,11 @@ function BakedHall() {
       // they keep a lit material and are shaded by the scene lights instead.
       if (src.emissiveMap) {
         src.emissiveMap.colorSpace = SRGBColorSpace
-        o.material = new MeshBasicMaterial({ map: src.emissiveMap, side: FrontSide })
+        // DoubleSide: the shell's wall/vault faces point outward, so from inside
+        // the room front-face culling made them vanish entirely.
+        o.material = new MeshBasicMaterial({ map: src.emissiveMap, side: DoubleSide })
       } else {
+        src.side = DoubleSide
         src.emissive?.setScalar(0)
         src.roughness = src.roughness ?? 0.6
         src.needsUpdate = true
