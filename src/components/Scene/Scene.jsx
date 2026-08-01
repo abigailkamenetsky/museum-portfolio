@@ -51,7 +51,11 @@ useGLTF.preload(FRAME_URL)
 const STAINED_URL = BASE + 'assets/models/stained_glass.glb'   // gothic window with painted glass
 useGLTF.preload(STAINED_URL)
 const CANDELABRA_URL = BASE + 'assets/models/candelabra.glb'; useGLTF.preload(CANDELABRA_URL)
-const BAKED_URL = BASE + 'assets/models/hall_baked.glb'   // Blender room with baked GI (preview: ?baked=1)
+// Version tag = first 8 chars of the GLB's sha256. The file is served from a fixed
+// path with max-age=600, so without this a browser keeps showing a stale room.
+// Bump this whenever hall_baked.glb is re-exported.
+const BAKED_VERSION = '841b16b2'
+const BAKED_URL = `${BASE}assets/models/hall_baked.glb?v=${BAKED_VERSION}`   // Blender room with baked GI (preview: ?baked=1)
 const USE_BAKED = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('baked')
 const STATUE1_URL = BASE + 'assets/models/statue1.glb'; useGLTF.preload(STATUE1_URL)
 const STATUE2_URL = BASE + 'assets/models/statue2.glb'; useGLTF.preload(STATUE2_URL)
