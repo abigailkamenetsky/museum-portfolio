@@ -15,7 +15,7 @@ import {
   MeshStandardMaterial, MeshPhysicalMaterial, MeshBasicMaterial, ExtrudeGeometry, ShapeGeometry, Shape, Path, Vector2,
   PlaneGeometry, BufferAttribute, TextureLoader, RepeatWrapping, SRGBColorSpace,
   EquirectangularReflectionMapping, Object3D, TorusGeometry, CylinderGeometry,
-  SphereGeometry, ConeGeometry, BoxGeometry, Matrix4, DoubleSide, FrontSide, Box3,
+  SphereGeometry, ConeGeometry, BoxGeometry, Matrix4, DoubleSide, FrontSide, Box3, Color,
   Vector3, Euler, MathUtils, ACESFilmicToneMapping, PCFSoftShadowMap, ClampToEdgeWrapping, CanvasTexture,
   LinearFilter, LinearMipmapLinearFilter,
 } from 'three'
@@ -1203,9 +1203,14 @@ function BakedHall() {
       // they keep a lit material and are shaded by the scene lights instead.
       if (src.emissiveMap) {
         src.emissiveMap.colorSpace = SRGBColorSpace
+        // Carry the glTF emissive factor/strength through as a tint, otherwise
+        // every brightness tweak made in Blender is silently ignored here.
+        const tint = (src.emissive ? src.emissive.clone() : new Color(1, 1, 1))
+          .multiplyScalar(src.emissiveIntensity ?? 1)
+        if (tint.r + tint.g + tint.b < 0.01) tint.setScalar(1)
         // DoubleSide: the shell's wall/vault faces point outward, so from inside
         // the room front-face culling made them vanish entirely.
-        o.material = new MeshBasicMaterial({ map: src.emissiveMap, side: DoubleSide })
+        o.material = new MeshBasicMaterial({ map: src.emissiveMap, color: tint, side: DoubleSide })
       } else {
         src.side = DoubleSide
         src.emissive?.setScalar(0)
