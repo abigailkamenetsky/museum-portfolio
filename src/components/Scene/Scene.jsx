@@ -42,6 +42,7 @@ const TEX = BASE + 'assets/textures/'
 const WALNUT = TEX + 'walnut/'   // real CC0 scanned dark walnut (Artaley3D)
 const WALLP = TEX + 'wallpaper/'   // dark-green baroque damask (from GLB)
 const CEILP = TEX + 'ceilingplaster/Plaster001_1K-JPG_'   // ceiling plaster PBR
+const SG_TEX = TEX + 'stainedglass_real.jpg'   // real Sainte-Chapelle glass, rectified from stock footage
 const JACQ = TEX + 'jacquard_'   // Poly Haven floral jacquard: real damask weave + normal/roughness
 const HDRI = BASE + 'assets/hdri/gallery.hdr'
 const DENIM_TEX = TEX + 'denim/'           // real denim fabric (skirt)
@@ -1368,17 +1369,29 @@ function DebugCam() {
     camera.position.set(parts[0], parts[1], parts[2])
     camera.rotation.order = 'YXZ'
     camera.rotation.set(MathUtils.degToRad(parts[3]), MathUtils.degToRad(parts[4]), 0)
-  }, 100)
+  })
   return null
 }
 
 function BakedHall() {
   const { scene } = useGLTF(BAKED_URL)
+  const sgTex = useMemo(() => {
+    const t = new TextureLoader().load(SG_TEX)
+    t.colorSpace = SRGBColorSpace
+    return t
+  }, [])
   const inst = useMemo(() => {
     const c = scene.clone(true)
+    let sgHits = 0
     c.traverse(o => {
       if (!o.isMesh) return
       const src = o.material
+      // real photographed glass, unlit and untonemapped so it reads backlit
+      if (/stained/i.test(o.name) || /stained/i.test(src?.name || '')) {
+        o.material = new MeshBasicMaterial({ map: sgTex, side: DoubleSide, toneMapped: false })
+        sgHits++
+        return
+      }
       // Only the shell carries a baked lightmap (emissiveTexture) — that one goes
       // unlit so the bake reads exactly as rendered. Props were never baked, so
       // they keep a lit material and are shaded by the scene lights instead.
@@ -1400,8 +1413,9 @@ function BakedHall() {
       }
       o.castShadow = o.receiveShadow = false
     })
+    if (!sgHits) console.warn('[stained] no mesh matched; texture not applied')
     return c
-  }, [scene])
+  }, [scene, sgTex])
   // Blender +Y (door end) maps to -Z on export, so spin it to match the R3F hall
   return <primitive object={inst} rotation={[0, Math.PI, 0]} />
 }
@@ -1747,9 +1761,11 @@ function Character() {
     cam.x = MathUtils.clamp(cam.x, -W / 2 + 0.4, W / 2 - 0.4)   // camera collision: stay inside the room
     cam.z = MathUtils.clamp(cam.z, -D / 2 + 0.4, D / 2 - 0.4)
     cam.y = MathUtils.clamp(cam.y, 0.8, CEIL - 0.4)
-    camera.position.lerp(cam, Math.min(1, 9 * d))
     _v5.set(ch.position.x, HEAD_Y + 0.4 + s.pitch * 7.0, ch.position.z)   // aim swings floor → ahead → ceiling
-    camera.lookAt(_v5)
+    if (!DEBUG_CAM) {
+      camera.position.lerp(cam, Math.min(1, 9 * d))
+      camera.lookAt(_v5)
+    }
 
     // which painting is the player looking at / near? → hover label (no key needed)
     const camDir = _v7.copy(_v5).sub(camera.position).normalize()
