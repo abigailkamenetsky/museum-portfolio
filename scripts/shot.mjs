@@ -56,6 +56,18 @@ try {
   await send('Runtime.enable')
   await send('Page.enable')
   await send('Page.navigate', { url })
+  await sleep(2500)
+  // dismiss the welcome/how-to overlay so the room is actually visible
+  for (let i = 0; i < 2; i++) {   // welcome -> howto -> explore; a 3rd opens the guide
+    for (const type of ['keyDown', 'keyUp']) {
+      await send('Input.dispatchKeyEvent', { type, key: ' ', code: 'Space', windowsVirtualKeyCode: 32, nativeVirtualKeyCode: 32 })
+    }
+    await sleep(400)
+  }
+  // entering 'explore' auto-opens the guide menu; Escape closes it
+  for (const type of ['keyDown', 'keyUp']) {
+    await send('Input.dispatchKeyEvent', { type, key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 })
+  }
   await sleep(Number(waitMs))          // real seconds, workers get to reply
   const { data } = await send('Page.captureScreenshot', { format: 'png' })
   writeFileSync(out, Buffer.from(data, 'base64'))

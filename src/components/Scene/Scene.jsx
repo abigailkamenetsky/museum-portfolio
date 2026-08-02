@@ -27,6 +27,7 @@ import { museum, touchInput } from '../../museum/store'
 import MarbleMuseumEnvironment from '../../museum/MarbleMuseumEnvironment'
 import { MUSEUM_ENVIRONMENT, CALIBRATION } from '../../data/museumConfig'
 const SPAWN = CALIBRATION[MUSEUM_ENVIRONMENT].playerSpawn
+const WALK = CALIBRATION[MUSEUM_ENVIRONMENT].walkBounds
 import { WINGS, PAINTINGS } from '../../data/museum'
 
 /* ── DIMENSIONS — long rectangular palace gallery (~2:1) ────── */
@@ -1735,8 +1736,8 @@ function Character() {
 
     const ch = root.current
     ch.position.addScaledVector(s.vel, d)
-    ch.position.x = MathUtils.clamp(ch.position.x, -W / 2 + 0.7, W / 2 - 0.7)
-    ch.position.z = MathUtils.clamp(ch.position.z, -D / 2 + 0.7, D / 2 - 0.7)
+    ch.position.x = MathUtils.clamp(ch.position.x, WALK[0], WALK[1])
+    ch.position.z = MathUtils.clamp(ch.position.z, WALK[2], WALK[3])
     ch.position.y = 0
     // push the player out of any solid furniture (AABB, least-penetration axis)
     for (const o of OBSTACLES) {

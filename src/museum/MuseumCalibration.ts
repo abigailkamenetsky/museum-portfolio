@@ -21,6 +21,8 @@ export type MuseumCalibrationConfig = {
   readonly cameraTarget: Vec3
   /** nudges the walkable plane so the character does not sink or float */
   readonly floorOffset: number
+  /** axis-aligned box the player may move within: [minX, maxX, minZ, maxZ] */
+  readonly walkBounds: readonly [number, number, number, number]
 }
 
 /**
@@ -34,6 +36,7 @@ export const LEGACY_CALIBRATION: MuseumCalibrationConfig = {
   playerSpawn: [0, 0, 34],
   cameraTarget: [0, 3.6, 0],
   floorOffset: 0,
+  walkBounds: [-8.3, 8.3, -38.3, 38.3],
 }
 
 /**
@@ -54,9 +57,15 @@ export const MARBLE_CALIBRATION: MuseumCalibrationConfig = {
   position: [0, 4.151, 0],
   rotation: [0, 0, 0],
   scale: 2.7043977,
-  playerSpawn: [0, 0, 10],   // inside the hall (z runs -24..+13.5)
+  playerSpawn: [0, 0, 5],    // the camera trails ~3.5m behind, so spawning
+                             // at 10 put the CAMERA through the near wall (z=13.46)
   cameraTarget: [0, 1.6, 0],
   floorOffset: 0,
+  // Marble reconstructs from one viewpoint, so only the near end holds up.
+  // Measured by sweeping the hall: sharp at z=12 and z=6, softening by z=0,
+  // clearly smeared by z=-6. Keep the player in the good 13m, and let the far
+  // end read as gloom down the axis rather than somewhere you can walk into.
+  walkBounds: [-3.2, 3.2, -1.0, 9.0],
 }
 
 /** Raw values as returned by the API, kept for recalibration after a re-export. */
