@@ -13,3 +13,4 @@ dist/
 
 # Blender working files (large, local only)
 blender/
+!.env.example
