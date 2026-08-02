@@ -58,10 +58,10 @@ export const MARBLE_CALIBRATION: MuseumCalibrationConfig = {
   // the ceiling at +0.6. Using the reported offset left the floor at y=-1.80,
   // so the player stood 1.8m in mid-air.
   //   floor lift = -(-2.2 * 2.7044) = +5.95  ->  floor lands on y=0
-  position: [0, 5.95, 0],
-  rotation: [0, 0, 0],
+  position: [0, 1.62, 0],
+  rotation: [Math.PI, 0, 0],   // Marble's world is Y-down; flip it upright
   scale: 2.7043977,
-  playerSpawn: [0, 0, 5],    // the camera trails ~3.5m behind, so spawning
+  playerSpawn: [0, 0, -5],    // the camera trails ~3.5m behind, so spawning
                              // at 10 put the CAMERA through the near wall (z=13.46)
   cameraTarget: [0, 1.6, 0],
   floorOffset: 0,
@@ -69,7 +69,7 @@ export const MARBLE_CALIBRATION: MuseumCalibrationConfig = {
   // Measured by sweeping the hall: sharp at z=12 and z=6, softening by z=0,
   // clearly smeared by z=-6. Keep the player in the good 13m, and let the far
   // end read as gloom down the axis rather than somewhere you can walk into.
-  walkBounds: [-3.2, 3.2, -1.0, 9.0],
+  walkBounds: [-3.2, 3.2, -9.0, 1.0],
 }
 
 /** Raw values as returned by the API, kept for recalibration after a re-export. */
