@@ -43,10 +43,24 @@ export const LEGACY_CALIBRATION: MuseumCalibrationConfig = {
  * an arbitrary metric scale, so expect all six fields to change.
  */
 export const MARBLE_CALIBRATION: MuseumCalibrationConfig = {
-  position: [0, 0, 0],
+  // Marble reports these directly in the world's semantics_metadata, so they
+  // are measured values rather than eyeballed ones:
+  //   metric_scale_factor  2.7043977  -> multiply to reach metres
+  //   ground_plane_offset  1.5348716  -> floor height in raw splat units
+  // Measured from the collider GLB: raw 3.12 x 13.87 x 2.98 units, which at
+  // 2.7044 is 8.4m wide x 37.5m long x 8.1m tall. Scale is applied before
+  // position, so the floor is LIFTED to y=0 by
+  //   +ground_plane_offset * metric_scale_factor = +4.151
+  position: [0, 4.151, 0],
   rotation: [0, 0, 0],
-  scale: 1,
-  playerSpawn: [0, 0, 34],
-  cameraTarget: [0, 3.6, 0],
+  scale: 2.7043977,
+  playerSpawn: [0, 0, 14],
+  cameraTarget: [0, 1.6, 0],
   floorOffset: 0,
 }
+
+/** Raw values as returned by the API, kept for recalibration after a re-export. */
+export const MARBLE_SEMANTICS = {
+  metricScaleFactor: 2.7043977,
+  groundPlaneOffset: 1.5348716,
+} as const

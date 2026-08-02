@@ -14,3 +14,7 @@ dist/
 # Blender working files (large, local only)
 blender/
 !.env.example
+
+# Marble exports (large binaries; regenerate via the API or re-download)
+public/museum/*.spz
+public/museum/abby-museum-fallback.png

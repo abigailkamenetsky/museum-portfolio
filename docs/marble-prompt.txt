@@ -1,61 +1,64 @@
-An enormous, wide, soaring baroque picture gallery inside a European palace,
-seen from a wide angle. This is a vast grand hall, not a corridor. The room is
-very wide and very tall, with a great deal of open floor between the two side
-walls, wide enough that many people could walk abreast. The ceiling soars high
-above, double height, and the barrel vault springs from far up the walls. Tall
-arched windows line both side walls at generous intervals, letting in soft
-daylight with mature green trees visible outside. Between the windows hang
-large ornate carved gilt picture frames. At the far end of the hall stands a
-tall stained glass window in rich reds, blues and golds. The floor is dark
-walnut herringbone parquet, polished to a deep sheen that reflects the windows
-and the candlelight.
+A vast, wide, soaring dark academia baroque picture gallery inside a European
+palace. Everything in this room is DARK, moody and dimly lit. This is a
+shadowed, candlelit hall at dusk, not a bright daylit museum. Deep shadows fill
+the corners, the vault and the far end of the room, and only pools of warm
+candlelight and shafts of cool window light break the darkness.
 
-The hall is richly furnished with sculpture. Full-length white Carrara marble
-statues of classical figures stand along the room on tall carved marble
-pedestals, posed in contrapposto with deeply carved flowing drapery, finely
-detailed faces, hands and folds of cloth. White marble portrait busts on turned
-marble socles are placed between them. The pedestals are carved and fluted with
-gilded bases and cornices. Gilded bronze candelabra and ornate wall sconces
-hold real lit candles with soft warm flames. Polished brass stanchions with
-dark crimson twisted velvet ropes cordon off the artwork along the walls. Down
-the centre of the wide floor lies a long Persian carpet in deep reds, golds and
-midnight blue with an intricate woven medallion pattern, and several low dark
-wood benches upholstered in deep red velvet sit along its length. A gilded
-console table with a marble top stands against one wall. Every one of these
-objects is crisply modelled and sharply detailed, with clean carved edges and
-realistic marble, brass, gilt, velvet and wood materials.
+The walls are DEEP DARK FOREST GREEN, hex #0F1B14 and #1B2A1F, a near-black
+green like dark bottle glass or deep pine needles in shadow. The walls must NOT
+be sage, NOT mint, NOT olive, NOT grey-green, NOT pale green, NOT bright green
+and NOT light green. They are almost black in the corners. A subtle tonal
+green-on-green damask pattern is barely visible in the wall silk. Below the
+green runs a low dark wood and cream marble wainscot with restrained gilding.
 
-The walls are covered in DEEP FOREST GREEN damask wallpaper. The green must be
-very dark and heavily saturated, like dark bottle glass or deep pine needles,
-close to black in the shadowed corners and only slightly lighter where light
-falls on it. The damask pattern is a subtle tonal green-on-green baroque
-scroll, barely visible, catching a faint silk sheen rather than contrasting.
-The walls must NOT be sage green, NOT mint green, NOT olive green, NOT grey
-green, NOT pale green, and NOT yellow green. They are a rich, moody, near-black
-forest green. Below the green runs a cream and pale grey marble wainscot with
-gilded molding and carved marble panels, and a gilded chair rail separating the
-marble from the green damask above.
+The floor is VERY DARK WALNUT herringbone parquet, hex #2A1E17 and #3A2F24,
+a deep near-black brown wood, polished so candlelight reflects along it. The
+floor must NOT be light wood, NOT honey oak, NOT golden brown, NOT pale. Down
+the centre lies a long runner carpet in DARK FOREST GREEN, hex #1B2A1F, with
+deep oxblood red #A63D2D borders and an intricate woven medallion pattern. The
+carpet green must be dark, not pale or mint.
 
-The ceiling is a vast barrel vault in cream and antique gold, high overhead. It
-is densely covered in heavily carved gilded rinceau scrollwork, acanthus
-leaves, rosettes and raised plaster ornament, arranged in panels divided by
-carved transverse ribs. Set into the centre of the vault, between the ribs, is
-a row of large dark oil-painted baroque fresco panels in ornate carved gold
-frames, each showing figures and angels among clouds in the style of Tiepolo
-and Pozzo. These ceiling paintings are dark, warm and richly coloured against
-the pale cream and gold of the surrounding carved ornament. A heavy carved gilt
-cornice runs along the top of the walls where they meet the vault.
+The walls carry MANY separate gold picture frames, arranged in a dense salon
+hang: several different frames on each wall section between the windows, in
+mixed sizes, some large and some small, hung in rows two or three high. They
+are modest carved gilt frames, NOT enormous, NOT one single giant frame per
+wall. Every frame is completely EMPTY, containing only flat plain dark neutral
+canvas with no image, no painting, no portrait, no figure and no pattern.
+Gilded candle sconces are mounted on the green wall BETWEEN and BESIDE the
+frames, never inside a frame and never overlapping a frame.
 
-The lighting is warm, moody and dramatic. Candlelight from the sconces and
-candelabra pools on the wide parquet floor, grazes the gold carving and rakes
-across the marble statues so their carved drapery casts real shadows, while
-cool daylight falls through the arched windows. There is strong chiaroscuro,
-with deep shadows in the corners and high under the vault, and glowing warm
-highlights on the gilding and the polished marble. The overall mood is hushed,
-reverent, dark academia, like a private palace gallery at dusk. Photorealistic,
-cinematic, wide angle, expansive sense of scale, high detail.
+At the far end of the hall is a tall arched leaded stained glass window in the
+style of Hieronymus Bosch and the Garden of Earthly Delights: a dense medieval
+fantasy scene of many small pale nude figures, fantastical creatures, birds,
+strange fruit, blue and green glass orbs and spheres, and a large central
+circular globe medallion, all rendered in small leaded panes of deep jewel
+colours, dark blues, forest greens, oxblood reds and amber. It is antique,
+intricate, medieval and painterly. It must NOT be modern, NOT abstract, NOT
+simple, NOT geometric and must not contain large flat blocks of colour.
 
-Every picture frame on the walls must be EMPTY. Inside each frame is only a
-plain, flat, dark neutral canvas with no image, no painting, no portrait, no
-figure and no pattern. Do not put artwork inside the frames. No text, no
-lettering, no signage, no labels, no numbers, no people and no visitors.
+The ceiling is a vast barrel vault, high overhead, in PALE AGED CREAM AND
+OFF-WHITE PLASTER, hex #C8BDA4 and #7D6A52. The vault is mostly pale plaster,
+roughly three quarters cream and one quarter gilding. Antique gold, hex
+#6B5E3E, appears only as restrained ACCENT on the carved ribs, the rosettes,
+the bead moulding and the panel frame edges. The vault must NOT be
+predominantly gold, NOT brassy, NOT bronze, NOT a gold ceiling. It reads as
+carved white and cream plasterwork with gilded highlights, like aged stucco.
+It is densely covered in deeply carved rinceau scrollwork, acanthus leaves,
+rosettes and raised plaster ornament, divided into panels by carved transverse
+ribs.
+
+Set into the vault between the ribs is a row of large rectangular recessed
+panels, each surrounded by carved gilt frame moulding. Every one of these
+ceiling panels is EMPTY: the interior is flat plain dark neutral canvas with no
+painting, no fresco, no figures, no angels, no clouds and no scene of any kind.
+Leave the ceiling panels blank.
+
+Tall arched windows line both side walls with cool daylight and green trees
+outside. White marble statues and portrait busts stand on carved pedestals.
+Polished brass stanchions with dark crimson velvet ropes. Low dark wood benches
+with deep oxblood red velvet cushions. Gilded console tables with marble tops.
+
+Warm candlelight, dramatic chiaroscuro, deep shadow, low key lighting, moody,
+hushed, reverent, intellectual, timeless, mysterious, historical dark academia.
+Photorealistic, cinematic, wide angle, expansive scale, high detail. No text, no
+lettering, no signage, no labels, no numbers, no people, no visitors.
