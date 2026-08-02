@@ -54,7 +54,7 @@ export const MARBLE_CALIBRATION: MuseumCalibrationConfig = {
   position: [0, 4.151, 0],
   rotation: [0, 0, 0],
   scale: 2.7043977,
-  playerSpawn: [0, 0, 14],
+  playerSpawn: [0, 0, 10],   // inside the hall (z runs -24..+13.5)
   cameraTarget: [0, 1.6, 0],
   floorOffset: 0,
 }

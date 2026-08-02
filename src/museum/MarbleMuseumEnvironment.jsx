@@ -18,6 +18,11 @@ import { MeshBasicMaterial, MeshStandardMaterial, DoubleSide, Color } from 'thre
 import { MARBLE_ASSETS, MUSEUM_DEBUG } from '../data/museumConfig'
 import { MARBLE_CALIBRATION as CAL } from './MuseumCalibration'
 
+// ?wscale=1 isolates whether the calibration scale interferes with Spark's
+// screen-space splat sizing. Diagnostic only.
+const SCALE_OVERRIDE = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('wscale')
+  ? Number(new URLSearchParams(window.location.search).get('wscale')) : null
+
 export default function MarbleMuseumEnvironment({ onStatus }) {
   const { scene, gl } = useThree()
   const rootRef = useRef()
@@ -32,7 +37,12 @@ export default function MarbleMuseumEnvironment({ onStatus }) {
     let spark
     try {
       spark = new SparkRenderer({ renderer: gl })
+      // SparkRenderer is a THREE.Mesh that does its accumulate/sort work during
+      // the render graph. If three frustum-culls it, that work never runs and
+      // nothing draws.
+      spark.frustumCulled = false
       scene.add(spark)
+      console.log('[marble] SparkRenderer mounted')
     } catch (e) {
       console.error('[marble] SparkRenderer failed', e)
       report('error', e)
@@ -45,8 +55,15 @@ export default function MarbleMuseumEnvironment({ onStatus }) {
     let mesh
     report('downloading')
     try {
+      // ?splat=low|mobile|full lets us compare tiers without a rebuild, and
+      // is the seam the device-tier logic will plug into later.
+      const tier = new URLSearchParams(window.location.search).get('splat')
+      const url = tier === 'low' ? MARBLE_ASSETS.low
+                : tier === 'mobile' ? MARBLE_ASSETS.mobile
+                : MARBLE_ASSETS.full
+      console.log('[marble] splat url', url)
       mesh = new SplatMesh({
-        url: MARBLE_ASSETS.full,
+        url,
         raycastable: false,
         onProgress: (e) => {
           if (!alive || !e?.total) return
@@ -58,6 +75,7 @@ export default function MarbleMuseumEnvironment({ onStatus }) {
           report('ready')
         },
       })
+      mesh.frustumCulled = false
       setSplat(mesh)
     } catch (e) {
       console.error('[marble] SplatMesh failed', e)
@@ -105,9 +123,9 @@ export default function MarbleMuseumEnvironment({ onStatus }) {
     <group
       ref={rootRef}
       name="museumWorldRoot"
-      position={CAL.position}
+      position={SCALE_OVERRIDE ? [0, 0, 0] : CAL.position}
       rotation={CAL.rotation}
-      scale={CAL.scale}
+      scale={SCALE_OVERRIDE ?? CAL.scale}
     >
       {splat && <primitive object={splat} />}
       {collider && <primitive object={collider} />}

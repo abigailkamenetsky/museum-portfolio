@@ -38,6 +38,7 @@ const BASE = import.meta.env.BASE_URL
 export const MARBLE_ASSETS = {
   full: `${BASE}museum/abby-museum-full.spz`,
   mobile: `${BASE}museum/abby-museum-mobile.spz`,
+  low: `${BASE}museum/abby-museum-low.spz`,
   collider: `${BASE}museum/abby-museum-collider.glb`,
   fallback: `${BASE}museum/abby-museum-fallback.webp`,
 } as const

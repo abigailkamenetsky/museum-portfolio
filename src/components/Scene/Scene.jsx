@@ -16,7 +16,7 @@ import {
   PlaneGeometry, BufferGeometry, BufferAttribute, TextureLoader, RepeatWrapping, SRGBColorSpace,
   EquirectangularReflectionMapping, Object3D, TorusGeometry, CylinderGeometry,
   SphereGeometry, ConeGeometry, BoxGeometry, Matrix4, DoubleSide, FrontSide, Box3, Color,
-  Vector3, Euler, MathUtils, ACESFilmicToneMapping, PCFSoftShadowMap, ClampToEdgeWrapping, CanvasTexture,
+  Vector3, Euler, MathUtils, ACESFilmicToneMapping, NoToneMapping, PCFSoftShadowMap, ClampToEdgeWrapping, CanvasTexture,
   LinearFilter, LinearMipmapLinearFilter,
 } from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
@@ -25,7 +25,8 @@ import { makeLandscapeTexture } from './textures'
 import { ARTWORKS, ART_BASE } from '../../data/artworks'
 import { museum, touchInput } from '../../museum/store'
 import MarbleMuseumEnvironment from '../../museum/MarbleMuseumEnvironment'
-import { MUSEUM_ENVIRONMENT } from '../../data/museumConfig'
+import { MUSEUM_ENVIRONMENT, CALIBRATION } from '../../data/museumConfig'
+const SPAWN = CALIBRATION[MUSEUM_ENVIRONMENT].playerSpawn
 import { WINGS, PAINTINGS } from '../../data/museum'
 
 /* ── DIMENSIONS — long rectangular palace gallery (~2:1) ────── */
@@ -1845,7 +1846,7 @@ function Character() {
 
   // stylized figure (faces +Z): brunette curls, Y2K tee, denim skirt, knee-high boots
   return (
-    <group ref={root} position={[0, 0, 34]}>{/* spawn just inside the entrance, facing into the gallery */}
+    <group ref={root} position={SPAWN}>{/* spawn from calibration: legacy z=34 sat 20m outside the Marble hall */}
       {/* "Guide Me" — one bold flashing arrow on the floor IN FRONT, pointing the way */}
       <group ref={arrowRef} visible={false}>
         {/* offset to one side so it isn't hidden directly in front of the character */}
@@ -2055,7 +2056,12 @@ export default function Scene() {
       shadows={false}
       dpr={[1, 1.5]}
       camera={{ position: [0, 2.8, 12], fov: 68 }}
-      gl={{ toneMapping: ACESFilmicToneMapping, toneMappingExposure: 0.98, antialias: true, powerPreference: 'high-performance' }}
+      /* Marble splats are baked and already display-referred. Running them
+         through ACES crushes an intentionally dark room to near-black, which
+         is why only the gold frames survived the first attempt. */
+      gl={MUSEUM_ENVIRONMENT === 'marble'
+        ? { toneMapping: NoToneMapping, antialias: false, powerPreference: 'high-performance' }
+        : { toneMapping: ACESFilmicToneMapping, toneMappingExposure: 0.98, antialias: true, powerPreference: 'high-performance' }}
       onCreated={() => console.log('[Scene] Canvas created, renderer ready')}
       style={{ width: '100vw', height: '100dvh', display: 'block', touchAction: 'none', WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}
     >
@@ -2110,7 +2116,7 @@ export default function Scene() {
       <Gallery />
       <Logger />
 
-      <EffectComposer>
+      {MUSEUM_ENVIRONMENT !== 'marble' && <EffectComposer>
         {/* AO at junctions — half-res + modest radius to stay cheap */}
         <N8AO halfRes aoRadius={1.1} intensity={1.35} />
         {/* bloom only on the lamp lenses */}
@@ -2119,7 +2125,7 @@ export default function Scene() {
         <HueSaturation saturation={-0.08} />
         <BrightnessContrast brightness={0.04} contrast={0.02} />
         <Vignette offset={0.3} darkness={0.28} blendFunction={BlendFunction.NORMAL} />
-      </EffectComposer>
+      </EffectComposer>}
     </Canvas>
   )
 }
