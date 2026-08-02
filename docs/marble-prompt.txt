@@ -27,8 +27,13 @@ canvas with no image, no painting, no portrait, no figure and no pattern.
 Gilded candle sconces are mounted on the green wall BETWEEN and BESIDE the
 frames, never inside a frame and never overlapping a frame.
 
-At the far end of the hall is a tall arched leaded stained glass window in the
-style of Hieronymus Bosch and the Garden of Earthly Delights: a dense medieval
+There is EXACTLY ONE stained glass window in the entire room, centred on the far
+end wall. Every window along the two side walls is ORNATE BUT CLEAR GLASS with
+leaded clear panes and carved stone surrounds, showing green trees and daylight
+outside. The side windows must NOT be stained glass and must NOT be coloured.
+
+The single stained glass window on the far end wall is a tall arched leaded
+window in the style of Hieronymus Bosch and the Garden of Earthly Delights: a dense medieval
 fantasy scene of many small pale nude figures, fantastical creatures, birds,
 strange fruit, blue and green glass orbs and spheres, and a large central
 circular globe medallion, all rendered in small leaded panes of deep jewel
@@ -53,8 +58,13 @@ ceiling panels is EMPTY: the interior is flat plain dark neutral canvas with no
 painting, no fresco, no figures, no angels, no clouds and no scene of any kind.
 Leave the ceiling panels blank.
 
-Tall arched windows line both side walls with cool daylight and green trees
-outside. White marble statues and portrait busts stand on carved pedestals.
+There is EXACTLY ONE door in the entire room: a single tall wooden double door
+with a carved pediment above it, centred on the end wall OPPOSITE the stained
+glass window. There are no other doors anywhere. The side walls have no doors,
+no doorways and no openings other than the clear windows.
+
+Tall arched clear windows line both side walls with cool daylight and green
+trees outside. White marble statues and portrait busts stand on carved pedestals.
 Polished brass stanchions with dark crimson velvet ropes. Low dark wood benches
 with deep oxblood red velvet cushions. Gilded console tables with marble tops.
 
