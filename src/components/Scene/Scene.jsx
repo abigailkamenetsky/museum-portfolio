@@ -1311,7 +1311,7 @@ function useJacquard(repX, repY) {
     }
     // green.jpg is the Poly Haven scan recoloured to the gallery green: the raw
     // scan is near-black charcoal, so tinting it green just produced mud
-    loadInto(loader, JACQ + 'green_v2.jpg', t => {
+    loadInto(loader, JACQ + 'green_v3.jpg', t => {
       cfg(t, true); mat.map = t
       // emissive follows the weave, so the pattern still reads in the dim
       // upper wall instead of being flooded by a flat colour
