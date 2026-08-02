@@ -1535,7 +1535,8 @@ const OBSTACLES = USE_BAKED
       { x: -6.1, z: -35.5, hx: 1.1, hz: 1.1 },  // statue (back-left)
       { x: 6.1, z: -35.5, hx: 1.1, hz: 1.1 },   // statue (back-right)
     ]
-const AV_SCALE = 1.9, HEAD_Y = 2.95   // avatar ~half the door height; camera aims at the new head
+const AV_H = CALIBRATION[MUSEUM_ENVIRONMENT].avatarHeight
+const AV_SCALE = 1.9 * (AV_H / 2.95), HEAD_Y = AV_H   // avatar ~half the door height; camera aims at the new head
 const _v1 = new Vector3(), _v2 = new Vector3(), _v3 = new Vector3(), _v4 = new Vector3()
 const _v5 = new Vector3(), _v6 = new Vector3(), _v7 = new Vector3(), _v8 = new Vector3()
 

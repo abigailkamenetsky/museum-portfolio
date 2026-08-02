@@ -23,6 +23,8 @@ export type MuseumCalibrationConfig = {
   readonly floorOffset: number
   /** axis-aligned box the player may move within: [minX, maxX, minZ, maxZ] */
   readonly walkBounds: readonly [number, number, number, number]
+  /** avatar height in metres; the room's real scale decides this, not taste */
+  readonly avatarHeight: number
 }
 
 /**
@@ -37,6 +39,7 @@ export const LEGACY_CALIBRATION: MuseumCalibrationConfig = {
   cameraTarget: [0, 3.6, 0],
   floorOffset: 0,
   walkBounds: [-8.3, 8.3, -38.3, 38.3],
+  avatarHeight: 2.95,   // the legacy hall is 13.5m tall and was authored around this
 }
 
 /**
@@ -70,6 +73,10 @@ export const MARBLE_CALIBRATION: MuseumCalibrationConfig = {
   // clearly smeared by z=-6. Keep the player in the good 13m, and let the far
   // end read as gloom down the axis rather than somewhere you can walk into.
   walkBounds: [-3.2, 3.2, -9.0, 1.0],
+  // Marble's hall measures 7.57m floor to vault. The legacy 2.95m avatar is
+  // 9ft 8in and filled 39% of that height. Abby is 5'4", so 1.63m: 22%, and
+  // comfortably below the window heads.
+  avatarHeight: 1.63,
 }
 
 /** Raw values as returned by the API, kept for recalibration after a re-export. */
