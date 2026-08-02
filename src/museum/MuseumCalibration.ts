@@ -51,10 +51,14 @@ export const MARBLE_CALIBRATION: MuseumCalibrationConfig = {
   //   metric_scale_factor  2.7043977  -> multiply to reach metres
   //   ground_plane_offset  1.5348716  -> floor height in raw splat units
   // Measured from the collider GLB: raw 3.12 x 13.87 x 2.98 units, which at
-  // 2.7044 is 8.4m wide x 37.5m long x 8.1m tall. Scale is applied before
-  // position, so the floor is LIFTED to y=0 by
-  //   +ground_plane_offset * metric_scale_factor = +4.151
-  position: [0, 4.151, 0],
+  // 2.7044 is 8.4m wide x 37.5m long x 8.1m tall.
+  //
+  // Do NOT derive the floor from ground_plane_offset (1.5349). Measuring the
+  // collider's dominant up-facing planes puts the real floor at raw -2.2 and
+  // the ceiling at +0.6. Using the reported offset left the floor at y=-1.80,
+  // so the player stood 1.8m in mid-air.
+  //   floor lift = -(-2.2 * 2.7044) = +5.95  ->  floor lands on y=0
+  position: [0, 5.95, 0],
   rotation: [0, 0, 0],
   scale: 2.7043977,
   playerSpawn: [0, 0, 5],    // the camera trails ~3.5m behind, so spawning
