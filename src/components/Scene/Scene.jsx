@@ -1298,7 +1298,7 @@ function useJacquard(repX, repY) {
   const mat = useMemo(() => new MeshStandardMaterial({
     color: '#ffffff', roughness: 0.88, metalness: 0,
     // the green is baked into the map, so the colour stays neutral here
-    emissive: new Color('#ffffff'), emissiveIntensity: 0.20,
+    emissive: new Color('#ffffff'), emissiveIntensity: 0.07,
     envMapIntensity: 0.2, side: DoubleSide,
   }), [])
   useEffect(() => {
@@ -1311,7 +1311,7 @@ function useJacquard(repX, repY) {
     }
     // green.jpg is the Poly Haven scan recoloured to the gallery green: the raw
     // scan is near-black charcoal, so tinting it green just produced mud
-    loadInto(loader, JACQ + 'green.jpg', t => {
+    loadInto(loader, JACQ + 'green_v2.jpg', t => {
       cfg(t, true); mat.map = t
       // emissive follows the weave, so the pattern still reads in the dim
       // upper wall instead of being flooded by a flat colour
@@ -1331,27 +1331,32 @@ function useJacquard(repX, repY) {
  */
 function LiveFrescoes() {
   const PW = 7.2, PD = PW / 1.20          // matches the crop's aspect
-  const mat = useMemo(() => new MeshStandardMaterial({
+  const N = 9
+  // One distinct painting per bay. Tiling a single fresco nine times read as
+  // wallpaper; real vaults carry a different scene in every compartment.
+  const mats = useMemo(() => Array.from({ length: N }, () => new MeshStandardMaterial({
     color: '#ffffff', roughness: 0.94, metalness: 0,
-    emissive: new Color('#ffffff'), emissiveIntensity: 0.5,
+    emissive: new Color('#ffffff'), emissiveIntensity: 0.42,
     envMapIntensity: 0.1, side: DoubleSide,
-  }), [])
+  })), [])
   useEffect(() => {
     const loader = new TextureLoader()
-    loadInto(loader, FRESCO_TEX, t => {
-      t.colorSpace = SRGBColorSpace
-      t.anisotropy = 8
-      mat.map = t
-      mat.emissiveMap = t
-      mat.needsUpdate = true
+    mats.forEach((mat, i) => {
+      loadInto(loader, `${TEX}fresco_${i + 1}.jpg`, t => {
+        t.colorSpace = SRGBColorSpace
+        t.anisotropy = 8
+        mat.map = t
+        mat.emissiveMap = t
+        mat.needsUpdate = true
+      })
     })
-  }, [mat])
+  }, [mats])
   // the vault reaches y=17.12 at x=+-3.6, so 17.02 tucks just beneath it
-  const zs = Array.from({ length: 9 }, (_, i) => -35 + i * 8.75)
+  const zs = Array.from({ length: N }, (_, i) => -35 + i * 8.75)
   return (
     <>
       {zs.map((z, i) => (
-        <mesh key={i} position={[0, 17.02, z]} rotation={[Math.PI / 2, 0, 0]} material={mat}>
+        <mesh key={i} position={[0, 17.02, z]} rotation={[Math.PI / 2, 0, 0]} material={mats[i]}>
           <planeGeometry args={[PW, PD]} /></mesh>
       ))}
     </>
