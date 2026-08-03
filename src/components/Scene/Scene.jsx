@@ -28,6 +28,10 @@ import MarbleMuseumEnvironment from '../../museum/MarbleMuseumEnvironment'
 import { MUSEUM_ENVIRONMENT, CALIBRATION } from '../../data/museumConfig'
 const SPAWN = CALIBRATION[MUSEUM_ENVIRONMENT].playerSpawn
 const WALK = CALIBRATION[MUSEUM_ENVIRONMENT].walkBounds
+// the camera trails the player, so it needs a little more room than they do
+const CAM_BOX = MUSEUM_ENVIRONMENT === 'marble'
+  ? [WALK[0] - 1.5, WALK[1] + 1.5, WALK[2] - 5, WALK[3] + 5, 7.5]
+  : [-W / 2 + 0.4, W / 2 - 0.4, -D / 2 + 0.4, D / 2 - 0.4, CEIL - 0.4]
 import { WINGS, PAINTINGS } from '../../data/museum'
 
 /* ── DIMENSIONS — long rectangular palace gallery (~2:1) ────── */
@@ -1523,7 +1527,10 @@ const WALK_SPEED = 4.4, RUN_SPEED = 7.5, ACCEL = 16, DRAG_SENS = 0.0032   // res
 const PLAYER_R = 0.45
 // Collision must match whichever room is actually rendered. The Blender hall has
 // no bench, its statues stand further back, and it adds a table on the carpet.
-const OBSTACLES = USE_BAKED
+// The Marble room's obstacles come from its own collider, not from the legacy
+// hall's furniture. Leaving the legacy list active put an invisible bench at
+// z=2 in the middle of the Marble hall and statues at z=+-35.5.
+const OBSTACLES = MUSEUM_ENVIRONMENT === 'marble' ? [] : USE_BAKED
   ? [
       { x: -5.4, z: -33.0, hx: 0.9, hz: 0.9 },  // statue pedestal (back-left)
       { x: 5.4, z: -33.0, hx: 0.9, hz: 0.9 },   // statue pedestal (back-right)
@@ -1807,9 +1814,11 @@ function Character() {
       HEAD_Y + 1.95 + s.pitch * 1.15,
       ch.position.z - cos * horiz,
     )
-    cam.x = MathUtils.clamp(cam.x, -W / 2 + 0.4, W / 2 - 0.4)   // camera collision: stay inside the room
-    cam.z = MathUtils.clamp(cam.z, -D / 2 + 0.4, D / 2 - 0.4)
-    cam.y = MathUtils.clamp(cam.y, 0.8, CEIL - 0.4)
+    // clamp the camera to the ROOM being rendered; the legacy 18x78 numbers
+    // stopped the camera following the player to the ends of the Marble hall
+    cam.x = MathUtils.clamp(cam.x, CAM_BOX[0], CAM_BOX[1])
+    cam.z = MathUtils.clamp(cam.z, CAM_BOX[2], CAM_BOX[3])
+    cam.y = MathUtils.clamp(cam.y, 0.8, CAM_BOX[4])
     _v5.set(ch.position.x, HEAD_Y + 0.4 + s.pitch * 7.0, ch.position.z)   // aim swings floor → ahead → ceiling
     if (!DEBUG_CAM) {
       camera.position.lerp(cam, Math.min(1, 9 * d))
