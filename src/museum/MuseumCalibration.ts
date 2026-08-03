@@ -61,18 +61,21 @@ export const MARBLE_CALIBRATION: MuseumCalibrationConfig = {
   // the ceiling at +0.6. Using the reported offset left the floor at y=-1.80,
   // so the player stood 1.8m in mid-air.
   //   floor lift = -(-2.2 * 2.7044) = +5.95  ->  floor lands on y=0
-  position: [0, 1.678, 0],
+  position: [0, 2.4, 0],   // floor raw +0.6, flipped and scaled: 0.6*4.0
   rotation: [Math.PI, 0, 0],   // Marble's world is Y-down; flip it upright
-  scale: 2.7960596,
+  // Marble's metric_scale_factor (2.796) yields a 5.59m ceiling, which made a
+  // 5'4" avatar 29% of the room height. v1's room was 7.57m and read correctly
+  // at 22%, so scale up to match: 2.796 * (8.0/5.59) = 4.0. Room becomes
+  // ~8.9m wide x 8.0m tall x 57m long.
+  scale: 4.0,
   playerSpawn: [0, 0, -5],    // the camera trails ~3.5m behind, so spawning
                              // at 10 put the CAMERA through the near wall (z=13.46)
   cameraTarget: [0, 1.6, 0],
   floorOffset: 0,
-  // The textured mesh is real geometry and does not smear, so the whole hall
-  // is walkable. Bounds are now the room's actual extent rather than the
-  // splat's sharp zone. Mesh raw bounds x -1.14..1.20, y -10.29..4.26 at
-  // scale 2.796, inset for the player's radius.
-  walkBounds: [-2.6, 2.8, -27.5, 11.0],
+  // Measured from the mesh's actual floor slab (raw x -1.05..1.17,
+  // y -10.08..4.19), flipped and scaled, inset for the player's radius.
+  // The whole hall is walkable because the mesh does not smear.
+  walkBounds: [-3.7, 4.2, -39.0, 15.0],
   // Marble's hall measures 7.57m floor to vault. The legacy 2.95m avatar is
   // 9ft 8in and filled 39% of that height. Abby is 5'4", so 1.63m: 22%, and
   // comfortably below the window heads.
