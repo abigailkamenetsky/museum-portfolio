@@ -39,6 +39,7 @@ export const MARBLE_ASSETS = {
   full: `${BASE}museum/abby-museum-full.spz`,
   mobile: `${BASE}museum/abby-museum-mobile.spz`,
   low: `${BASE}museum/abby-museum-low.spz`,
+  mesh: `${BASE}museum/abby-museum-mesh-web.glb`,
   collider: `${BASE}museum/abby-museum-collider.glb`,
   fallback: `${BASE}museum/abby-museum-fallback.webp`,
 } as const

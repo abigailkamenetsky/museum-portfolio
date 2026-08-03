@@ -14,14 +14,33 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useThree } from '@react-three/fiber'
 import { SplatMesh, SparkRenderer } from '@sparkjsdev/spark'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { MeshBasicMaterial, MeshStandardMaterial, DoubleSide, Color } from 'three'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
+import { MeshBasicMaterial, MeshStandardMaterial, DoubleSide, Color, SRGBColorSpace } from 'three'
 import { MARBLE_ASSETS, MUSEUM_DEBUG } from '../data/museumConfig'
 import { MARBLE_CALIBRATION as CAL } from './MuseumCalibration'
+
+const SHOW_COLLIDER = typeof window !== 'undefined'
+  && new URLSearchParams(window.location.search).has('collider')
+
+// ?mode=mesh|splat|both  — mesh is real geometry (walkable everywhere, never
+// smears); splat is photoreal near its capture point and blurs away from it.
+const MODE = typeof window !== 'undefined'
+  ? (new URLSearchParams(window.location.search).get('mode') || 'mesh') : 'mesh'
 
 // ?wscale=1 isolates whether the calibration scale interferes with Spark's
 // screen-space splat sizing. Diagnostic only.
 const SCALE_OVERRIDE = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('wscale')
   ? Number(new URLSearchParams(window.location.search).get('wscale')) : null
+
+// Marble's mesh ships Draco-compressed, so the loader needs a decoder. Served
+// from public/draco rather than a CDN, to keep the museum self-hosted.
+function makeGltfLoader() {
+  const draco = new DRACOLoader()
+  draco.setDecoderPath(`${import.meta.env.BASE_URL}draco/`)
+  const loader = new GLTFLoader()
+  loader.setDRACOLoader(draco)
+  return loader
+}
 
 export default function MarbleMuseumEnvironment({ onStatus }) {
   const { scene, gl } = useThree()
@@ -50,7 +69,29 @@ export default function MarbleMuseumEnvironment({ onStatus }) {
     return () => { if (spark) scene.remove(spark) }
   }, [scene, gl])
 
+  const [hall, setHall] = useState(null)
   useEffect(() => {
+    if (MODE === 'splat') return
+    let alive = true
+    makeGltfLoader().load(MARBLE_ASSETS.mesh, (gltf) => {
+      if (!alive) return
+      let tris = 0
+      gltf.scene.traverse((o) => {
+        if (!o.isMesh) return
+        tris += (o.geometry.index?.count ?? o.geometry.attributes.position.count) / 3
+        // photogrammetry texture is already lit; do not relight it
+        const map = o.material?.map
+        if (map) map.colorSpace = SRGBColorSpace
+        o.material = new MeshBasicMaterial({ map, side: DoubleSide })
+      })
+      console.log('[marble] mesh loaded,', Math.round(tris), 'triangles')
+      setHall(gltf.scene)
+    }, undefined, (e) => console.warn('[marble] mesh failed', e))
+    return () => { alive = false }
+  }, [])
+
+  useEffect(() => {
+    if (MODE === 'mesh') return
     let alive = true
     let mesh
     report('downloading')
@@ -91,7 +132,7 @@ export default function MarbleMuseumEnvironment({ onStatus }) {
   // use, wireframe in debug, and it is what movement will collide against.
   useEffect(() => {
     let alive = true
-    new GLTFLoader().load(
+    makeGltfLoader().load(
       MARBLE_ASSETS.collider,
       (gltf) => {
         if (!alive) return
@@ -100,10 +141,12 @@ export default function MarbleMuseumEnvironment({ onStatus }) {
         root.traverse((o) => {
           if (!o.isMesh) return
           tris += (o.geometry.index?.count ?? o.geometry.attributes.position.count) / 3
-          o.material = MUSEUM_DEBUG
+          // wireframe is opt-in via ?collider=1: showing it by default in dev
+          // made every screenshot unreadable
+          o.material = SHOW_COLLIDER
             ? new MeshBasicMaterial({ color: new Color('#39ff88'), wireframe: true, transparent: true, opacity: 0.35 })
             : new MeshStandardMaterial({ visible: false })
-          o.visible = MUSEUM_DEBUG
+          o.visible = SHOW_COLLIDER
           o.raycast = o.raycast   // kept raycastable: placement + movement need it
         })
         console.log('[marble] collider loaded,', Math.round(tris), 'triangles')
@@ -127,6 +170,7 @@ export default function MarbleMuseumEnvironment({ onStatus }) {
       rotation={CAL.rotation}
       scale={SCALE_OVERRIDE ?? CAL.scale}
     >
+      {hall && <primitive object={hall} />}
       {splat && <primitive object={splat} />}
       {collider && <primitive object={collider} />}
 

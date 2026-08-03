@@ -56,7 +56,7 @@ try {
   await send('Runtime.enable')
   await send('Page.enable')
   await send('Page.navigate', { url })
-  await sleep(2500)
+  await sleep(6000)   // the mesh/splat needs to be up before the UI responds
   // dismiss the welcome/how-to overlay so the room is actually visible
   for (let i = 0; i < 2; i++) {   // welcome -> howto -> explore; a 3rd opens the guide
     for (const type of ['keyDown', 'keyUp']) {
