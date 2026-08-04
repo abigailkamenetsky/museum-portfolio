@@ -24,7 +24,7 @@ import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 import { makeLandscapeTexture } from './textures'
 import { ARTWORKS, ART_BASE } from '../../data/artworks'
 import { museum, touchInput } from '../../museum/store'
-import MarbleMuseumEnvironment, { MarbleStatues } from '../../museum/MarbleMuseumEnvironment'
+import MarbleMuseumEnvironment from '../../museum/MarbleMuseumEnvironment'
 import { MUSEUM_ENVIRONMENT, CALIBRATION } from '../../data/museumConfig'
 const SPAWN = CALIBRATION[MUSEUM_ENVIRONMENT].playerSpawn
 const WALK = CALIBRATION[MUSEUM_ENVIRONMENT].walkBounds
@@ -2020,7 +2020,6 @@ function Gallery() {
       {MUSEUM_ENVIRONMENT === 'marble' ? (
         <Suspense fallback={null}>
           <MarbleMuseumEnvironment onStatus={(p, x) => console.log('[marble]', p, x ?? '')} />
-          <MarbleStatues />
         </Suspense>
       ) : USE_BAKED ? (
         <>
