@@ -158,10 +158,6 @@ export default function MarbleMuseumEnvironment({ onStatus }) {
     return () => { alive = false }
   }, [])
 
-  const probe = useMemo(() => new MeshStandardMaterial({
-    color: '#c0392b', roughness: 0.6, side: DoubleSide,
-  }), [])
-
   return (
     <group
       ref={rootRef}
@@ -174,20 +170,6 @@ export default function MarbleMuseumEnvironment({ onStatus }) {
       {splat && <primitive object={splat} />}
       {collider && <primitive object={collider} />}
 
-      {/* Phase 2 probe: proves an ordinary lit mesh renders IN FRONT of splats
-          and still receives pointer events. The whole painting architecture
-          depends on this being true. */}
-      {MUSEUM_DEBUG && (
-        <mesh
-          position={[0, 0.8, 0]}
-          material={probe}
-          onClick={(e) => { e.stopPropagation(); console.log('[marble] PROBE CLICKED') }}
-          onPointerOver={() => { document.body.style.cursor = 'pointer' }}
-          onPointerOut={() => { document.body.style.cursor = '' }}
-        >
-          <planeGeometry args={[0.6, 0.45]} />
-        </mesh>
-      )}
     </group>
   )
 }
