@@ -56,10 +56,14 @@ function makeGltfLoader() {
  * affected by the Marble calibration transform.
  */
 const OUR_STATUES = [
-  { url: 'statue1.glb', pos: [-2.6, 0, -6], rotY: Math.PI * 0.15, height: 2.4 },
-  { url: 'statue2.glb', pos: [2.6, 0, -6], rotY: -Math.PI * 0.15, height: 2.4 },
-  { url: 'statue2.glb', pos: [-2.6, 0, -16], rotY: Math.PI * 0.2, height: 2.4 },
-  { url: 'statue1.glb', pos: [2.6, 0, -16], rotY: -Math.PI * 0.2, height: 2.4 },
+  // Positions are MEASURED, not chosen: histogramming upright free-standing
+  // faces located Marble's statue clusters at raw (x -0.05..0.3, y -4) and
+  // (x -0.8, y -6..-7). Through the museumWorldRoot transform (scale 4,
+  // rotation.x = PI, position.y 2.4) those land at these world positions.
+  { url: 'statue1.glb', pos: [-0.2, 0, -16.0], rotY: 0.2, height: 2.4 },
+  { url: 'statue2.glb', pos: [1.2, 0, -16.0], rotY: -0.3, height: 2.4 },
+  { url: 'statue2.glb', pos: [-3.2, 0, -24.0], rotY: 1.2, height: 2.4 },
+  { url: 'statue1.glb', pos: [-3.2, 0, -28.0], rotY: 1.2, height: 2.4 },
 ]
 
 function OurStatue({ url, pos, rotY, height }) {
