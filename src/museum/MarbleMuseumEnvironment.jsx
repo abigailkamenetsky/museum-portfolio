@@ -10,12 +10,13 @@
  * must hit our own interaction meshes, never a cloud of splats.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useThree } from '@react-three/fiber'
+import { useGLTF } from '@react-three/drei'
 import { SplatMesh, SparkRenderer } from '@sparkjsdev/spark'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
-import { MeshBasicMaterial, MeshStandardMaterial, DoubleSide, Color, SRGBColorSpace } from 'three'
+import { MeshBasicMaterial, MeshStandardMaterial, DoubleSide, Color, SRGBColorSpace, Box3, Vector3 } from 'three'
 import { MARBLE_ASSETS, MUSEUM_DEBUG } from '../data/museumConfig'
 import { MARBLE_CALIBRATION as CAL } from './MuseumCalibration'
 
@@ -40,6 +41,47 @@ function makeGltfLoader() {
   const loader = new GLTFLoader()
   loader.setDRACOLoader(draco)
   return loader
+}
+
+/**
+ * Our own statues, placed over Marble's.
+ *
+ * Marble's statuary reconstructed as melted, half-human forms, and it cannot be
+ * cut out: the mesh is unwelded triangle soup (598k fragments of <=6 faces), so
+ * there is no object to select and every position filter also catches the floor
+ * and walls. Covering them with real geometry is non-destructive and renders
+ * sharp, unlike the surrounding photogrammetry.
+ *
+ * Positions are in WORLD space, i.e. outside museumWorldRoot, so they are not
+ * affected by the Marble calibration transform.
+ */
+const OUR_STATUES = [
+  { url: 'statue1.glb', pos: [-2.6, 0, -6], rotY: Math.PI * 0.15, height: 2.4 },
+  { url: 'statue2.glb', pos: [2.6, 0, -6], rotY: -Math.PI * 0.15, height: 2.4 },
+  { url: 'statue2.glb', pos: [-2.6, 0, -16], rotY: Math.PI * 0.2, height: 2.4 },
+  { url: 'statue1.glb', pos: [2.6, 0, -16], rotY: -Math.PI * 0.2, height: 2.4 },
+]
+
+function OurStatue({ url, pos, rotY, height }) {
+  const { scene } = useGLTF(`${import.meta.env.BASE_URL}assets/models/${url}`)
+  const inst = useMemo(() => {
+    const c = scene.clone(true)
+    const box = new Box3().setFromObject(c)
+    const size = new Vector3(); box.getSize(size)
+    const s = height / (size.y || 1)
+    c.scale.setScalar(s)
+    // re-seat on the floor after scaling
+    const b2 = new Box3().setFromObject(c)
+    c.position.y -= b2.min.y
+    c.traverse((o) => {
+      if (!o.isMesh) return
+      o.material = new MeshStandardMaterial({
+        color: '#e8e4da', roughness: 0.62, metalness: 0, envMapIntensity: 0.3,
+      })
+    })
+    return c
+  }, [scene, height])
+  return <primitive object={inst} position={pos} rotation={[0, rotY, 0]} />
 }
 
 export default function MarbleMuseumEnvironment({ onStatus }) {
@@ -171,5 +213,15 @@ export default function MarbleMuseumEnvironment({ onStatus }) {
       {collider && <primitive object={collider} />}
 
     </group>
+  )
+}
+
+export function MarbleStatues() {
+  return (
+    <>
+      {OUR_STATUES.map((st, i) => (
+        <Suspense key={i} fallback={null}><OurStatue {...st} /></Suspense>
+      ))}
+    </>
   )
 }
