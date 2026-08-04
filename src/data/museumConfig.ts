@@ -35,12 +35,16 @@ const BASE = import.meta.env.BASE_URL
  * specs. `full` is the ~2M-splat SPZ, `mobile` the ~500k variant, `collider`
  * the 100-200k-triangle physics GLB, `fallback` the 360 panorama.
  */
+// Version tags are the first 8 chars of each file's sha256. The files are served
+// from fixed paths, so without these a browser keeps showing a stale room: we
+// lost hours to exactly this with the Blender bake. Regenerate with
+// `npm run museum:version` after replacing any asset.
 export const MARBLE_ASSETS = {
-  full: `${BASE}museum/abby-museum-full.spz`,
-  mobile: `${BASE}museum/abby-museum-mobile.spz`,
-  low: `${BASE}museum/abby-museum-low.spz`,
-  mesh: `${BASE}museum/abby-museum-mesh-web.glb`,
-  collider: `${BASE}museum/abby-museum-collider.glb`,
+  full: `${BASE}museum/abby-museum-full.spz?v=7fb7eecf`,
+  mobile: `${BASE}museum/abby-museum-mobile.spz?v=39c5e811`,
+  low: `${BASE}museum/abby-museum-low.spz?v=1eba30f7`,
+  mesh: `${BASE}museum/abby-museum-mesh-web.glb?v=3cdf8b87`,
+  collider: `${BASE}museum/abby-museum-collider.glb?v=bbc7b865`,
   fallback: `${BASE}museum/abby-museum-fallback.webp`,
 } as const
 

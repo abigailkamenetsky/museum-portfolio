@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "museum:version": "node scripts/version_assets.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
