@@ -24,7 +24,8 @@ import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 import { makeLandscapeTexture } from './textures'
 import { ARTWORKS, ART_BASE } from '../../data/artworks'
 import { museum, touchInput } from '../../museum/store'
-import MarbleMuseumEnvironment, { MarbleStatues } from '../../museum/MarbleMuseumEnvironment'
+import MarbleMuseumEnvironment from '../../museum/MarbleMuseumEnvironment'
+import MarblePaintings from '../../museum/MarblePaintings'
 import { MUSEUM_ENVIRONMENT, CALIBRATION } from '../../data/museumConfig'
 const SPAWN = CALIBRATION[MUSEUM_ENVIRONMENT].playerSpawn
 const WALK = CALIBRATION[MUSEUM_ENVIRONMENT].walkBounds
@@ -2020,7 +2021,7 @@ function Gallery() {
       {MUSEUM_ENVIRONMENT === 'marble' ? (
         <Suspense fallback={null}>
           <MarbleMuseumEnvironment onStatus={(p, x) => console.log('[marble]', p, x ?? '')} />
-          <MarbleStatues />
+          <MarblePaintings />
         </Suspense>
       ) : USE_BAKED ? (
         <>
@@ -2046,7 +2047,9 @@ function Gallery() {
       )}
       <Suspense fallback={null}><Character /></Suspense>
 
-      <Suspense fallback={null}><Paintings items={items} m={m} /></Suspense>
+      {MUSEUM_ENVIRONMENT !== 'marble' && (
+        <Suspense fallback={null}><Paintings items={items} m={m} /></Suspense>
+      )}
       {/* curated warm wall-wash spots (kept few for performance) */}
       {[
         { pos: [-hw + 1.0, H - 1.4, 18], tgt: [-hw + 0.1, PY, 18], ry: Math.PI / 2 },
