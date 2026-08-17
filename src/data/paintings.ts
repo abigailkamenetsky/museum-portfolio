@@ -31,7 +31,7 @@ export const WALL_X = 4.12          // canvas sits just proud of the wall face
 export const HANG_Y = 2.25          // centre height, a little above eye level
 export const DEPTH_OFFSET = 0.05    // keeps the canvas off the wall, no z-fighting
 export const Z_START = 11.0         // near the door end
-export const Z_SPACING = 2.9        // along the hall
+export const Z_SPACING = 3.6        // along the hall; frames need more room than bare canvases
 
 /**
  * Alternates walls so a visitor walking the centre meets them left, right,
@@ -49,7 +49,7 @@ export function layout(entries: ReadonlyArray<{ wingId: string; piece: number | 
       position: [side * (WALL_X - DEPTH_OFFSET), HANG_Y, z] as Vec3,
       // face into the room: -x wall turns +90 degrees, +x wall turns -90
       rotation: [0, side < 0 ? Math.PI / 2 : -Math.PI / 2, 0] as Vec3,
-      width: 1.5,
+      width: 1.05,
     }
   })
 }

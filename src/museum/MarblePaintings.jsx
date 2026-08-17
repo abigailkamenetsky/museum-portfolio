@@ -13,8 +13,9 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import {
   MeshBasicMaterial, MeshStandardMaterial, TextureLoader,
-  SRGBColorSpace, DoubleSide, Color,
+  SRGBColorSpace, DoubleSide, Color, Box3, Vector3,
 } from 'three'
+import { useGLTF } from '@react-three/drei'
 import { WINGS } from '../data/museum'
 import { ART_BASE } from '../data/artworks'
 import { layout, DEPTH_OFFSET } from '../data/paintings'
@@ -36,6 +37,39 @@ const ENTRIES = WINGS.flatMap((w) => {
 })
 
 const PLACED = layout(ENTRIES.map((e) => ({ wingId: e.wingId, piece: e.piece })))
+
+const FRAME_URL = import.meta.env.BASE_URL + 'assets/models/frame_gold.glb'
+useGLTF.preload(FRAME_URL)
+
+/**
+ * Marble paints its frames into the texture, so there is nothing to align to:
+ * detecting them from the panorama merged neighbours into 4m blobs. Giving each
+ * painting its OWN carved frame makes it a self-contained object that reads as
+ * hung art rather than a decal, and removes the dependency entirely.
+ */
+function GoldFrame({ w, h }) {
+  const { scene } = useGLTF(FRAME_URL)
+  const inst = useMemo(() => {
+    const c = scene.clone(true)
+    const box = new Box3().setFromObject(c)
+    const size = new Vector3(); box.getSize(size)
+    // the asset is landscape; fit its opening to this canvas
+    c.scale.set((w * 1.19) / (size.x || 1), (h * 1.19) / (size.y || 1), 0.06 / (size.z || 1))
+    c.traverse((o) => {
+      if (!o.isMesh) return
+      const m = o.material.clone()
+      m.map = null                       // baked albedo is dark bronze; tint reads brown
+      if (m.metalnessMap) m.metalnessMap = null
+      m.color = new Color('#c9a24a')     // aged gold
+      m.metalness = 1.0
+      m.roughness = 0.45
+      m.envMapIntensity = 0.9
+      o.material = m
+    })
+    return c
+  }, [scene, w, h])
+  return <primitive object={inst} />
+}
 
 function Painting({ entry, place }) {
   const [tex, setTex] = useState(null)
@@ -78,9 +112,11 @@ function Painting({ entry, place }) {
 
   return (
     <group position={place.position} rotation={place.rotation}>
+      {/* thin dark ground behind the canvas, hidden by the frame rebate */}
       <mesh position={[0, 0, -0.012]} material={backMat}>
-        <planeGeometry args={[w + 0.14, h + 0.14]} />
+        <planeGeometry args={[w + 0.04, h + 0.04]} />
       </mesh>
+      <Suspense fallback={null}><GoldFrame w={w} h={h} /></Suspense>
       {tex && (
         <mesh material={canvasMat}>
           <planeGeometry args={[w, h]} />
