@@ -10,10 +10,11 @@
  * reach production. It is not an auth mechanism, it is a build-time flag.
  */
 import { useEffect } from 'react'
-import { editor, useEditor, nudge, reset, exportJSON, goTo } from './paintingEditorStore'
+import { editor, useEditor, nudge, reset, exportJSON, goTo, dragBy } from './paintingEditorStore'
 import { MUSEUM_EDITOR_ENABLED } from '../data/museumConfig'
 
 const KEY_HELP = [
+  ['hold G + drag', 'MOVE the painting'],
   ['← →', 'along the wall'],
   ['↑ ↓', 'height'],
   ['[ ]', 'size'],
@@ -50,8 +51,31 @@ export default function PaintingEditorPanel({ entries, placements }) {
       if (e.key === 'p' || e.key === 'P') { e.preventDefault(); goTo(placements, s.index - 1); return }
       if (e.key === 'Escape') { editor.set({ selected: null, enabled: false }) }
     }
+    // G holds the grab: while down, canvas drags move the painting not the camera
+    const onDown = (e) => {
+      if ((e.key === 'g' || e.key === 'G') && s.selected && !e.repeat) {
+        editor.set({ grabbing: true })
+      }
+    }
+    const onUp = (e) => {
+      if (e.key === 'g' || e.key === 'G') editor.set({ grabbing: false })
+    }
+    const onDrag = (e) => {
+      const st = editor.get()
+      if (!st.selected) return
+      const base = placements.find((p) => p.id === st.selected)
+      if (base) dragBy(st.selected, base, e.detail.dx, e.detail.dy)
+    }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    window.addEventListener('keydown', onDown)
+    window.addEventListener('keyup', onUp)
+    window.addEventListener('museum:dragPainting', onDrag)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('keydown', onDown)
+      window.removeEventListener('keyup', onUp)
+      window.removeEventListener('museum:dragPainting', onDrag)
+    }
   }, [s.selected, placements])
 
   if (!MUSEUM_EDITOR_ENABLED) return null
@@ -81,16 +105,10 @@ export default function PaintingEditorPanel({ entries, placements }) {
 
       {!cur && (
         <>
-          <div style={{ opacity: .8, marginBottom: 9 }}>
-            Walk freely, or start the guided pass and it will fly you to each
-            painting in turn.
+          <div style={{ opacity: .8 }}>
+            Walk with WASD, drag to look. Click a painting to select it, then
+            hold <b style={{ color: '#8fdc9a' }}>G</b> and drag to move it.
           </div>
-          <button
-            style={{ ...btn, width: '100%' }}
-            onClick={() => { editor.set({ enabled: true }); goTo(placements, 0) }}
-          >
-            Start guided placement →
-          </button>
         </>
       )}
 
@@ -118,6 +136,10 @@ export default function PaintingEditorPanel({ entries, placements }) {
           </table>
           <div style={{ opacity: .6, marginTop: 6 }}>hold Shift for fine steps</div>
         </>
+      )}
+
+      {cur && s.grabbing && (
+        <div style={{ color: '#8fdc9a', marginTop: 8 }}>● moving — release G to stop</div>
       )}
 
       {cur && (

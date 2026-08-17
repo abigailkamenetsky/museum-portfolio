@@ -14,13 +14,36 @@ const state = {
   enabled: false,
   selected: null,          // painting id
   index: -1,               // position in the placement list, for next/prev
-  focus: true,             // camera flies to the selection and movement is frozen
+  grabbing: false,         // G held: pointer drags the painting, not the camera
   overrides: {},           // id -> { position:[x,y,z], width, rotationY }
 }
 
-/** True while the editor owns the camera and input, so walking must stop. */
-export function isEditorFocused() {
-  return state.enabled && state.focus && state.selected != null
+/**
+ * True while G is held with a painting selected. The camera's drag-to-look
+ * stands down for exactly this window, so the same mouse drag moves the
+ * painting instead. Flying the camera to each painting was worse: it framed
+ * dark wall and there was no way to zoom back out.
+ */
+export function isGrabbing() {
+  return state.grabbing && state.selected != null
+}
+
+/** Drag deltas in pixels -> world movement along the wall and in height. */
+export function dragBy(id, base, dxPx, dyPx) {
+  const cur = resolve(id, base)
+  const p = cur.position
+  const k = 0.006                       // metres per pixel, comfortable at arm's length
+  const facingNegX = p[0] < 0
+  state.overrides[id] = {
+    position: [
+      p[0],
+      +(p[1] - dyPx * k).toFixed(3),                       // drag up -> painting up
+      +(p[2] + dxPx * k * (facingNegX ? 1 : -1)).toFixed(3), // follow the pointer along the wall
+    ],
+    width: cur.width,
+    rotationY: cur.rotation?.[1] ?? 0,
+  }
+  editor.bump()
 }
 
 let version = 0

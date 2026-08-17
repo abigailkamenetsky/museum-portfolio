@@ -26,7 +26,7 @@ import { ARTWORKS, ART_BASE } from '../../data/artworks'
 import { museum, touchInput } from '../../museum/store'
 import MarbleMuseumEnvironment from '../../museum/MarbleMuseumEnvironment'
 import MarblePaintings from '../../museum/MarblePaintings'
-import { isEditorFocused } from '../../museum/paintingEditorStore'
+import { isGrabbing, editor, resolve as resolvePlace, dragBy } from '../../museum/paintingEditorStore'
 import { MUSEUM_ENVIRONMENT, CALIBRATION } from '../../data/museumConfig'
 const SPAWN = CALIBRATION[MUSEUM_ENVIRONMENT].playerSpawn
 const WALK = CALIBRATION[MUSEUM_ENVIRONMENT].walkBounds
@@ -1688,6 +1688,14 @@ function Character() {
     const down = e => { dragging = true; st.current.dragging = true; lx = e.clientX; ly = e.clientY }
     const move = e => {
       if (!dragging) return
+      // G held with a painting selected: this drag belongs to the painting
+      if (isGrabbing()) {
+        window.dispatchEvent(new CustomEvent('museum:dragPainting', {
+          detail: { dx: e.clientX - lx, dy: e.clientY - ly },
+        }))
+        lx = e.clientX; ly = e.clientY
+        return
+      }
       const s = st.current
       s.yawT -= (e.clientX - lx) * DRAG_SENS                                   // horizontal → orbit left/right
       s.pitchT = MathUtils.clamp(s.pitchT - (e.clientY - ly) * DRAG_SENS, -1.48, 1.48)  // vertical → tilt (±~85°)
@@ -1822,7 +1830,7 @@ function Character() {
     cam.z = MathUtils.clamp(cam.z, CAM_BOX[2], CAM_BOX[3])
     cam.y = MathUtils.clamp(cam.y, 0.8, CAM_BOX[4])
     _v5.set(ch.position.x, HEAD_Y + 0.4 + s.pitch * 7.0, ch.position.z)   // aim swings floor → ahead → ceiling
-    if (!DEBUG_CAM && !isEditorFocused()) {
+    if (!DEBUG_CAM) {
       camera.position.lerp(cam, Math.min(1, 9 * d))
       camera.lookAt(_v5)
     }

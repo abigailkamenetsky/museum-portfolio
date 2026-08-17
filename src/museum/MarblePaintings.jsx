@@ -11,7 +11,6 @@
  */
 
 import { Suspense, useEffect, useMemo, useState } from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
 import {
   MeshBasicMaterial, MeshStandardMaterial, TextureLoader,
   SRGBColorSpace, DoubleSide, Color, Box3, Vector3,
@@ -21,7 +20,7 @@ import { WINGS } from '../data/museum'
 import { ART_BASE } from '../data/artworks'
 import { layout, DEPTH_OFFSET } from '../data/paintings'
 import { museum } from '../museum/store'
-import { editor, useEditor, resolve, isEditorFocused } from './paintingEditorStore'
+import { editor, useEditor, resolve } from './paintingEditorStore'
 import { MUSEUM_EDITOR_ENABLED } from '../data/museumConfig'
 
 /** Flatten the wings into one ordered list of hangable pieces. */
@@ -149,31 +148,9 @@ function Painting({ entry, place: base }) {
   )
 }
 
-/**
- * Parks the camera in front of the painting being edited, so Abby never has to
- * walk to it. Runs at default priority and only when the editor owns the view;
- * the player's own camera update stands down via isEditorFocused().
- */
-function EditorCam({ placements }) {
-  const { camera } = useThree()
-  useFrame(() => {
-    if (!isEditorFocused()) return
-    const st = editor.get()
-    const base = placements.find((p) => p.id === st.selected)
-    if (!base) return
-    const p = resolve(base.id, base)
-    const [x, y, z] = p.position
-    const inward = x < 0 ? 1 : -1          // step into the room, off the wall
-    camera.position.set(x + inward * 2.6, y + 0.15, z)
-    camera.lookAt(x, y, z)
-  })
-  return null
-}
-
 export default function MarblePaintings() {
   return (
     <>
-      {MUSEUM_EDITOR_ENABLED && <EditorCam placements={PLACED} />}
       {ENTRIES.map((entry, i) => (
         <Suspense key={PLACED[i].id} fallback={null}>
           <Painting entry={entry} place={PLACED[i]} />
