@@ -17,7 +17,8 @@ const KEY_HELP = [
   ['hold G + drag', 'MOVE the painting'],
   ['← →', 'along the wall'],
   ['↑ ↓', 'height'],
-  ['[ ]', 'size'],
+  ['[ ]', 'width'],
+  ['- =', 'height'],
   [', .', 'rotate'],
   ['1 2', 'depth off / into wall'],
   ['R', 'reset this painting'],
@@ -41,6 +42,7 @@ export default function PaintingEditorPanel({ entries, placements }) {
         ArrowLeft: { z: -fine }, ArrowRight: { z: fine },
         ArrowUp: { y: fine }, ArrowDown: { y: -fine },
         '[': { w: -fine }, ']': { w: fine },
+        '-': { h: -fine }, '=': { h: fine },
         ',': { ry: -0.02 }, '.': { ry: 0.02 },
         '1': { x: base.position[0] < 0 ? -fine : fine },
         '2': { x: base.position[0] < 0 ? fine : -fine },
@@ -122,7 +124,8 @@ export default function PaintingEditorPanel({ entries, placements }) {
           </div>
           <div style={{ opacity: .85 }}>
             x {pos[0].toFixed(2)}  y {pos[1].toFixed(2)}  z {pos[2].toFixed(2)}<br />
-            width {wid.toFixed(2)} m {ov ? ' (moved)' : ' (default)'}
+            {wid.toFixed(2)} x {(ov?.height ?? cur.height).toFixed(2)} m
+            {ov ? ' (moved)' : ' (default)'}
           </div>
           <table style={{ marginTop: 8, opacity: .8, borderSpacing: 0 }}>
             <tbody>

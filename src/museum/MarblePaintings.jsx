@@ -15,7 +15,6 @@ import {
   MeshBasicMaterial, MeshStandardMaterial, TextureLoader,
   SRGBColorSpace, DoubleSide, Color, Box3, Vector3,
 } from 'three'
-import { useGLTF } from '@react-three/drei'
 import { WINGS } from '../data/museum'
 import { ART_BASE } from '../data/artworks'
 import { layout, DEPTH_OFFSET } from '../data/paintings'
@@ -38,40 +37,7 @@ const ENTRIES = WINGS.flatMap((w) => {
   }]
 })
 
-const PLACED = layout(ENTRIES.map((e) => ({ wingId: e.wingId, piece: e.piece })))
-
-const FRAME_URL = import.meta.env.BASE_URL + 'assets/models/frame_gold.glb'
-useGLTF.preload(FRAME_URL)
-
-/**
- * Marble paints its frames into the texture, so there is nothing to align to:
- * detecting them from the panorama merged neighbours into 4m blobs. Giving each
- * painting its OWN carved frame makes it a self-contained object that reads as
- * hung art rather than a decal, and removes the dependency entirely.
- */
-function GoldFrame({ w, h }) {
-  const { scene } = useGLTF(FRAME_URL)
-  const inst = useMemo(() => {
-    const c = scene.clone(true)
-    const box = new Box3().setFromObject(c)
-    const size = new Vector3(); box.getSize(size)
-    // the asset is landscape; fit its opening to this canvas
-    c.scale.set((w * 1.19) / (size.x || 1), (h * 1.19) / (size.y || 1), 0.06 / (size.z || 1))
-    c.traverse((o) => {
-      if (!o.isMesh) return
-      const m = o.material.clone()
-      m.map = null                       // baked albedo is dark bronze; tint reads brown
-      if (m.metalnessMap) m.metalnessMap = null
-      m.color = new Color('#c9a24a')     // aged gold
-      m.metalness = 1.0
-      m.roughness = 0.45
-      m.envMapIntensity = 0.9
-      o.material = m
-    })
-    return c
-  }, [scene, w, h])
-  return <primitive object={inst} />
-}
+const PLACED = layout(ENTRIES.map((e) => ({ wingId: e.wingId, piece: e.piece, aspect: e.aspect })))
 
 function Painting({ entry, place: base }) {
   const ed = useEditor()
@@ -106,7 +72,24 @@ function Painting({ entry, place: base }) {
   }, [tex, canvasMat])
 
   const w = place.width
-  const h = w * (entry.aspect || 1.25)
+  const h = place.height ?? w * (entry.aspect || 1.25)
+
+  // Marble's frames are not the artwork's proportions. Rather than stretch the
+  // image or leave gaps, crop it to fill: scale the texture on its short axis
+  // and re-centre, which is 'cover' from the original spec.
+  useEffect(() => {
+    if (!tex) return
+    const imgAspect = (tex.image?.height || 1) / (tex.image?.width || 1)
+    const quadAspect = h / w
+    if (imgAspect > quadAspect) {
+      const r = quadAspect / imgAspect
+      tex.repeat.set(1, r); tex.offset.set(0, (1 - r) / 2)
+    } else {
+      const r = imgAspect / quadAspect
+      tex.repeat.set(r, 1); tex.offset.set((1 - r) / 2, 0)
+    }
+    tex.needsUpdate = true
+  }, [tex, w, h])
 
   const open = (e) => {
     e.stopPropagation()
@@ -121,9 +104,8 @@ function Painting({ entry, place: base }) {
     <group position={place.position} rotation={place.rotation}>
       {/* thin dark ground behind the canvas, hidden by the frame rebate */}
       <mesh position={[0, 0, -0.012]} material={backMat}>
-        <planeGeometry args={[w + 0.04, h + 0.04]} />
+        <planeGeometry args={[w + 0.02, h + 0.02]} />
       </mesh>
-      <Suspense fallback={null}><GoldFrame w={w} h={h} /></Suspense>
       {tex && (
         <mesh material={canvasMat}>
           <planeGeometry args={[w, h]} />
@@ -136,7 +118,7 @@ function Painting({ entry, place: base }) {
         onPointerOver={(e) => { e.stopPropagation(); setHover(true); document.body.style.cursor = 'pointer' }}
         onPointerOut={() => { setHover(false); document.body.style.cursor = '' }}
       >
-        <planeGeometry args={[w + 0.3, h + 0.3]} />
+        <planeGeometry args={[w + 0.2, h + 0.2]} />
         <meshBasicMaterial
           transparent
           opacity={selected ? 0.3 : hover ? 0.08 : 0}

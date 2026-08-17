@@ -41,6 +41,7 @@ export function dragBy(id, base, dxPx, dyPx) {
       +(p[2] + dxPx * k * (facingNegX ? 1 : -1)).toFixed(3), // follow the pointer along the wall
     ],
     width: cur.width,
+    height: cur.height,
     rotationY: cur.rotation?.[1] ?? 0,
   }
   editor.bump()
@@ -70,6 +71,9 @@ export function resolve(id, base) {
     ...base,
     position: o.position ?? base.position,
     width: o.width ?? base.width,
+    // height is independent: Marble's frames are not the artwork's aspect, so
+    // fitting one to the other requires setting both and cropping the image
+    height: o.height ?? base.height,
     rotation: o.rotationY != null ? [0, o.rotationY, 0] : base.rotation,
   }
 }
@@ -84,6 +88,7 @@ export function nudge(id, base, delta) {
       +(p[2] + (delta.z || 0)).toFixed(3),
     ],
     width: +Math.max(0.2, cur.width + (delta.w || 0)).toFixed(3),
+    height: +Math.max(0.2, (cur.height ?? cur.width * 1.25) + (delta.h || 0)).toFixed(3),
     rotationY: +((cur.rotation?.[1] ?? 0) + (delta.ry || 0)).toFixed(4),
   }
   editor.bump()
@@ -114,6 +119,7 @@ export function exportJSON(entries, placements) {
       position: p.position.map((v) => +v.toFixed(3)),
       rotation: p.rotation.map((v) => +v.toFixed(4)),
       width: +p.width.toFixed(3),
+      height: +(p.height ?? p.width * 1.25).toFixed(3),
     }
   })
   return JSON.stringify(rows, null, 2)

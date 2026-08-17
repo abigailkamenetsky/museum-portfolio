@@ -23,6 +23,7 @@ export type PaintingPlacement = {
   readonly rotation: Vec3
   /** metres of visible canvas; height follows from the artwork's aspect */
   readonly width: number
+  readonly height: number
   readonly visible?: boolean
 }
 
@@ -38,7 +39,7 @@ export const Z_SPACING = 3.6        // along the hall; frames need more room tha
  * left. Order follows the wing order in museum.js, so the narrative sequence
  * is preserved rather than scattered.
  */
-export function layout(entries: ReadonlyArray<{ wingId: string; piece: number | null }>): PaintingPlacement[] {
+export function layout(entries: ReadonlyArray<{ wingId: string; piece: number | null; aspect?: number }>): PaintingPlacement[] {
   return entries.map((e, i) => {
     const side = i % 2 === 0 ? -1 : 1
     const z = Z_START - Math.floor(i / 2) * Z_SPACING
@@ -50,6 +51,7 @@ export function layout(entries: ReadonlyArray<{ wingId: string; piece: number | 
       // face into the room: -x wall turns +90 degrees, +x wall turns -90
       rotation: [0, side < 0 ? Math.PI / 2 : -Math.PI / 2, 0] as Vec3,
       width: 1.05,
+      height: 1.05 * (e.aspect ?? 1.25),
     }
   })
 }
