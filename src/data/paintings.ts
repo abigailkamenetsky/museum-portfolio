@@ -6,9 +6,16 @@
  * painting references it by wingId + piece. Duplicating the descriptions would
  * guarantee they drift.
  *
- * The legacy hall computed placement from its own geometry (wallX = side * 8.88),
- * which is why paintings floated through Marble's walls: Marble's are at x ~ +-4.4.
+ * Positions are no longer invented. frameSlots.json holds the frames Marble
+ * actually painted into the walls, measured by photographing both walls from
+ * inside the app and raycasting the detected boxes against the real mesh
+ * (scripts/wall_scan.mjs -> raycast_frames.mjs -> merge_slots.py). Inventing a
+ * grid is what put paintings through walls and overlapping each other: the
+ * legacy hall computed wallX = side * 8.88, and Marble's walls are near +-4.1
+ * and bow by up to half a metre.
  */
+
+import SLOTS from './frameSlots.json'
 
 export type Vec3 = readonly [number, number, number]
 
@@ -21,37 +28,62 @@ export type PaintingPlacement = {
   readonly piece: number | null
   readonly position: Vec3
   readonly rotation: Vec3
-  /** metres of visible canvas; height follows from the artwork's aspect */
+  /** metres of visible canvas, taken from the frame it fills */
   readonly width: number
   readonly height: number
   readonly visible?: boolean
 }
 
-/** Marble hall: walls at x ~ +-4.4, floor y=0, runs z -39 .. +15. */
-export const WALL_X = 4.12          // canvas sits just proud of the wall face
-export const HANG_Y = 2.25          // centre height, a little above eye level
+type Slot = {
+  side: number
+  x: number
+  y: number
+  z: number
+  w: number
+  h: number
+  seen: number
+  spread: number
+}
+
 export const DEPTH_OFFSET = 0.05    // keeps the canvas off the wall, no z-fighting
-export const Z_START = 11.0         // near the door end
-export const Z_SPACING = 3.6        // along the hall; frames need more room than bare canvases
 
 /**
- * Alternates walls so a visitor walking the centre meets them left, right,
- * left. Order follows the wing order in museum.js, so the narrative sequence
- * is preserved rather than scattered.
+ * Encounter order: a visitor enters near z = +12 and walks toward -z, so
+ * descending z is the order the frames are met. Within one bay the upper
+ * picture reads first, hence descending y as the tie-break.
  */
-export function layout(entries: ReadonlyArray<{ wingId: string; piece: number | null; aspect?: number }>): PaintingPlacement[] {
+const ORDERED: Slot[] = [...(SLOTS as Slot[])].sort((a, b) => (b.z - a.z) || (b.y - a.y))
+
+/** How many real frames the walls actually offer. */
+export const SLOT_COUNT = ORDERED.length
+
+export function layout(
+  entries: ReadonlyArray<{ wingId: string; piece: number | null; aspect?: number }>,
+): PaintingPlacement[] {
   return entries.map((e, i) => {
-    const side = i % 2 === 0 ? -1 : 1
-    const z = Z_START - Math.floor(i / 2) * Z_SPACING
+    const slot = ORDERED[i]
+    const id = `${e.wingId}-${e.piece ?? 'solo'}`
+    if (!slot) {
+      // More artwork than Marble painted frames. Hiding it silently would read
+      // as "everything is hung", so it stays in the registry, flagged.
+      return {
+        id, wingId: e.wingId, piece: e.piece,
+        position: [0, -100, 0] as Vec3,
+        rotation: [0, 0, 0] as Vec3,
+        width: 1, height: 1, visible: false,
+      }
+    }
     return {
-      id: `${e.wingId}-${e.piece ?? 'solo'}`,
+      id,
       wingId: e.wingId,
       piece: e.piece,
-      position: [side * (WALL_X - DEPTH_OFFSET), HANG_Y, z] as Vec3,
+      // pulled off the wall along its own normal, which differs per slot
+      // because pilasters project and window reveals recess
+      position: [slot.x - slot.side * DEPTH_OFFSET, slot.y, slot.z] as Vec3,
       // face into the room: -x wall turns +90 degrees, +x wall turns -90
-      rotation: [0, side < 0 ? Math.PI / 2 : -Math.PI / 2, 0] as Vec3,
-      width: 1.05,
-      height: 1.05 * (e.aspect ?? 1.25),
+      rotation: [0, slot.side < 0 ? Math.PI / 2 : -Math.PI / 2, 0] as Vec3,
+      width: slot.w,
+      height: slot.h,
     }
   })
 }

@@ -17,7 +17,7 @@ import {
 } from 'three'
 import { WINGS } from '../data/museum'
 import { ART_BASE } from '../data/artworks'
-import { layout, DEPTH_OFFSET } from '../data/paintings'
+import { layout, DEPTH_OFFSET, SLOT_COUNT } from '../data/paintings'
 import { museum } from '../museum/store'
 import { editor, useEditor, resolve } from './paintingEditorStore'
 import { MUSEUM_EDITOR_ENABLED } from '../data/museumConfig'
@@ -38,6 +38,14 @@ const ENTRIES = WINGS.flatMap((w) => {
 })
 
 const PLACED = layout(ENTRIES.map((e) => ({ wingId: e.wingId, piece: e.piece, aspect: e.aspect })))
+
+if (ENTRIES.length > SLOT_COUNT) {
+  console.warn(
+    `[paintings] ${ENTRIES.length} artworks but only ${SLOT_COUNT} measured frames; ` +
+    `${ENTRIES.length - SLOT_COUNT} are unhung: ` +
+    ENTRIES.slice(SLOT_COUNT).map((e) => e.title).join(', '),
+  )
+}
 
 function Painting({ entry, place: base }) {
   const ed = useEditor()
@@ -130,18 +138,28 @@ function Painting({ entry, place: base }) {
   )
 }
 
-// Debug: magenta quads at the detected frame positions. If these land on
-// Marble's painted frames, the ortho-render -> world mapping is correct and the
-// detection can be trusted; if they float, the mapping is still wrong.
+// Debug: magenta quads at the detected frame slots. Each slot's x comes from a
+// raycast against the real wall, so the marker should sit flat on the gilt with
+// no floating and no sinking. ?slots=1 shows them without the rest of the editor.
 import SLOTS from '../data/frameSlots.json'
+
+const SHOW_SLOTS = typeof window !== 'undefined'
+  && new URLSearchParams(window.location.search).has('slots')
+
 function FrameMarkers() {
-  if (!MUSEUM_EDITOR_ENABLED) return null
+  // opt-in only: these sit exactly where the paintings do, so leaving them on
+  // in dev just tints every canvas magenta
+  if (!SHOW_SLOTS) return null
   return (
     <>
       {SLOTS.map((s, i) => (
-        <mesh key={i} position={[-4.05, s.y, s.z]} rotation={[0, Math.PI / 2, 0]}>
+        <mesh
+          key={i}
+          position={[s.x - s.side * DEPTH_OFFSET, s.y, s.z]}
+          rotation={[0, s.side < 0 ? Math.PI / 2 : -Math.PI / 2, 0]}
+        >
           <planeGeometry args={[s.w, s.h]} />
-          <meshBasicMaterial color="#ff00c8" transparent opacity={0.55} depthTest={false} />
+          <meshBasicMaterial color="#ff00c8" transparent opacity={0.5} />
         </mesh>
       ))}
     </>
@@ -154,14 +172,16 @@ const HIDE_PAINTINGS = typeof window !== 'undefined'
   && new URLSearchParams(window.location.search).has('nopaint')
 
 export default function MarblePaintings() {
-  if (HIDE_PAINTINGS) return null
+  if (HIDE_PAINTINGS) return <FrameMarkers />
   return (
     <>
       <FrameMarkers />
       {ENTRIES.map((entry, i) => (
-        <Suspense key={PLACED[i].id} fallback={null}>
-          <Painting entry={entry} place={PLACED[i]} />
-        </Suspense>
+        PLACED[i].visible === false ? null : (
+          <Suspense key={PLACED[i].id} fallback={null}>
+            <Painting entry={entry} place={PLACED[i]} />
+          </Suspense>
+        )
       ))}
     </>
   )
