@@ -26,6 +26,7 @@ import { ARTWORKS, ART_BASE } from '../../data/artworks'
 import { museum, touchInput } from '../../museum/store'
 import MarbleMuseumEnvironment from '../../museum/MarbleMuseumEnvironment'
 import MarblePaintings from '../../museum/MarblePaintings'
+import MarbleStainedGlass from '../../museum/MarbleStainedGlass'
 import { isGrabbing, editor, resolve as resolvePlace, dragBy } from '../../museum/paintingEditorStore'
 import { MUSEUM_ENVIRONMENT, CALIBRATION } from '../../data/museumConfig'
 const SPAWN = CALIBRATION[MUSEUM_ENVIRONMENT].playerSpawn
@@ -2042,6 +2043,7 @@ function Gallery() {
         <Suspense fallback={null}>
           <MarbleMuseumEnvironment onStatus={(p, x) => console.log('[marble]', p, x ?? '')} />
           <MarblePaintings />
+          <MarbleStainedGlass />
         </Suspense>
       ) : USE_BAKED ? (
         <>
