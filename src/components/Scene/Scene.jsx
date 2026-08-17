@@ -26,6 +26,7 @@ import { ARTWORKS, ART_BASE } from '../../data/artworks'
 import { museum, touchInput } from '../../museum/store'
 import MarbleMuseumEnvironment from '../../museum/MarbleMuseumEnvironment'
 import MarblePaintings from '../../museum/MarblePaintings'
+import { isEditorFocused } from '../../museum/paintingEditorStore'
 import { MUSEUM_ENVIRONMENT, CALIBRATION } from '../../data/museumConfig'
 const SPAWN = CALIBRATION[MUSEUM_ENVIRONMENT].playerSpawn
 const WALK = CALIBRATION[MUSEUM_ENVIRONMENT].walkBounds
@@ -1821,7 +1822,7 @@ function Character() {
     cam.z = MathUtils.clamp(cam.z, CAM_BOX[2], CAM_BOX[3])
     cam.y = MathUtils.clamp(cam.y, 0.8, CAM_BOX[4])
     _v5.set(ch.position.x, HEAD_Y + 0.4 + s.pitch * 7.0, ch.position.z)   // aim swings floor → ahead → ceiling
-    if (!DEBUG_CAM) {
+    if (!DEBUG_CAM && !isEditorFocused()) {
       camera.position.lerp(cam, Math.min(1, 9 * d))
       camera.lookAt(_v5)
     }

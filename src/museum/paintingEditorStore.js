@@ -13,7 +13,14 @@ import { useSyncExternalStore } from 'react'
 const state = {
   enabled: false,
   selected: null,          // painting id
+  index: -1,               // position in the placement list, for next/prev
+  focus: true,             // camera flies to the selection and movement is frozen
   overrides: {},           // id -> { position:[x,y,z], width, rotationY }
+}
+
+/** True while the editor owns the camera and input, so walking must stop. */
+export function isEditorFocused() {
+  return state.enabled && state.focus && state.selected != null
 }
 
 let version = 0
@@ -56,6 +63,15 @@ export function nudge(id, base, delta) {
     width: +Math.max(0.2, cur.width + (delta.w || 0)).toFixed(3),
     rotationY: +((cur.rotation?.[1] ?? 0) + (delta.ry || 0)).toFixed(4),
   }
+  editor.bump()
+}
+
+/** Step to a painting by list index, wrapping at both ends. */
+export function goTo(placements, i) {
+  if (!placements.length) return
+  const n = ((i % placements.length) + placements.length) % placements.length
+  state.index = n
+  state.selected = placements[n].id
   editor.bump()
 }
 
