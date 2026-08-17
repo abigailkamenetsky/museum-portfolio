@@ -11,6 +11,7 @@
  */
 
 import { Suspense, useEffect, useMemo, useState } from 'react'
+import { useThree } from '@react-three/fiber'
 import {
   MeshBasicMaterial, MeshStandardMaterial, TextureLoader,
   SRGBColorSpace, DoubleSide, Color, Box3, Vector3,
@@ -49,22 +50,62 @@ if (ENTRIES.length > SLOT_COUNT) {
 
 function Painting({ entry, place: base }) {
   const ed = useEditor()
+  const gl = useThree((s) => s.gl)
   const place = MUSEUM_EDITOR_ENABLED ? resolve(base.id, base) : base
   const selected = MUSEUM_EDITOR_ENABLED && ed.selected === base.id
   const [tex, setTex] = useState(null)
   const [hover, setHover] = useState(false)
+
+  const w = place.width
+  const h = place.height ?? w * (entry.aspect || 1.25)
 
   useEffect(() => {
     if (!entry.art) return
     let alive = true
     new TextureLoader().load(
       ART_BASE + entry.art,
-      (t) => { if (!alive) return; t.colorSpace = SRGBColorSpace; t.anisotropy = 8; setTex(t) },
+      (t) => {
+        if (!alive) return
+        t.colorSpace = SRGBColorSpace
+        t.anisotropy = 8
+
+        // Marble's frames are not the artwork's proportions. Rather than stretch
+        // the image or leave gaps, crop it to fill: scale the texture on its
+        // short axis and re-centre, which is 'cover' from the original spec.
+        // Done before upload so nothing needs needsUpdate afterwards.
+        const imgAspect = (t.image?.height || 1) / (t.image?.width || 1)
+        const quadAspect = h / w
+        if (imgAspect > quadAspect) {
+          const r = quadAspect / imgAspect
+          t.repeat.set(1, r); t.offset.set(0, (1 - r) / 2)
+        } else {
+          const r = imgAspect / quadAspect
+          t.repeat.set(r, 1); t.offset.set((1 - r) / 2, 0)
+        }
+
+        // Upload NOW, with three's cached GL state re-synced first.
+        //
+        // Spark calls gl.pixelStorei(UNPACK_FLIP_Y_WEBGL, ...) straight on the
+        // raw context, while three's WebGLState.pixelStorei caches the value and
+        // skips the real call when it believes nothing changed. Once Spark has
+        // desynced that cache, every texture three uploads afterwards lands with
+        // the wrong flip, which is why paintings hung upside down, and why it was
+        // a different set of paintings on each load: it depended purely on which
+        // images finished decoding after Spark first touched the state.
+        //
+        // resetState makes the next pixelStorei actually execute; initTexture
+        // then uploads at this controlled moment rather than at some random
+        // later frame.
+        gl.resetState()
+        gl.initTexture(t)
+
+        setTex(t)
+      },
       undefined,
       () => console.warn('[painting] failed', entry.art),
     )
     return () => { alive = false }
-  }, [entry.art])
+  }, [entry.art, gl, w, h])
 
   const canvasMat = useMemo(() => new MeshBasicMaterial({
     color: '#ffffff', toneMapped: false, side: DoubleSide,
@@ -78,26 +119,6 @@ function Painting({ entry, place: base }) {
   useEffect(() => {
     if (tex) { canvasMat.map = tex; canvasMat.needsUpdate = true }
   }, [tex, canvasMat])
-
-  const w = place.width
-  const h = place.height ?? w * (entry.aspect || 1.25)
-
-  // Marble's frames are not the artwork's proportions. Rather than stretch the
-  // image or leave gaps, crop it to fill: scale the texture on its short axis
-  // and re-centre, which is 'cover' from the original spec.
-  useEffect(() => {
-    if (!tex) return
-    const imgAspect = (tex.image?.height || 1) / (tex.image?.width || 1)
-    const quadAspect = h / w
-    if (imgAspect > quadAspect) {
-      const r = quadAspect / imgAspect
-      tex.repeat.set(1, r); tex.offset.set(0, (1 - r) / 2)
-    } else {
-      const r = imgAspect / quadAspect
-      tex.repeat.set(r, 1); tex.offset.set((1 - r) / 2, 0)
-    }
-    tex.needsUpdate = true
-  }, [tex, w, h])
 
   const open = (e) => {
     e.stopPropagation()
