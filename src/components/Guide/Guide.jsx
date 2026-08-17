@@ -117,6 +117,10 @@ const pill = (active) => ({
   color: GOLD, font: `600 21px ${serif}`, cursor: 'pointer', borderRadius: 10,
 })
 
+import PaintingEditorPanel from '../../museum/PaintingEditorPanel'
+import { ENTRIES, PLACED } from '../../museum/MarblePaintings'
+import { MUSEUM_ENVIRONMENT } from '../../data/museumConfig'
+
 export default function Guide() {
   const s = useMuseum()
   const [hover, setHover] = useState(null)
@@ -173,6 +177,7 @@ export default function Guide() {
 
   return (
     <>
+      {MUSEUM_ENVIRONMENT === 'marble' && <PaintingEditorPanel entries={ENTRIES} placements={PLACED} />}
       {/* LOADING SCREEN - covers everything until assets are ready */}
       {!ready && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: '#0a0c08', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: serif }}>

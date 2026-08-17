@@ -20,6 +20,8 @@ import { WINGS } from '../data/museum'
 import { ART_BASE } from '../data/artworks'
 import { layout, DEPTH_OFFSET } from '../data/paintings'
 import { museum } from '../museum/store'
+import { editor, useEditor, resolve } from './paintingEditorStore'
+import { MUSEUM_EDITOR_ENABLED } from '../data/museumConfig'
 
 /** Flatten the wings into one ordered list of hangable pieces. */
 const ENTRIES = WINGS.flatMap((w) => {
@@ -71,7 +73,10 @@ function GoldFrame({ w, h }) {
   return <primitive object={inst} />
 }
 
-function Painting({ entry, place }) {
+function Painting({ entry, place: base }) {
+  const ed = useEditor()
+  const place = MUSEUM_EDITOR_ENABLED ? resolve(base.id, base) : base
+  const selected = MUSEUM_EDITOR_ENABLED && ed.selected === base.id
   const [tex, setTex] = useState(null)
   const [hover, setHover] = useState(false)
 
@@ -105,6 +110,8 @@ function Painting({ entry, place }) {
 
   const open = (e) => {
     e.stopPropagation()
+    // in the editor a click selects rather than opening the exhibit
+    if (MUSEUM_EDITOR_ENABLED) { editor.set({ selected: base.id }); return }
     const mu = museum.get()
     if (mu.menu || mu.card) return
     museum.set({ card: entry.wingId, cardPiece: entry.piece })
@@ -130,7 +137,12 @@ function Painting({ entry, place }) {
         onPointerOut={() => { setHover(false); document.body.style.cursor = '' }}
       >
         <planeGeometry args={[w + 0.3, h + 0.3]} />
-        <meshBasicMaterial transparent opacity={hover ? 0.08 : 0} color={new Color('#ffe9b0')} depthWrite={false} />
+        <meshBasicMaterial
+          transparent
+          opacity={selected ? 0.3 : hover ? 0.08 : 0}
+          color={new Color(selected ? '#8fdc9a' : '#ffe9b0')}
+          depthWrite={false}
+        />
       </mesh>
     </group>
   )
