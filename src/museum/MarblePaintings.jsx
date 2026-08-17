@@ -130,9 +130,28 @@ function Painting({ entry, place: base }) {
   )
 }
 
+// Debug: magenta quads at the detected frame positions. If these land on
+// Marble's painted frames, the ortho-render -> world mapping is correct and the
+// detection can be trusted; if they float, the mapping is still wrong.
+import SLOTS from '../data/frameSlots.json'
+function FrameMarkers() {
+  if (!MUSEUM_EDITOR_ENABLED) return null
+  return (
+    <>
+      {SLOTS.map((s, i) => (
+        <mesh key={i} position={[-4.05, s.y, s.z]} rotation={[0, Math.PI / 2, 0]}>
+          <planeGeometry args={[s.w, s.h]} />
+          <meshBasicMaterial color="#ff00c8" transparent opacity={0.55} depthTest={false} />
+        </mesh>
+      ))}
+    </>
+  )
+}
+
 export default function MarblePaintings() {
   return (
     <>
+      <FrameMarkers />
       {ENTRIES.map((entry, i) => (
         <Suspense key={PLACED[i].id} fallback={null}>
           <Painting entry={entry} place={PLACED[i]} />
