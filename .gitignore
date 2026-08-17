@@ -19,3 +19,9 @@ blender/
 public/museum/*.spz
 public/museum/abby-museum-fallback.png
 public/museum/abby-museum-mesh.glb
+
+# Raw Marble exports: source artifacts for the web mesh, too large for GitHub.
+# The optimized files that actually ship are abby-museum-mesh-web.glb and
+# abby-museum-collider.glb.
+public/museum/v4-mesh.glb
+public/museum/v4-pano.png
