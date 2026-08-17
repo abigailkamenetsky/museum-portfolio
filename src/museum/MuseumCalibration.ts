@@ -68,8 +68,12 @@ export const MARBLE_CALIBRATION: MuseumCalibrationConfig = {
   // at 22%, so scale up to match: 2.796 * (8.0/5.59) = 4.0. Room becomes
   // ~8.9m wide x 8.0m tall x 57m long.
   scale: 4.0,
-  playerSpawn: [0, 0, -5],    // the camera trails ~3.5m behind, so spawning
-                             // at 10 put the CAMERA through the near wall (z=13.46)
+  // Spawn at the door end and walk the hall toward the stained glass, so the
+  // exhibits are met in narrative order instead of starting mid-room with the
+  // first four behind you. The camera trails ~3.5m, and the near wall is at
+  // z=13.46, so this is as far back as the player can stand without putting the
+  // camera through it.
+  playerSpawn: [0, 0, 9.6],
   cameraTarget: [0, 1.6, 0],
   floorOffset: 0,
   // Measured from the mesh's actual floor slab (raw x -1.05..1.17,
