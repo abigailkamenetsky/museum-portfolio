@@ -12,10 +12,10 @@
 
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useThree } from '@react-three/fiber'
+import { useGLTF } from '@react-three/drei'
 import {
   MeshBasicMaterial, MeshStandardMaterial, TextureLoader,
   SRGBColorSpace, DoubleSide, Color, Box3, Vector3,
-  Shape, Path, ExtrudeGeometry,
 } from 'three'
 import { WINGS } from '../data/museum'
 import { ART_BASE } from '../data/artworks'
@@ -50,89 +50,59 @@ if (ENTRIES.length > SLOT_COUNT) {
 }
 
 /**
- * Visible width of the gold moulding, in metres.
+ * The same carved Baroque frame the legacy hall hangs, reused here.
  *
- * Proportional to the picture so a small panel does not wear a frame meant for a
- * two-metre landscape, clamped at both ends so nothing looks like a pinstripe or
- * swallows the artwork.
- */
-function frameBand(w, h) {
-  return Math.min(0.11, Math.max(0.05, Math.min(w, h) * 0.085))
-}
-
-/** One mitred rectangular ring, extruded. Corners mitre themselves. */
-function ring(outerW, outerH, innerW, innerH, depth, bevel) {
-  const ow = Math.max(0.04, outerW - 2 * bevel), oh = Math.max(0.04, outerH - 2 * bevel)
-  const iw = Math.max(0.02, innerW + 2 * bevel), ih = Math.max(0.02, innerH + 2 * bevel)
-
-  const shape = new Shape()
-  shape.moveTo(-ow / 2, -oh / 2)
-  shape.lineTo(ow / 2, -oh / 2)
-  shape.lineTo(ow / 2, oh / 2)
-  shape.lineTo(-ow / 2, oh / 2)
-  shape.closePath()
-
-  const hole = new Path()
-  hole.moveTo(-iw / 2, -ih / 2)
-  hole.lineTo(-iw / 2, ih / 2)
-  hole.lineTo(iw / 2, ih / 2)
-  hole.lineTo(iw / 2, -ih / 2)
-  hole.closePath()
-  shape.holes.push(hole)
-
-  const geo = new ExtrudeGeometry(shape, {
-    depth: Math.max(0.004, depth - bevel),
-    bevelEnabled: true,
-    bevelThickness: bevel,
-    bevelSize: bevel,
-    bevelSegments: 2,
-    curveSegments: 1,
-  })
-  geo.computeVertexNormals()
-  return geo
-}
-
-/**
- * A frame profile, not a flat slab.
+ * An extruded moulding profile was the first attempt and it read as plain: real
+ * relief needs actual carving, and this GLB already has it, with baked normal
+ * and roughness maps that give gold-leaf wear no procedural profile matches.
+ * One geometry and one material are shared by every painting, so 29 frames cost
+ * one buffer.
  *
- * The first attempt was a single ring with a small chamfer, and it read as
- * painted card: one broad face at one angle takes one flat value of light, so
- * there is nothing to tell the eye it is carved. Real moulding is a sequence of
- * steps at different heights, and the shadow lines between them are what sells
- * it. So this builds three: a raised outer lip, a recessed cove, and a small
- * raised lip at the opening.
+ * The loader is a copy of the legacy hall's rather than an import, because
+ * Scene.jsx imports this file and pulling it the other way would form a cycle.
  */
-function frameProfile(w, h, band) {
-  const lip = band * 0.34         // outer lip
-  const cove = band * 0.42        // recessed middle, throws the shadow line
-  const oW = w, oH = h
-  const aW = w - 2 * lip, aH = h - 2 * lip
-  const bW = aW - 2 * cove, bH = aH - 2 * cove
-  const cW = w - 2 * band, cH = h - 2 * band
-  return [
-    ring(oW, oH, aW, aH, 0.062, 0.011),   // outer lip, stands proudest
-    ring(aW, aH, bW, bH, 0.030, 0.009),   // cove, set back so the lip casts into it
-    ring(bW, bH, cW, cH, 0.052, 0.007),   // inner lip framing the canvas
-  ]
+const FRAME_URL = import.meta.env.BASE_URL + 'assets/models/frame_gold.glb'
+
+/** Aperture of the carved asset as a fraction of its outer size, measured from it. */
+const AP_W = 0.66
+const AP_H = 0.70
+
+function useGoldFrame() {
+  const { scene } = useGLTF(FRAME_URL)
+  return useMemo(() => {
+    let g, mt
+    scene.traverse((o) => { if (o.isMesh && !g) { g = o.geometry; mt = o.material } })
+    if (!g) return null
+    const geo = g.clone()
+    geo.rotateZ(Math.PI / 2)          // the asset ships landscape
+    geo.center()
+    geo.computeBoundingBox()
+    const bb = geo.boundingBox
+    const nw = bb.max.x - bb.min.x
+    const nh = bb.max.y - bb.min.y
+    const nd = Math.max(0.02, bb.max.z - bb.min.z)
+
+    // The baked baseColor is a dark bronze, so any tint over it reads brown.
+    // Drop the albedo and use a literal gold, keeping the normal and roughness
+    // maps so the carved relief and leaf wear survive.
+    const mat = mt.clone()
+    mat.map = null
+    if (mat.metalnessMap) mat.metalnessMap = null
+    // The legacy hall renders through tone mapping, which rolls off its bright
+    // '#ffcf40'. The Marble room uses NoToneMapping, where that same value clips
+    // to flat cartoon yellow, so the gold here is darker and rougher on purpose.
+    mat.color.set('#b0801f')
+    mat.metalness = 0.95
+    mat.roughness = 0.5
+    mat.envMapIntensity = 0.7
+    if (mat.emissive) { mat.emissive.set('#000000'); mat.emissiveIntensity = 0 }
+    mat.needsUpdate = true
+    return { geo, mat, nw, nh, nd }
+  }, [scene])
 }
+useGLTF.preload(FRAME_URL)
 
-/**
- * Water-gilt gold.
- *
- * Fully metallic reads as a black mirror in a dim room with little to reflect,
- * the same trap the Blender bake fell into, so this keeps real diffuse and leans
- * on the gallery HDRI for the sheen. The faint emissive keeps the shadowed
- * inner faces from crushing to black under the hall's low ambient.
- */
-const GOLD = new MeshStandardMaterial({
-  color: '#9a6f21',
-  metalness: 0.8,
-  roughness: 0.26,
-  emissive: new Color('#241804'),
-  emissiveIntensity: 1,
-})
-
-function Painting({ entry, place: base }) {
+function Painting({ entry, place: base, frame }) {
   const ed = useEditor()
   const gl = useThree((s) => s.gl)
   const place = MUSEUM_EDITOR_ENABLED ? resolve(base.id, base) : base
@@ -140,13 +110,12 @@ function Painting({ entry, place: base }) {
   const [tex, setTex] = useState(null)
   const [hover, setHover] = useState(false)
 
+  // The slot is the OUTER edge of Marble's painted frame, so the carved frame
+  // takes the whole slot and the canvas fills the aperture it leaves.
   const w = place.width
   const h = place.height ?? w * (entry.aspect || 1.25)
-  // The slot is the OUTER edge of Marble's painted frame, so our moulding takes
-  // that band and the canvas drops into the opening it leaves.
-  const band = frameBand(w, h)
-  const cw = Math.max(0.2, w - 2 * band)
-  const ch = Math.max(0.2, h - 2 * band)
+  const cw = Math.max(0.12, w * AP_W)
+  const ch = Math.max(0.12, h * AP_H)
 
   useEffect(() => {
     if (!entry.art) return
@@ -196,9 +165,6 @@ function Painting({ entry, place: base }) {
     return () => { alive = false }
   }, [entry.art, gl, cw, ch])
 
-  const frameGeos = useMemo(() => frameProfile(w, h, band), [w, h, band])
-  useEffect(() => () => frameGeos.forEach((g) => g.dispose()), [frameGeos])
-
   const canvasMat = useMemo(() => new MeshBasicMaterial({
     color: '#ffffff', toneMapped: false, side: DoubleSide,
   }), [])
@@ -224,22 +190,24 @@ function Painting({ entry, place: base }) {
   return (
     <group position={place.position} rotation={place.rotation}>
       {/* thin dark ground behind the canvas, hidden by the frame rebate */}
-      <mesh position={[0, 0, -0.012]} material={backMat}>
-        <planeGeometry args={[w + 0.02, h + 0.02]} />
+      <mesh position={[0, 0, 0.02]} material={backMat}>
+        <planeGeometry args={[cw * 1.08, ch * 1.08]} />
       </mesh>
       {tex && (
-        <mesh material={canvasMat}>
-          <planeGeometry args={[cw, ch]} />
+        <mesh position={[0, 0, 0.028]} material={canvasMat}>
+          <planeGeometry args={[cw * 1.02, ch * 1.02]} />
         </mesh>
       )}
-      {/* gold moulding, sitting in the band Marble's painted frame occupies */}
-      {frameGeos.map((g, i) => (
-        <mesh key={i} geometry={g} material={GOLD} castShadow />
-      ))}
-      {/* narrow dark rebate so the canvas edge reads as sitting inside the frame */}
-      <mesh position={[0, 0, -0.004]} material={backMat}>
-        <planeGeometry args={[cw + 0.018, ch + 0.018]} />
-      </mesh>
+      {/* carved gold frame, shared geometry scaled to this slot */}
+      {frame && (
+        <mesh
+          geometry={frame.geo}
+          material={frame.mat}
+          position={[0, 0, 0.055]}
+          scale={[w / frame.nw, h / frame.nh, 0.11 / frame.nd]}
+          castShadow
+        />
+      )}
       {/* invisible, padded click target */}
       <mesh
         position={[0, 0, 0.03]}
@@ -292,18 +260,26 @@ function FrameMarkers() {
 const HIDE_PAINTINGS = typeof window !== 'undefined'
   && new URLSearchParams(window.location.search).has('nopaint')
 
+function Hang() {
+  // one carved frame loaded once, shared by every painting
+  const frame = useGoldFrame()
+  return (
+    <>
+      {ENTRIES.map((entry, i) => (
+        PLACED[i].visible === false ? null : (
+          <Painting key={PLACED[i].id} entry={entry} place={PLACED[i]} frame={frame} />
+        )
+      ))}
+    </>
+  )
+}
+
 export default function MarblePaintings() {
   if (HIDE_PAINTINGS) return <FrameMarkers />
   return (
     <>
       <FrameMarkers />
-      {ENTRIES.map((entry, i) => (
-        PLACED[i].visible === false ? null : (
-          <Suspense key={PLACED[i].id} fallback={null}>
-            <Painting entry={entry} place={PLACED[i]} />
-          </Suspense>
-        )
-      ))}
+      <Suspense fallback={null}><Hang /></Suspense>
     </>
   )
 }

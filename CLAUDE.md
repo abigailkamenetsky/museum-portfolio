@@ -26,7 +26,7 @@ An interactive, art-museum-style resume portfolio built as a side-scrolling web 
 
 ## Repository
 - **GitHub username:** abigailkamenetsky
-- **Repo name:** museum-portfolio (private)
+- **Repo name:** museum-portfolio — **PUBLIC on GitHub** (this line used to say private; it was wrong). Anyone can read the code and the full commit history. No secrets belong in this repo: the Marble API key lives only in gitignored `.env.local`. GitHub Pages serves the site from this repo, and Pages on a Free account requires the repo to stay public, so flipping it private would take the live site down unless the account has Pro.
 - **Remote:** git@github.com:abigailkamenetsky/museum-portfolio.git
 - **Branch strategy:** `main` is always deployable. Feature work on named branches. Every completed milestone ends with a commit and push.
 
