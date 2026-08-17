@@ -148,7 +148,13 @@ function FrameMarkers() {
   )
 }
 
+// ?nopaint clears our canvases so a wall-scan screenshot sees only Marble's
+// painted frames. Without it our own quads occlude the very thing being detected.
+const HIDE_PAINTINGS = typeof window !== 'undefined'
+  && new URLSearchParams(window.location.search).has('nopaint')
+
 export default function MarblePaintings() {
+  if (HIDE_PAINTINGS) return null
   return (
     <>
       <FrameMarkers />

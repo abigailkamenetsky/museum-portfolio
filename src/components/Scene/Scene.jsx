@@ -1416,13 +1416,24 @@ const DEBUG_CAM = typeof window !== 'undefined'
   ? new URLSearchParams(window.location.search).get('cam') : null
 
 function DebugCam() {
-  const { camera } = useThree()
+  const { camera, scene, raycaster, size } = useThree()
   const parts = useMemo(() => (DEBUG_CAM || '').split(',').map(Number), [])
+  // Handle for the frame-detection pass: it raycasts detected pixels against
+  // the real mesh, which is more honest than assuming a flat wall plane —
+  // Marble's walls bow, so a plane solve drifts by tens of centimetres.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    window.__three = { camera, scene, raycaster, size }
+  }, [camera, scene, raycaster, size])
   useFrame(() => {
-    if (!DEBUG_CAM || parts.length < 5 || parts.some(Number.isNaN)) return
-    camera.position.set(parts[0], parts[1], parts[2])
+    // window.__cam lets a screenshot script step the camera along the wall
+    // without reloading, which otherwise costs 11s of asset load per station
+    const live = typeof window !== 'undefined' ? window.__cam : null
+    const p = Array.isArray(live) && live.length >= 5 ? live : parts
+    if (p === parts && (!DEBUG_CAM || parts.length < 5 || parts.some(Number.isNaN))) return
+    camera.position.set(p[0], p[1], p[2])
     camera.rotation.order = 'YXZ'
-    camera.rotation.set(MathUtils.degToRad(parts[3]), MathUtils.degToRad(parts[4]), 0)
+    camera.rotation.set(MathUtils.degToRad(p[3]), MathUtils.degToRad(p[4]), 0)
   })
   return null
 }
