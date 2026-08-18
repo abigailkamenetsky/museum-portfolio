@@ -11,7 +11,10 @@ import { spawn } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
 import { setTimeout as sleep } from 'node:timers/promises'
 
-const [url, out, waitMs = '8000', W = '1200', H = '800'] = process.argv.slice(2)
+// `clean` as a 6th arg hides every DOM overlay, leaving only the canvas. The
+// welcome / audio-guide cards are dismissed by timed keypresses, which race
+// against asset load and kept blocking verification shots.
+const [url, out, waitMs = '8000', W = '1200', H = '800', clean] = process.argv.slice(2)
 if (!url || !out) { console.error('usage: shot.mjs <url> <out.png> [waitMs] [w] [h]'); process.exit(1) }
 
 const PORT = 9333 + Math.floor(Math.random() * 200)
@@ -69,6 +72,17 @@ try {
     await send('Input.dispatchKeyEvent', { type, key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27 })
   }
   await sleep(Number(waitMs))          // real seconds, workers get to reply
+  if (clean === 'clean') {
+    // hide by ancestry, so the canvas's own wrappers survive
+    await send('Runtime.evaluate', {
+      expression: `(() => { const c = document.querySelector('canvas'); if (!c) return
+        document.querySelectorAll('body *').forEach((el) => {
+          if (el === c || el.contains(c)) return
+          el.style.display = 'none'
+        }) })()`,
+    })
+    await sleep(600)
+  }
   const { data } = await send('Page.captureScreenshot', { format: 'png' })
   writeFileSync(out, Buffer.from(data, 'base64'))
   console.log(`saved ${out} after ${waitMs}ms`)

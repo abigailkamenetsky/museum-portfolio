@@ -27,6 +27,8 @@ import { museum, touchInput } from '../../museum/store'
 import MarbleMuseumEnvironment from '../../museum/MarbleMuseumEnvironment'
 import MarblePaintings from '../../museum/MarblePaintings'
 import MarbleStainedGlass from '../../museum/MarbleStainedGlass'
+import MarbleFloor from '../../museum/MarbleFloor'
+import { floorHeightAt } from '../../museum/floorField'
 import { isGrabbing, editor, resolve as resolvePlace, dragBy } from '../../museum/paintingEditorStore'
 import { MUSEUM_ENVIRONMENT, CALIBRATION } from '../../data/museumConfig'
 const SPAWN = CALIBRATION[MUSEUM_ENVIRONMENT].playerSpawn
@@ -1768,7 +1770,13 @@ function Character() {
     ch.position.addScaledVector(s.vel, d)
     ch.position.x = MathUtils.clamp(ch.position.x, WALK[0], WALK[1])
     ch.position.z = MathUtils.clamp(ch.position.z, WALK[2], WALK[3])
-    ch.position.y = 0
+    // Marble's hall is a ramp, dropping about 1.9m from the door to the far
+    // end, so a fixed y=0 left the character floating over a metre above the
+    // floor by the time it reached the stained glass. The legacy hall really is
+    // level, so it keeps y=0.
+    ch.position.y = MUSEUM_ENVIRONMENT === 'marble'
+      ? floorHeightAt(ch.position.x, ch.position.z)
+      : 0
     // push the player out of any solid furniture (AABB, least-penetration axis)
     for (const o of OBSTACLES) {
       const minx = o.x - o.hx - PLAYER_R, maxx = o.x + o.hx + PLAYER_R
@@ -2049,6 +2057,7 @@ function Gallery() {
               resolution. Starts past the sharp band so nothing near is touched. */}
           <fog attach="fog" args={['#0e0b07', 16, 52]} />
           <MarbleMuseumEnvironment onStatus={(p, x) => console.log('[marble]', p, x ?? '')} />
+          <MarbleFloor />
           <MarblePaintings />
           <MarbleStainedGlass />
         </Suspense>
