@@ -19,8 +19,13 @@ import {
 import { buildFloorGeometry, FLOOR_BOUNDS } from './floorField'
 
 const T = import.meta.env.BASE_URL + 'assets/textures/floor/WoodFloor043_2K-JPG_'
+const WALNUT = import.meta.env.BASE_URL + 'assets/textures/floor/walnut_color.jpg'
 
-const LIFT = 0.12          // Marble's floor is bumpy between samples; a smaller lift lost the depth test
+// Marble's floor is locally smooth: measured deviation from a bilinear fit is
+// 0.4cm median, 2.7cm at p90. So this only has to clear a few centimetres.
+// It was 12cm while the height field was coarse, and that rode up over the
+// skirting, the bench feet and the statue plinths, burying their bases.
+const LIFT = 0.035
 
 // One tile of the map covers this much floor. It is 1024x512 with six boards
 // across the short side, so 1.8m gives boards about 30cm wide.
@@ -36,18 +41,39 @@ export default function MarbleFloor() {
   )
   useEffect(() => () => geo.dispose(), [geo])
 
-  // The brief asks for deep walnut, almost black in shadow. The map is a light
-  // pine, so it is tinted down hard; left at full brightness it out-shouted the
-  // paintings, which are the point of the room.
+  // Tuned against Marble's own floor rather than by eye. Sampled there: rgb
+  // (31,16,8) near, (23,10,5) mid, so it is very dark and strongly red, r about
+  // twice g. The first pass was three times too bright mid-hall and nowhere near
+  // red enough, which is what made it read as a plank sheet laid on top of the
+  // room instead of part of it.
+  //
+  // Most of that excess brightness was specular: at roughness 0.42 the map's
+  // gloss put a bright streak down the centre of the hall, brighter than the
+  // near floor, which is backwards. Waxed old oak is fairly matte.
+  // The walnut tone is baked into walnut_color.jsp rather than applied as a
+  // material tint. Tinting fought the hall's ambient light and lost: a dark red
+  // albedo just got lifted back to flat grey, and dropping envMapIntensity did
+  // nothing because this floor is lit by the scene's lights, not by the HDRI.
+  // Baking it means the grain keeps its contrast at the tone we want.
   const mat = useMemo(() => new MeshStandardMaterial({
-    roughness: 0.42, metalness: 0.0, color: '#4a3220',
+    roughness: 0.62,           // waxed old boards: matte, with a little sheen
+    metalness: 0.0,
+    color: '#ffffff',
+    // The gallery HDRI lights this almost neutrally, which was washing the red
+    // straight back out: the albedo is r/g 1.9 but it rendered at 1.3. Old dark
+    // parquet reflects very little of the room anyway.
+    envMapIntensity: 0.25,
+    vertexColors: true,        // per-vertex falloff toward the skirting
+    polygonOffset: true,       // win the depth test without lifting geometry
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -4,
   }), [])
 
   useEffect(() => {
     const across = FLOOR_BOUNDS.x1 - FLOOR_BOUNDS.x0
     const along = Math.abs(FLOOR_BOUNDS.z1 - FLOOR_BOUNDS.z0)
     const load = (file, srgb) => new Promise((res) => {
-      new TextureLoader().load(T + file, (t) => {
+      new TextureLoader().load(file.startsWith('../') ? WALNUT : T + file, (t) => {
         t.wrapS = t.wrapT = RepeatWrapping
         if (srgb) t.colorSpace = SRGBColorSpace
         t.anisotropy = gl.capabilities.getMaxAnisotropy()
@@ -62,7 +88,7 @@ export default function MarbleFloor() {
 
     let alive = true
     Promise.all([
-      load('Color.jpg', true),
+      load('../walnut_color.jpg', true),
       load('NormalGL.jpg', false),
       load('Roughness.jpg', false),
     ]).then(([col, nrm, rgh]) => {

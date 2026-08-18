@@ -46,12 +46,20 @@ export function buildFloorGeometry(BufferGeometry, Float32BufferAttribute, lift,
   const NZ = (nz - 1) * res + 1
   const pos = []
   const uv = []
+  const col = []
   for (let j = 0; j < NZ; j++) {
     const z = z0 + ((z1 - z0) * j) / (NZ - 1)
     for (let i = 0; i < NX; i++) {
       const x = x0 + ((x1 - x0) * i) / (NX - 1)
       pos.push(x, floorHeightAt(x, z) + lift, z)
       uv.push(j / (NZ - 1), i / (NX - 1))   // u runs down the hall
+      // Marble's floor falls away to almost nothing at the skirting (measured
+      // luminance 5 by the wall against 20 mid-floor) because the sconces light
+      // the centre. A uniformly lit plank plane reads as a separate object laid
+      // on top, so the same falloff is baked in per-vertex.
+      const t = Math.min(1, Math.max(0, (Math.abs(x) - 1.1) / 3.3))
+      const f = 1 - 0.62 * t * t
+      col.push(f, f, f)
     }
   }
   // Wind so the faces point UP. z decreases as j increases, so the intuitive
@@ -67,6 +75,7 @@ export function buildFloorGeometry(BufferGeometry, Float32BufferAttribute, lift,
   const g = new BufferGeometry()
   g.setAttribute('position', new Float32BufferAttribute(pos, 3))
   g.setAttribute('uv', new Float32BufferAttribute(uv, 2))
+  g.setAttribute('color', new Float32BufferAttribute(col, 3))
   g.setIndex(idx)
   g.computeVertexNormals()
   return g

@@ -61,8 +61,8 @@ try {
       })
       if (ours) ours.visible = false
 
-      const X0 = -4.6, X1 = 4.6, NX = 11
-      const Z0 = 16.5, Z1 = -43.5, NZ = 41
+      const X0 = -4.6, X1 = 4.6, NX = 21
+      const Z0 = 16.5, Z1 = -43.5, NZ = 81
       const grid = []
       for (let j = 0; j < NZ; j++) {
         const z = Z0 + (Z1 - Z0) * j / (NZ - 1)
