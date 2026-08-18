@@ -30,7 +30,15 @@ export function floorHeightAt(x, z) {
   return (a * (1 - tx) + b * tx) * (1 - tz) + (c * (1 - tx) + d * tx) * tz
 }
 
-export const FLOOR_BOUNDS = { x0, x1, z0, z1 }
+/**
+ * The parquet stops here rather than at the measured field's end. Past about
+ * z -39.5 the downward rays stop finding floor and start hitting the step and
+ * wall under the Bosch window, which reads as the ground rising; carrying the
+ * parquet over it buried the bottom of the window.
+ */
+export const FLOOR_Z_FAR = -39.2
+
+export const FLOOR_BOUNDS = { x0, x1, z0, z1: FLOOR_Z_FAR }
 
 /**
  * A mesh that follows the field.
@@ -43,12 +51,13 @@ export const FLOOR_BOUNDS = { x0, x1, z0, z1 }
  */
 export function buildFloorGeometry(BufferGeometry, Float32BufferAttribute, lift, res = 3) {
   const NX = (nx - 1) * res + 1
-  const NZ = (nz - 1) * res + 1
+  const zEnd = Math.max(z1, FLOOR_Z_FAR)
+  const NZ = Math.max(2, Math.round(((z0 - zEnd) / (z0 - z1)) * ((nz - 1) * res)) + 1)
   const pos = []
   const uv = []
   const col = []
   for (let j = 0; j < NZ; j++) {
-    const z = z0 + ((z1 - z0) * j) / (NZ - 1)
+    const z = z0 + ((zEnd - z0) * j) / (NZ - 1)
     for (let i = 0; i < NX; i++) {
       const x = x0 + ((x1 - x0) * i) / (NX - 1)
       pos.push(x, floorHeightAt(x, z) + lift, z)
