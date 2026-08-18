@@ -70,13 +70,15 @@ try {
         for (let i = 0; i < NX; i++) {
           const x = X0 + (X1 - X0) * i / (NX - 1)
           rc.set(new V(x, 8, z), new V(0, -1, 0))
-          // TOPMOST hit is what you would stand on. Filtering by face normal
-          // instead picked the underside of a lower shell, which read as a flat
-          // floor and hid the real slope.
+          // Record the whole column, not one number. The LOWEST hit is the
+          // floor slab; anything standing measurably above it in the same cell
+          // is an object resting on the floor (bench, plinth, rug, step), and
+          // paving over those is exactly what buried them.
           const hs = rc.intersectObjects(t.scene.children, true)
             .filter(h => h.object.visible && h.object !== ours
                     && h.point.y > -3.5 && h.point.y < 2.5)
-          row.push(hs.length ? +hs[0].point.y.toFixed(3) : null)
+            .map(h => h.point.y)
+          row.push(hs.length ? [+Math.min(...hs).toFixed(3), +Math.max(...hs).toFixed(3)] : null)
         }
         grid.push(row)
       }
@@ -88,13 +90,22 @@ try {
   const d = result.value
   // Benches, rugs and statue plinths are topmost too, so reject anything well
   // above its row's median and refill it from neighbours.
+  // split into a floor field and an occupancy mask
+  d.occ = []
   for (let j = 0; j < d.nz; j++) {
-    const row = d.grid[j].filter(v => v !== null).sort((a, b) => a - b)
-    if (!row.length) continue
-    const med = row[Math.floor(row.length / 2)]
+    const los = d.grid[j].filter(v => v !== null).map(v => v[0]).sort((a, b) => a - b)
+    const med = los.length ? los[Math.floor(los.length / 2)] : null
+    const occRow = []
     for (let i = 0; i < d.nx; i++) {
-      if (d.grid[j][i] !== null && d.grid[j][i] - med > 0.45) d.grid[j][i] = null
+      const cell = d.grid[j][i]
+      if (cell === null) { occRow.push(0); d.grid[j][i] = null; continue }
+      const [lo, hi] = cell
+      // a lone ray that punched through a hole in the mesh reads far too low
+      const floor = (med !== null && lo < med - 0.6) ? med : lo
+      occRow.push(hi - floor)          // raw clearance; thresholded below
+      d.grid[j][i] = floor
     }
+    d.occ.push(occRow)
   }
   // fill gaps from neighbours so the mesh has no holes
   const flat = d.grid.flat().filter(v => v !== null)
@@ -111,7 +122,25 @@ try {
     }
   }
   console.log(JSON.stringify(d))
+    // Photogrammetry shells are noisy, so a small clearance is not an object.
+  // Pick the cut from the distribution rather than by eye.
+  const clear = d.occ.flat().slice().sort((a, b) => a - b)
+  const q = (p) => clear[Math.floor(clear.length * p)]
+  console.error(`clearance percentiles  p50 ${q(0.5).toFixed(2)}  p75 ${q(0.75).toFixed(2)}  p90 ${q(0.9).toFixed(2)}  p95 ${q(0.95).toFixed(2)}  max ${clear[clear.length-1].toFixed(2)}`)
+  const CUT = 0.22          // taller than mesh noise, shorter than a bench seat
+  d.occ = d.occ.map(r => r.map(v => (v > CUT ? 1 : 0)))
+  // grow by one cell so the parquet keeps clear of an object's base
+  const grown = d.occ.map(r => r.slice())
+  for (let j = 0; j < d.nz; j++) for (let i = 0; i < d.nx; i++) {
+    if (!d.occ[j][i]) continue
+    for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+      if (grown[j + dj]?.[i + di] !== undefined) grown[j + dj][i + di] = 1
+    }
+  }
+  d.occ = grown
+  const occN = d.occ.flat().filter(Boolean).length
   console.error(`grid ${d.nx} x ${d.nz}, y ${Math.min(...d.grid.flat()).toFixed(2)} .. ${Math.max(...d.grid.flat()).toFixed(2)}`)
+  console.error(`occupied cells (something standing on the floor): ${occN} of ${d.nx * d.nz} (${(100*occN/(d.nx*d.nz)).toFixed(1)}%)`)
 } finally {
   chrome.kill()
 }
