@@ -2041,6 +2041,13 @@ function Gallery() {
       <DebugCam />
       {MUSEUM_ENVIRONMENT === 'marble' ? (
         <Suspense fallback={null}>
+          {/* Marble reconstructs from a single panorama, so its detail decays
+              with distance from that one capture point and the hall's two ends
+              are soft. That cannot be sharpened. Haze turns it into depth
+              instead: a warm dark falloff over the last stretch reads as air in
+              a long candlelit room, and the eye stops reading it as low
+              resolution. Starts past the sharp band so nothing near is touched. */}
+          <fog attach="fog" args={['#0e0b07', 16, 52]} />
           <MarbleMuseumEnvironment onStatus={(p, x) => console.log('[marble]', p, x ?? '')} />
           <MarblePaintings />
           <MarbleStainedGlass />
