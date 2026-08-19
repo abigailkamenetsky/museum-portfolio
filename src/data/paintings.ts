@@ -15,7 +15,26 @@
  * and bow by up to half a metre.
  */
 
-import SLOTS from './frameSlots.json'
+import SPREAD_SLOTS from './frameSlots.json'
+import CONCENTRATED_SLOTS from './frameSlotsConcentrated.json'
+
+/**
+ * `?hang=concentrated` pulls all 40 into the sharp band (z +6 .. -17) instead of
+ * spreading them the length of the hall.
+ *
+ * Marble's reconstruction only holds up over that stretch: the detail survey
+ * scores the door end 8-30 and the far end 18-28, against 40-100 in the middle.
+ * The spread hang puts 18 of the 40 on soft wall. The concentrated one is a
+ * three-tier salon wall, which is what the Mauritshuis actually does, at the cost
+ * of leaving the hall's two ends as architecture rather than gallery.
+ *
+ * Both ship so they can be compared from identical cameras before choosing.
+ */
+const HANG = typeof window !== 'undefined'
+  ? new URLSearchParams(window.location.search).get('hang')
+  : null
+
+const SLOTS = HANG === 'concentrated' ? CONCENTRATED_SLOTS : SPREAD_SLOTS
 
 export type Vec3 = readonly [number, number, number]
 

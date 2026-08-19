@@ -29,13 +29,17 @@ WIN = 9                 # local window for the std, in downsampled pixels
 DOWN = 4
 
 # candidate painting sizes in FULL-res pixels (~6.2mm/px across, 7.3mm/px up)
-SIZES = [(190, 210), (165, 175), (140, 150), (120, 125)]
-MARGIN = 14             # clear border required around a candidate, full-res px
+SIZES = [(190, 210), (165, 175), (140, 150), (120, 125), (100, 108), (86, 92)]
+# Large panels for resurfacing blurred wall, rather than hanging something on it
+PANEL_SIZES = [(560, 420), (430, 380), (330, 300), (250, 240)]
+MARGIN = 9              # clear border required around a candidate, full-res px
 X_LO, X_HI = 190, 1410  # ignore the extreme edges: too oblique to measure well
 
 
 def main() -> None:
     root = Path(sys.argv[1])
+    global PANELS
+    PANELS = len(sys.argv) > 2 and sys.argv[2] == "panels"
     manifest = json.loads((root / "manifest.json").read_text())
     out = []
 
@@ -63,7 +67,7 @@ def main() -> None:
 
         taken = []
         boxes = []
-        for bw, bh in SIZES:                       # largest first
+        for bw, bh in (PANEL_SIZES if PANELS else SIZES):                       # largest first
             sw, sh = bw // DOWN, bh // DOWN
             m = MARGIN // DOWN
             step = max(6, sw // 3)
@@ -83,12 +87,12 @@ def main() -> None:
         d = ImageDraw.Draw(dbg)
         for x0, y0, x1, y1 in boxes:
             d.rectangle([x0, y0, x1, y1], outline=(0, 220, 255), width=3)
-        dbg.save(root / ("free_" + entry["file"]))
+        dbg.save(root / (("panel_" if PANELS else "free_") + entry["file"]))
 
         out.append({**entry, "boxes": boxes})
         print(f"{entry['file']}: {len(boxes)} free patches", file=sys.stderr)
 
-    (root / "free_boxes.json").write_text(json.dumps(out, indent=2))
+    (root / ("panel_boxes.json" if PANELS else "free_boxes.json")).write_text(json.dumps(out, indent=2))
     print(f"total {sum(len(o['boxes']) for o in out)}", file=sys.stderr)
 
 
