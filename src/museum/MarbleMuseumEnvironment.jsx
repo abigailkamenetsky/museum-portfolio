@@ -16,9 +16,10 @@ import { useGLTF } from '@react-three/drei'
 import { SplatMesh, SparkRenderer } from '@sparkjsdev/spark'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
-import { MeshBasicMaterial, MeshStandardMaterial, DoubleSide, Color, SRGBColorSpace, Box3, Vector3 } from 'three'
+import { MeshBasicMaterial, MeshStandardMaterial, DoubleSide, Color, SRGBColorSpace, Box3, Vector3, Matrix4, Quaternion, Euler } from 'three'
 import { MARBLE_ASSETS, MUSEUM_DEBUG } from '../data/museumConfig'
 import { MARBLE_CALIBRATION as CAL } from './MuseumCalibration'
+import { floorHeightAt } from './floorField'
 
 const SHOW_COLLIDER = typeof window !== 'undefined'
   && new URLSearchParams(window.location.search).has('collider')
@@ -60,8 +61,10 @@ const OUR_STATUES = [
   // faces located Marble's statue clusters at raw (x -0.05..0.3, y -4) and
   // (x -0.8, y -6..-7). Through the museumWorldRoot transform (scale 4,
   // rotation.x = PI, position.y 2.4) those land at these world positions.
-  { url: 'statue1.glb', pos: [-0.2, 0, -16.0], rotY: 0.2, height: 2.4 },
-  { url: 'statue2.glb', pos: [1.2, 0, -16.0], rotY: -0.3, height: 2.4 },
+  // The two that stood mid-hall at z -16 are gone. Abby's objection to figures
+  // in the middle of the room was not only about Marble's melted ones: anything
+  // standing in the walkway reads the same way. Statuary belongs against the
+  // wall, so only the two wall-side pieces remain.
   { url: 'statue2.glb', pos: [-3.2, 0, -24.0], rotY: 1.2, height: 2.4 },
   { url: 'statue1.glb', pos: [-3.2, 0, -28.0], rotY: 1.2, height: 2.4 },
 ]
@@ -85,7 +88,69 @@ function OurStatue({ url, pos, rotY, height }) {
     })
     return c
   }, [scene, height])
-  return <primitive object={inst} position={pos} rotation={[0, rotY, 0]} />
+  // the hall is a ramp, so y=0 left these floating a metre up at the far end
+  const seated = [pos[0], floorHeightAt(pos[0], pos[2]), pos[2]]
+  return <primitive object={inst} position={seated} rotation={[0, rotY, 0]} />
+}
+
+/**
+ * Delete the melted figures Marble invented in the middle of the hall.
+ *
+ * Three earlier attempts at this destroyed the room, because they filtered
+ * triangles by position in a band the floor and walls also occupy, and took
+ * 17,499 floor faces and 19,368 wall faces with them. Two things make it safe
+ * now. The figures were located by raycast rather than guessed at (one cluster,
+ * x 0.2..0.6, z -22..-19.5, standing 1.4m off the floor), so the box can be
+ * tight and nowhere near a wall. And we now lay our own parquet over this whole
+ * stretch, so removing Marble's floor inside the box leaves no hole to see.
+ *
+ * Done at load on the loaded geometry, not by editing the asset, so it is a
+ * one-line revert rather than another round of mesh surgery.
+ */
+const CUT_BOXES = [
+  { x0: -1.0, x1: 1.8, y0: -1.8, y1: 1.2, z0: -25.6, z1: -17.5 },
+]
+
+function stripRegions(root) {
+  const v = new Vector3()
+  let removed = 0
+  root.updateMatrixWorld(true)
+  // This runs before the mesh is parented to museumWorldRoot, so matrixWorld
+  // carries none of the calibration. Apply it explicitly or the box is compared
+  // against unflipped, unscaled coordinates and matches nothing.
+  const cal = new Matrix4().compose(
+    new Vector3(...CAL.position),
+    new Quaternion().setFromEuler(new Euler(...CAL.rotation)),
+    new Vector3(CAL.scale, CAL.scale, CAL.scale),
+  )
+  const toWorld = new Matrix4()
+  root.traverse((o) => {
+    if (!o.isMesh || !o.geometry?.attributes?.position) return
+    const g = o.geometry
+    toWorld.multiplyMatrices(cal, o.matrixWorld)
+    const pos = g.attributes.position
+    const idx = g.index
+    const n = idx ? idx.count : pos.count
+    const keep = []
+    for (let i = 0; i < n; i += 3) {
+      const a = idx ? idx.getX(i) : i
+      const b = idx ? idx.getX(i + 1) : i + 1
+      const c = idx ? idx.getX(i + 2) : i + 2
+      // centroid in world space: the mesh sits under a flipped, scaled root
+      let cx = 0, cy = 0, cz = 0
+      for (const k of [a, b, c]) {
+        v.fromBufferAttribute(pos, k).applyMatrix4(toWorld)
+        cx += v.x; cy += v.y; cz += v.z
+      }
+      cx /= 3; cy /= 3; cz /= 3
+      const inside = CUT_BOXES.some((q) =>
+        cx > q.x0 && cx < q.x1 && cy > q.y0 && cy < q.y1 && cz > q.z0 && cz < q.z1)
+      if (inside) { removed++; continue }
+      keep.push(a, b, c)
+    }
+    if (keep.length !== n) g.setIndex(keep)
+  })
+  return removed
 }
 
 export default function MarbleMuseumEnvironment({ onStatus }) {
@@ -131,6 +196,8 @@ export default function MarbleMuseumEnvironment({ onStatus }) {
         o.material = new MeshBasicMaterial({ map, side: DoubleSide })
       })
       console.log('[marble] mesh loaded,', Math.round(tris), 'triangles')
+      const cut = stripRegions(gltf.scene)
+      if (cut) console.log('[marble] removed', cut, 'triangles of mid-room figures')
       setHall(gltf.scene)
     }, undefined, (e) => console.warn('[marble] mesh failed', e))
     return () => { alive = false }
