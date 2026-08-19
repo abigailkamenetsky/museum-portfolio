@@ -16,7 +16,16 @@ import { useMemo } from 'react'
 import { MeshStandardMaterial, Shape, ExtrudeGeometry, Color } from 'three'
 import { floorHeightAt } from './floorField'
 
-// measured centre of Marble's doorcase, on the right wall
+// MEASURED, but only the centre is trustworthy so far.
+//
+// The door Abby means is on the NEAR END wall, behind the player at spawn, not
+// the opening on the right wall this was first aimed at. Raycasting it gives a
+// doorcase centred at x 0.48, y 2.61, z 16.96 with the leaf at x 0.43, y 1.83.
+//
+// The SIZE is not measured yet: raycast_frames.mjs reports width along Z, which
+// is right for the two side walls it was written for and wrong for an end wall,
+// where Z is depth. It returned a 0.09m wide doorcase and a 3.0m depth spread.
+// Fix that convention before re-aiming this, or it will land wrong a third time.
 const Z = 1.61
 const X_FACE = 4.42          // between the recessed reveal (4.69) and the entablature (4.16)
 
