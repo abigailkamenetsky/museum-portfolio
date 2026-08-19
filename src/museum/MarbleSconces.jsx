@@ -25,7 +25,15 @@ const URL = import.meta.env.BASE_URL + 'assets/models/candelabra.glb'
 const HEIGHT = 0.62          // metres, wall sconce rather than floor candelabra
 const OFF_WALL = 0.16        // clear of the wall face
 
+// Off by default. Abby's verdict: wrong look (the brass scroll does not match
+// Marble's own candelabra) and wrong placement (spacing runs 0.0m to 3.3m apart,
+// including a duplicate, so the detector is finding flames unevenly rather than
+// finding Marble's actual fittings).
+export const SCONCES_ON = typeof window !== 'undefined'
+  && new URLSearchParams(window.location.search).get('sconces') === 'on'
+
 export default function MarbleSconces() {
+  if (!SCONCES_ON) return null
   const { scene } = useGLTF(URL)
 
   const proto = useMemo(() => {

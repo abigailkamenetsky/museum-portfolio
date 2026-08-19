@@ -29,7 +29,14 @@ const ENT_H = 0.52
 const ENT_Y = 3.77
 const PED_H = 0.78
 
+// Off by default. It was measured accurately, but onto the WRONG opening: the
+// doorcase found on the right wall at z 1.6 is not the brown door Abby means.
+// The target needs identifying before this is re-aimed.
+export const DOOR_ON = typeof window !== 'undefined'
+  && new URLSearchParams(window.location.search).get('door') === 'on'
+
 export default function MarbleDoor() {
+  if (!DOOR_ON) return null
   const wood = useMemo(() => new MeshStandardMaterial({
     color: '#3b2415', roughness: 0.62, metalness: 0.05, envMapIntensity: 0.3,
   }), [])
