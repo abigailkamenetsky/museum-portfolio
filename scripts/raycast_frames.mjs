@@ -103,10 +103,19 @@ try {
         out.push({
           file: j.file, box: j.box,
           x: +mid.x.toFixed(3), y: +mid.y.toFixed(3), z: +mid.z.toFixed(3),
-          // width runs along the hall (z), height is vertical (y)
-          w: +(((Math.abs(tr.z - tl.z)) + (Math.abs(br.z - bl.z))) / 2).toFixed(3),
+          // Width is the horizontal run between the top corners, whichever axis
+          // that happens to be. Measuring it along z alone is right for the two
+          // side walls this was written for and wrong for an end wall, where z is
+          // depth: it reported a 3.1m doorcase as 0.09m wide.
+          w: +(((Math.hypot(tr.x - tl.x, tr.z - tl.z))
+                + (Math.hypot(br.x - bl.x, br.z - bl.z))) / 2).toFixed(3),
           h: +(((Math.abs(bl.y - tl.y)) + (Math.abs(br.y - tr.y))) / 2).toFixed(3),
-          spread: +(Math.max(tl.x,tr.x,bl.x,br.x) - Math.min(tl.x,tr.x,bl.x,br.x)).toFixed(3),
+          // depth spread measured along the wall's own normal, so an end wall is
+          // judged on z and a side wall on x
+          spread: +(Math.min(
+            Math.max(tl.x,tr.x,bl.x,br.x) - Math.min(tl.x,tr.x,bl.x,br.x),
+            Math.max(tl.z,tr.z,bl.z,br.z) - Math.min(tl.z,tr.z,bl.z,br.z),
+          )).toFixed(3),
         })
       }
       return { out }

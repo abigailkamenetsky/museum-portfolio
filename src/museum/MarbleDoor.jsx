@@ -16,31 +16,30 @@ import { useMemo } from 'react'
 import { MeshStandardMaterial, Shape, ExtrudeGeometry, Color } from 'three'
 import { floorHeightAt } from './floorField'
 
-// MEASURED, but only the centre is trustworthy so far.
-//
-// The door Abby means is on the NEAR END wall, behind the player at spawn, not
-// the opening on the right wall this was first aimed at. Raycasting it gives a
-// doorcase centred at x 0.48, y 2.61, z 16.96 with the leaf at x 0.43, y 1.83.
-//
-// The SIZE is not measured yet: raycast_frames.mjs reports width along Z, which
-// is right for the two side walls it was written for and wrong for an end wall,
-// where Z is depth. It returned a 0.09m wide doorcase and a 3.0m depth spread.
-// Fix that convention before re-aiming this, or it will land wrong a third time.
-const Z = 1.61
-const X_FACE = 4.42          // between the recessed reveal (4.69) and the entablature (4.16)
-
-const W = 3.11               // doorcase overall
-const H = 4.89
-const LEAF_W = 1.22
-const LEAF_H = 3.31
-const PIL_W = 0.56           // pilaster, ~19% of the case each side, as measured
+// Measured on Marble's own doorcase, on the NEAR END wall behind the player at
+// spawn. Raycasting it after fixing the width axis gives a 2.96 x 4.91m case
+// centred at x 0.485, z 16.96, with a 1.71 x 3.44m leaf whose foot lands at
+// y 0.12, i.e. on the floor. The earlier attempt was aimed at an opening on the
+// right wall, which was the wrong door entirely.
+// 16.96 is where the rays landed, but that is the RECESSED reveal inside the
+// opening, so building there left our door behind Marble's pilasters and
+// pediment with only fragments poking through. Pulled forward to sit proud of
+// the wall face instead.
+const Z = 16.42
+const X_C = 0.485            // the doorcase is not on the hall centreline
+const W = 2.96
+const H = 4.91
+const LEAF_W = 1.71
+const LEAF_H = 3.44
+const PIL_W = 0.52
 const ENT_H = 0.52
-const ENT_Y = 3.77
-const PED_H = 0.78
+const ENT_Y = 3.95
+const PED_H = 0.80
 
-// Off by default. It was measured accurately, but onto the WRONG opening: the
-// doorcase found on the right wall at z 1.6 is not the brown door Abby means.
-// The target needs identifying before this is re-aimed.
+// Placement is correct now. Held behind ?door=on because the surface is not:
+// flat boxes and flat gilt rectangles read as cardboard, which is worse than
+// Marble's blurry but richly textured door. Needs the treatment the picture
+// frames got, a stepped moulding profile plus the walnut map, before it goes on.
 export const DOOR_ON = typeof window !== 'undefined'
   && new URLSearchParams(window.location.search).get('door') === 'on'
 
@@ -69,11 +68,11 @@ export default function MarbleDoor() {
     return g
   }, [])
 
-  const base = floorHeightAt(X_FACE, Z)
+  const base = floorHeightAt(X_C, Z)
   const pilX = LEAF_W / 2 + PIL_W / 2 + 0.06
 
   return (
-    <group position={[X_FACE, base, Z]} rotation={[0, -Math.PI / 2, 0]}>
+    <group position={[X_C, base, Z]} rotation={[0, Math.PI, 0]}>
       {/* dark reveal, so nothing of Marble's smeared door shows through ours */}
       <mesh position={[0, H / 2, -0.16]} material={wood}>
         <boxGeometry args={[W, H, 0.06]} />
