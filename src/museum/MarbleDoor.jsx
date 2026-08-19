@@ -1,34 +1,32 @@
 /**
- * Our own pediment doorcase, built over Marble's.
+ * Our own pediment doorcase, built over Marble's on the near end wall.
  *
- * The door is the second of the three things Abby named. Unlike the candelabra
- * there is no asset for it, so it is built from primitives, but every dimension
- * is measured off Marble's own rather than invented: raycasting the doorcase,
- * the leaf and the entablature in the wall scan gave 3.11 x 4.89m overall, a
- * 1.22 x 3.31m leaf, and an entablature at y 3.77 that projects to x 4.16 while
- * the reveal sits back at 4.69. So this lands on Marble's door, not near it.
+ * Every dimension is measured off Marble's own: raycasting the case, leaf and
+ * entablature gives 2.96 x 4.91m overall and a 1.71 x 3.44m leaf whose foot
+ * lands at y 0.12, centred at x 0.485. It sits at z 16.42 rather than the 16.96
+ * the rays returned, because that reading is the recessed reveal INSIDE the
+ * opening, and building there left our door behind Marble's pilasters.
  *
- * Built as a group standing on the floor field, since the hall is a ramp and a
- * door at a fixed y would sink or float.
+ * The first version was flat boxes and flat gilt rectangles and read as
+ * cardboard. Joinery is a sequence of steps at different depths and the shadow
+ * lines between them are what sells it, which is exactly what rescued the
+ * picture frames. So the case is stepped, the panels are recessed behind their
+ * own mouldings, and the wood carries the walnut map.
  */
 
-import { useMemo } from 'react'
-import { MeshStandardMaterial, Shape, ExtrudeGeometry, Color } from 'three'
+import { useEffect, useMemo } from 'react'
+import { useThree } from '@react-three/fiber'
+import {
+  MeshStandardMaterial, Shape, Path, ExtrudeGeometry, Color,
+  TextureLoader, RepeatWrapping, SRGBColorSpace,
+} from 'three'
 import { floorHeightAt } from './floorField'
 
-// Measured on Marble's own doorcase, on the NEAR END wall behind the player at
-// spawn. Raycasting it after fixing the width axis gives a 2.96 x 4.91m case
-// centred at x 0.485, z 16.96, with a 1.71 x 3.44m leaf whose foot lands at
-// y 0.12, i.e. on the floor. The earlier attempt was aimed at an opening on the
-// right wall, which was the wrong door entirely.
-// 16.96 is where the rays landed, but that is the RECESSED reveal inside the
-// opening, so building there left our door behind Marble's pilasters and
-// pediment with only fragments poking through. Pulled forward to sit proud of
-// the wall face instead.
+const WALNUT = import.meta.env.BASE_URL + 'assets/textures/floor/walnut_color.jpg'
+
 const Z = 16.42
-const X_C = 0.485            // the doorcase is not on the hall centreline
+const X_C = 0.485
 const W = 2.96
-const H = 4.91
 const LEAF_W = 1.71
 const LEAF_H = 3.44
 const PIL_W = 0.52
@@ -36,72 +34,105 @@ const ENT_H = 0.52
 const ENT_Y = 3.95
 const PED_H = 0.80
 
-// Placement is correct now. Held behind ?door=on because the surface is not:
-// flat boxes and flat gilt rectangles read as cardboard, which is worse than
-// Marble's blurry but richly textured door. Needs the treatment the picture
-// frames got, a stepped moulding profile plus the walnut map, before it goes on.
-export const DOOR_ON = typeof window !== 'undefined'
-  && new URLSearchParams(window.location.search).get('door') === 'on'
+/** A mitred rectangular ring, extruded. The same trick the picture frames use. */
+function ring(ow, oh, iw, ih, depth, bevel) {
+  const s = new Shape()
+  s.moveTo(-ow / 2, -oh / 2); s.lineTo(ow / 2, -oh / 2)
+  s.lineTo(ow / 2, oh / 2); s.lineTo(-ow / 2, oh / 2); s.closePath()
+  const h = new Path()
+  h.moveTo(-iw / 2, -ih / 2); h.lineTo(-iw / 2, ih / 2)
+  h.lineTo(iw / 2, ih / 2); h.lineTo(iw / 2, -ih / 2); h.closePath()
+  s.holes.push(h)
+  const g = new ExtrudeGeometry(s, {
+    depth: Math.max(0.004, depth - bevel), bevelEnabled: true,
+    bevelThickness: bevel, bevelSize: bevel, bevelSegments: 2, curveSegments: 1,
+  })
+  g.computeVertexNormals()
+  return g
+}
 
 export default function MarbleDoor() {
-  if (!DOOR_ON) return null
+  const gl = useThree((s) => s.gl)
+
   const wood = useMemo(() => new MeshStandardMaterial({
-    color: '#3b2415', roughness: 0.62, metalness: 0.05, envMapIntensity: 0.3,
+    color: '#d8b184', roughness: 0.58, metalness: 0.04, envMapIntensity: 0.45,
   }), [])
   const stone = useMemo(() => new MeshStandardMaterial({
-    color: '#6b5540', roughness: 0.78, metalness: 0.0, envMapIntensity: 0.3,
+    color: '#7d6444', roughness: 0.72, envMapIntensity: 0.45, metalness: 0.02,
   }), [])
   const gilt = useMemo(() => new MeshStandardMaterial({
-    color: '#9a7326', roughness: 0.44, metalness: 0.85,
-    emissive: new Color('#241804'), envMapIntensity: 0.4,
+    color: '#8a6420', roughness: 0.45, metalness: 0.8,
+    emissive: new Color('#1d1304'), envMapIntensity: 0.4,
   }), [])
 
-  // triangular pediment, extruded so it has real depth and catches the light
+  useEffect(() => {
+    let alive = true
+    new TextureLoader().load(WALNUT, (t) => {
+      if (!alive) return
+      t.wrapS = t.wrapT = RepeatWrapping
+      t.colorSpace = SRGBColorSpace
+      t.repeat.set(1.4, 2.6)
+      t.anisotropy = 8
+      gl.resetState(); gl.initTexture(t)
+      wood.map = t; wood.needsUpdate = true
+    }, undefined, () => {})
+    return () => { alive = false }
+  }, [gl, wood])
+
+  const panelRing = useMemo(
+    () => ring(LEAF_W * 0.66, LEAF_H * 0.30, LEAF_W * 0.50, LEAF_H * 0.22, 0.045, 0.012), [])
+  const caseRing = useMemo(
+    () => ring(W, LEAF_H + 0.34, LEAF_W + 0.10, LEAF_H + 0.06, 0.20, 0.022), [])
   const pediment = useMemo(() => {
     const s = new Shape()
-    s.moveTo(-W / 2, 0)
-    s.lineTo(W / 2, 0)
-    s.lineTo(0, PED_H)
-    s.closePath()
-    const g = new ExtrudeGeometry(s, { depth: 0.30, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02, bevelSegments: 1 })
+    s.moveTo(-W / 2, 0); s.lineTo(W / 2, 0); s.lineTo(0, PED_H); s.closePath()
+    const g = new ExtrudeGeometry(s, {
+      depth: 0.26, bevelEnabled: true, bevelSize: 0.03, bevelThickness: 0.03, bevelSegments: 2,
+    })
     g.computeVertexNormals()
     return g
   }, [])
+  useEffect(() => () => [panelRing, caseRing, pediment].forEach((g) => g.dispose()),
+    [panelRing, caseRing, pediment])
 
   const base = floorHeightAt(X_C, Z)
-  const pilX = LEAF_W / 2 + PIL_W / 2 + 0.06
 
   return (
     <group position={[X_C, base, Z]} rotation={[0, Math.PI, 0]}>
-      {/* dark reveal, so nothing of Marble's smeared door shows through ours */}
-      <mesh position={[0, H / 2, -0.16]} material={wood}>
-        <boxGeometry args={[W, H, 0.06]} />
-      </mesh>
-
-      {/* the leaf, with two recessed panels */}
-      <mesh position={[0, LEAF_H / 2, -0.04]} material={wood}>
+      {/* the leaf, walnut, set back inside the case */}
+      <mesh position={[0, LEAF_H / 2 + 0.1, -0.10]} material={wood}>
         <boxGeometry args={[LEAF_W, LEAF_H, 0.10]} />
       </mesh>
-      {[0.72, 0.30].map((f, i) => (
-        <mesh key={i} position={[0, LEAF_H * f, 0.03]} material={gilt}>
-          <boxGeometry args={[LEAF_W * 0.62, LEAF_H * 0.26, 0.02]} />
-        </mesh>
+      {[0.70, 0.30].map((f, i) => (
+        <group key={i} position={[0, LEAF_H * f + 0.1, -0.04]}>
+          <mesh geometry={panelRing} material={gilt} />
+          <mesh position={[0, 0, -0.03]} material={wood}>
+            <boxGeometry args={[LEAF_W * 0.52, LEAF_H * 0.23, 0.03]} />
+          </mesh>
+        </group>
       ))}
 
-      {/* pilasters either side */}
+      {/* stepped case: architrave ring, then pilasters standing proud of it */}
+      <mesh geometry={caseRing} position={[0, LEAF_H / 2 + 0.24, 0.0]} material={stone} />
       {[-1, 1].map((s) => (
-        <mesh key={s} position={[s * pilX, LEAF_H / 2 + 0.1, 0.02]} material={stone}>
-          <boxGeometry args={[PIL_W, LEAF_H + 0.2, 0.22]} />
+        <mesh
+          key={s}
+          position={[s * (LEAF_W / 2 + PIL_W / 2 + 0.06), LEAF_H / 2 + 0.14, 0.12]}
+          material={stone}
+        >
+          <boxGeometry args={[PIL_W, LEAF_H + 0.22, 0.16]} />
         </mesh>
       ))}
 
-      {/* entablature across the top, projecting into the room as measured */}
-      <mesh position={[0, ENT_Y - base, 0.10]} material={stone}>
-        <boxGeometry args={[W, ENT_H, 0.34]} />
+      {/* entablature in two steps, so the upper course casts into the lower */}
+      <mesh position={[0, ENT_Y - base, 0.06]} material={stone}>
+        <boxGeometry args={[W, ENT_H * 0.55, 0.22]} />
+      </mesh>
+      <mesh position={[0, ENT_Y - base + ENT_H * 0.42, 0.16]} material={stone}>
+        <boxGeometry args={[W + 0.10, ENT_H * 0.34, 0.32]} />
       </mesh>
 
-      {/* pediment above it */}
-      <mesh geometry={pediment} position={[0, ENT_Y - base + ENT_H / 2, -0.05]} material={stone} />
+      <mesh geometry={pediment} position={[0, ENT_Y - base + ENT_H * 0.58, 0.02]} material={stone} />
     </group>
   )
 }
