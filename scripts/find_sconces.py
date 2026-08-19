@@ -31,7 +31,7 @@ def main() -> None:
         s = np.asarray(im.resize((W // DOWN, H // DOWN), Image.BILINEAR), dtype=np.float32)
         r, g, b = s[..., 0], s[..., 1], s[..., 2]
         lum = r * 0.30 + g * 0.59 + b * 0.11
-        hot = (lum > 118) & (r > b + 45) & (r >= g)
+        hot = (lum > 92) & (r > b + 38) & (r >= g)
         hot = ndimage.binary_closing(hot, np.ones((3, 3), bool))
         lab, _ = ndimage.label(hot)
         boxes = []
@@ -43,6 +43,15 @@ def main() -> None:
             if not (MIN_PX <= n <= MAX_PX):
                 continue
             if max(bw / max(bh, 1), bh / max(bw, 1)) > MAX_ASPECT:
+                continue
+            # A sconce sits on DARK wall. A highlight on the glazing sits on a
+            # bright window, so judge the surroundings, not just the blob.
+            pad = max(6, max(bw, bh))
+            ry0, ry1 = max(0, y0 - pad), min(lum.shape[0], y1 + pad)
+            rx0, rx1 = max(0, x0 - pad), min(lum.shape[1], x1 + pad)
+            ring = lum[ry0:ry1, rx0:rx1].sum() - lum[y0:y1, x0:x1].sum()
+            rn = (ry1 - ry0) * (rx1 - rx0) - bw * bh
+            if rn <= 0 or ring / rn > 62:
                 continue
             boxes.append([x0 * DOWN, y0 * DOWN, x1 * DOWN, y1 * DOWN])
         dbg = im.copy()
