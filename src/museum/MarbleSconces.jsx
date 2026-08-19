@@ -21,8 +21,11 @@ import { useGLTF } from '@react-three/drei'
 import { Box3, Vector3, MeshStandardMaterial, Color } from 'three'
 import SCONCES from '../data/sconces.json'
 
-const URL = import.meta.env.BASE_URL + 'assets/models/candelabra.glb'
-const HEIGHT = 0.62          // metres, wall sconce rather than floor candelabra
+// The real fitting from the Blender hall (back plate, boss, two arms, two
+// candles, two pans, two flames), exported out of hall_source.blend rather than
+// the downloaded candelabra.glb that was standing in for it.
+const URL = import.meta.env.BASE_URL + 'assets/models/sconce_og.glb'
+const HEIGHT = 1.08          // the asset's own height, measured on export
 const OFF_WALL = 0.16        // clear of the wall face
 
 // Off by default. Abby's verdict: wrong look (the brass scroll does not match
