@@ -113,7 +113,7 @@ const CUT_BOXES = [
   // (all beyond |x| 3) are never touched, and the top stops at 1.2 so nothing
   // reaches the wall paintings or the vault. Our parquet covers the floor under
   // all of it, so removing Marble's floor here costs nothing.
-  { x0: -2.6, x1: 2.6, y0: -2.0, y1: 1.2, z0: -33.0, z1: -16.5 },
+  { x0: -2.6, x1: 2.6, y0: -2.0, y1: 1.2, z0: -36.5, z1: -11.5 },
 ]
 
 function stripRegions(root) {
