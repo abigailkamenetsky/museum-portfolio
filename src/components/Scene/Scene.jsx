@@ -28,6 +28,7 @@ import MarbleMuseumEnvironment from '../../museum/MarbleMuseumEnvironment'
 import MarblePaintings from '../../museum/MarblePaintings'
 import MarbleStainedGlass from '../../museum/MarbleStainedGlass'
 import MarbleFloor from '../../museum/MarbleFloor'
+import MarbleWalls from '../../museum/MarbleWalls'
 import { floorHeightAt } from '../../museum/floorField'
 import { isGrabbing, editor, resolve as resolvePlace, dragBy } from '../../museum/paintingEditorStore'
 import { MUSEUM_ENVIRONMENT, CALIBRATION } from '../../data/museumConfig'
@@ -2058,6 +2059,7 @@ function Gallery() {
           <fog attach="fog" args={['#0e0b07', 16, 52]} />
           <MarbleMuseumEnvironment onStatus={(p, x) => console.log('[marble]', p, x ?? '')} />
           <MarbleFloor />
+          <MarbleWalls />
           <MarblePaintings />
           <MarbleStainedGlass />
         </Suspense>
