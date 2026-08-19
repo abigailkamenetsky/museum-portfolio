@@ -10,12 +10,12 @@
  * canvas, so clicks are forgiving and the splat can never steal them.
  */
 
-import { Suspense, useEffect, useMemo, useState } from 'react'
-import { useThree } from '@react-three/fiber'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { useThree, useFrame } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import {
   MeshBasicMaterial, MeshStandardMaterial, TextureLoader,
-  SRGBColorSpace, DoubleSide, Color, Box3, Vector3,
+  SRGBColorSpace, DoubleSide, Color, Box3, Vector3, CanvasTexture,
 } from 'three'
 import { WINGS } from '../data/museum'
 import { ART_BASE } from '../data/artworks'
@@ -29,12 +29,12 @@ const ENTRIES = WINGS.flatMap((w) => {
   const pcs = w.exhibit?.pieces
   if (pcs && pcs.length) {
     return pcs.map((p, i) => ({
-      wingId: w.id, piece: i, title: p.title,
+      wingId: w.id, piece: i, title: p.title, artwork: p.artwork || null,
       art: p.art || null, aspect: p.artAspect || 1.25,
     }))
   }
   return [{
-    wingId: w.id, piece: null, title: w.title,
+    wingId: w.id, piece: null, title: w.title, artwork: w.artwork || null,
     art: w.art || null, aspect: w.artAspect || 1.25,
   }]
 })
@@ -102,6 +102,87 @@ function useGoldFrame() {
 }
 useGLTF.preload(FRAME_URL)
 
+
+/**
+ * A gallery label, drawn to a canvas rather than laid out as 3D text.
+ *
+ * 40 paintings means 40 labels, and troika-style SDF text or 40 DOM overlays both
+ * cost far more than a small texture that is generated once and never changes.
+ *
+ * Content follows a real museum card but inverted for the audience: the project
+ * leads, because a recruiter reading this has ninety seconds and needs to know it
+ * is HelpMynd before they need to know it is a Rembrandt.
+ */
+function makePlacard(title, artwork) {
+  const W = 512, H = 224
+  const c = document.createElement('canvas')
+  c.width = W; c.height = H
+  const g = c.getContext('2d')
+
+  g.fillStyle = '#151310'
+  g.fillRect(0, 0, W, H)
+  g.strokeStyle = '#6b5a33'
+  g.lineWidth = 4
+  g.strokeRect(6, 6, W - 12, H - 12)
+
+  const serif = 'Georgia, "Times New Roman", serif'
+  g.textAlign = 'center'
+
+  g.fillStyle = '#f0e6cf'
+  const t = (title || '').toUpperCase()
+  // Shrink AND wrap. Shrinking alone still clipped: "LEADING IN THE
+  // ENTREPRENEURIAL WORLD" is far too long for one line at any readable size.
+  const MAXW = W - 70
+  let size = 46
+  let lines = [t]
+  for (; size >= 22; size -= 2) {
+    g.font = `600 ${size}px ${serif}`
+    if (g.measureText(t).width <= MAXW) { lines = [t]; break }
+    // try two lines, splitting at the word boundary nearest the middle
+    const words = t.split(' ')
+    let best = null
+    for (let k = 1; k < words.length; k++) {
+      const a = words.slice(0, k).join(' ')
+      const b = words.slice(k).join(' ')
+      const wa = g.measureText(a).width, wb = g.measureText(b).width
+      if (wa <= MAXW && wb <= MAXW) {
+        const score = Math.abs(wa - wb)
+        if (!best || score < best.score) best = { a, b, score }
+      }
+    }
+    if (best) { lines = [best.a, best.b]; break }
+  }
+  g.font = `600 ${size}px ${serif}`
+  const titleTop = artwork ? (lines.length > 1 ? 62 : 88) : (lines.length > 1 ? 96 : 122)
+  lines.forEach((ln, i) => g.fillText(ln, W / 2, titleTop + i * (size + 6)))
+
+  if (artwork) {
+    g.strokeStyle = '#4a3f26'
+    g.lineWidth = 2
+    const ruleY = lines.length > 1 ? 128 : 112
+    g.beginPath(); g.moveTo(W * 0.3, ruleY); g.lineTo(W * 0.7, ruleY); g.stroke()
+
+    g.fillStyle = '#b9a97f'
+    let s2 = 27
+    g.font = `italic ${s2}px ${serif}`
+    const parts = String(artwork).split(' - ')
+    const artist = parts[0] || ''
+    const work = parts.slice(1).join(' - ')
+    while (g.measureText(work || artist).width > W - 60 && s2 > 15) {
+      s2 -= 1
+      g.font = `italic ${s2}px ${serif}`
+    }
+    const attrY = ruleY + 40
+    g.fillText(artist, W / 2, attrY)
+    if (work) g.fillText(work, W / 2, attrY + s2 + 8)
+  }
+
+  const tex = new CanvasTexture(c)
+  tex.colorSpace = SRGBColorSpace
+  tex.anisotropy = 8
+  return tex
+}
+
 function Painting({ entry, place: base, frame }) {
   const ed = useEditor()
   const gl = useThree((s) => s.gl)
@@ -165,6 +246,35 @@ function Painting({ entry, place: base, frame }) {
     return () => { alive = false }
   }, [entry.art, gl, cw, ch])
 
+  const placardTex = useMemo(
+    () => makePlacard(entry.title, entry.artwork),
+    [entry.title, entry.artwork],
+  )
+  useEffect(() => () => placardTex.dispose(), [placardTex])
+  const placardMat = useMemo(() => new MeshBasicMaterial({
+    map: placardTex, transparent: true, opacity: 0, toneMapped: false, depthWrite: false,
+  }), [placardTex])
+
+  // Encounter layer: the label and the glow both come up as you approach, so the
+  // promenade stays uncluttered and the room does not read as 40 competing signs.
+  const grp = useRef()
+  const glowRef = useRef()
+  const here = useMemo(() => new Vector3(), [])
+  useFrame((state, dt) => {
+    if (!grp.current) return
+    grp.current.getWorldPosition(here)
+    const d = state.camera.position.distanceTo(here)
+    const want = d < NEAR_FULL ? 1 : d > NEAR_NONE ? 0 : (NEAR_NONE - d) / (NEAR_NONE - NEAR_FULL)
+    const k = 1 - Math.exp(-6 * dt)
+    placardMat.opacity += (want - placardMat.opacity) * k
+    placardMat.visible = placardMat.opacity > 0.01
+    if (glowRef.current) {
+      const gm = glowRef.current.material
+      gm.opacity += ((hover ? 0.30 : want * 0.16) - gm.opacity) * k
+      gm.visible = gm.opacity > 0.01
+    }
+  })
+
   const canvasMat = useMemo(() => new MeshBasicMaterial({
     color: '#ffffff', toneMapped: false, side: DoubleSide,
   }), [])
@@ -188,7 +298,12 @@ function Painting({ entry, place: base, frame }) {
   }
 
   return (
-    <group position={place.position} rotation={place.rotation}>
+    <group ref={grp} position={place.position} rotation={place.rotation}>
+      {/* warm pool behind the frame, so a painting lifts off the wall as you near it */}
+      <mesh ref={glowRef} position={[0, 0, -0.02]}>
+        <planeGeometry args={[w * 1.5, h * 1.5]} />
+        <meshBasicMaterial color="#ffcf8a" transparent opacity={0} depthWrite={false} toneMapped={false} />
+      </mesh>
       {/* thin dark ground behind the canvas, hidden by the frame rebate */}
       <mesh position={[0, 0, 0.02]} material={backMat}>
         <planeGeometry args={[cw * 1.08, ch * 1.08]} />
@@ -208,6 +323,10 @@ function Painting({ entry, place: base, frame }) {
           castShadow
         />
       )}
+      {/* gallery label, below the frame, fading in on approach */}
+      <mesh position={[0, -h / 2 - 0.20, 0.04]} material={placardMat}>
+        <planeGeometry args={[0.42, 0.184]} />
+      </mesh>
       {/* invisible, padded click target */}
       <mesh
         position={[0, 0, 0.03]}
@@ -231,6 +350,10 @@ function Painting({ entry, place: base, frame }) {
 // raycast against the real wall, so the marker should sit flat on the gilt with
 // no floating and no sinking. ?slots=1 shows them without the rest of the editor.
 import SLOTS from '../data/frameSlots.json'
+
+// metres: label and glow at full strength inside NEAR_FULL, gone past NEAR_NONE
+const NEAR_FULL = 3.2
+const NEAR_NONE = 6.5
 
 const SHOW_SLOTS = typeof window !== 'undefined'
   && new URLSearchParams(window.location.search).has('slots')
