@@ -44,13 +44,19 @@ export default function MarbleSconces() {
     c.scale.setScalar(HEIGHT / (size.y || 1))
     const b2 = new Box3().setFromObject(c)
     c.position.y -= (b2.min.y + b2.max.y) / 2      // centre on the mount point
-    // Aged brass, lit warm. envMapIntensity stays low: fully reflective metal
-    // reads as a black mirror in a room this dim.
-    const brass = new MeshStandardMaterial({
-      color: '#8a6a2b', metalness: 0.75, roughness: 0.42,
-      emissive: new Color('#4a2f08'), emissiveIntensity: 0.9, envMapIntensity: 0.35,
+    // KEEP the asset's own materials. It ships baseColor, metallicRoughness,
+    // normal and occlusion maps, and the first version threw all four away for a
+    // flat brass MeshStandardMaterial, which is why the sconces read as a plain
+    // scroll instead of the carved fitting from the Blender hall. Only the
+    // envMap response is calmed, because fully reflective metal reads as a black
+    // mirror in a room this dim.
+    c.traverse((o) => {
+      if (!o.isMesh || !o.material) return
+      o.material = o.material.clone()
+      o.material.envMapIntensity = 0.35
+      if (o.material.emissive) o.material.emissive.set('#2a1b05')
+      o.material.needsUpdate = true
     })
-    c.traverse((o) => { if (o.isMesh) o.material = brass })
     return c
   }, [scene])
 
