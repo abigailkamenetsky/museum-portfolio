@@ -25,7 +25,10 @@ import SCONCES from '../data/sconces.json'
 // candles, two pans, two flames), exported out of hall_source.blend rather than
 // the downloaded candelabra.glb that was standing in for it.
 const URL = import.meta.env.BASE_URL + 'assets/models/sconce_og.glb'
-const HEIGHT = 1.08          // the asset's own height, measured on export
+// The asset is 0.31 deep x 1.09 tall x 0.74 wide and faces +X, which is the
+// wall it came off in the Blender hall. So the left wall needs no turn and the
+// right wall needs a half turn, not the quarter turns a +Z-facing asset wanted.
+const HEIGHT = 1.09          // the asset's own height, so it keeps native scale
 const OFF_WALL = 0.16        // clear of the wall face
 
 // Off by default. Abby's verdict: wrong look (the brass scroll does not match
@@ -69,7 +72,7 @@ export default function MarbleSconces() {
         <group
           key={i}
           position={[s.x - s.side * OFF_WALL, s.y, s.z]}
-          rotation={[0, s.side < 0 ? Math.PI / 2 : -Math.PI / 2, 0]}
+          rotation={[0, s.side < 0 ? 0 : Math.PI, 0]}
         >
           <primitive object={proto.clone(true)} />
           {/* the flame itself, unlit so it reads as a light source */}
