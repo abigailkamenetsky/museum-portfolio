@@ -46,10 +46,20 @@ def main() -> None:
             # the column while it stays brighter than the surrounding wall.
             col = lum[:, x0:x1]
             wall = float(np.median(lum[lum < 40])) if (lum < 40).any() else 12.0
-            yy = y1
-            while yy < lum.shape[0] - 1 and float(col[yy].mean()) > wall + 14:
+            # Do not stop on the first dark row: the glazing bars cross the
+            # opening and read as wall. Measured on one window, a transom dipped
+            # to 25.2 against a 25.4 threshold and halted the walk one row in,
+            # while the real sill was 130px lower at 11.5. So require a RUN of
+            # dark rows, and judge against a looser threshold.
+            yy, dark, last_bright = y1, 0, y1
+            while yy < lum.shape[0] - 1 and dark < 4:
+                if float(col[yy].mean()) > wall + 9:
+                    dark = 0
+                    last_bright = yy
+                else:
+                    dark += 1
                 yy += 1
-            y1 = yy
+            y1 = last_bright + 1
             boxes.append([x0 * DOWN, y0 * DOWN, x1 * DOWN, y1 * DOWN])
         dbg = im.copy(); d = ImageDraw.Draw(dbg)
         for b in boxes:
