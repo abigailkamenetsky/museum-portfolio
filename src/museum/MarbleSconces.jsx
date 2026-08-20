@@ -75,11 +75,8 @@ export default function MarbleSconces() {
           rotation={[0, s.side < 0 ? 0 : Math.PI, 0]}
         >
           <primitive object={proto.clone(true)} />
-          {/* the flame itself, unlit so it reads as a light source */}
-          <mesh position={[0, HEIGHT * 0.46, 0.02]}>
-            <sphereGeometry args={[0.045, 8, 6]} />
-            <meshBasicMaterial color="#ffca72" toneMapped={false} />
-          </mesh>
+          {/* no flame added here: the asset carries its own Sconce_flame parts,
+              and adding one put a second light floating between the candles */}
         </group>
       ))}
     </>
