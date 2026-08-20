@@ -31,6 +31,7 @@ import MarbleFloor from '../../museum/MarbleFloor'
 import MarbleWalls from '../../museum/MarbleWalls'
 import MarbleSconces from '../../museum/MarbleSconces'
 import MarbleDoor from '../../museum/MarbleDoor'
+import MarbleWindows from '../../museum/MarbleWindows'
 import { floorHeightAt } from '../../museum/floorField'
 import { isGrabbing, editor, resolve as resolvePlace, dragBy } from '../../museum/paintingEditorStore'
 import { MUSEUM_ENVIRONMENT, CALIBRATION } from '../../data/museumConfig'
@@ -2064,6 +2065,7 @@ function Gallery() {
           <MarbleWalls />
           <MarbleSconces />
           <MarbleDoor />
+          <MarbleWindows />
           <MarblePaintings />
           <MarbleStainedGlass />
         </Suspense>
