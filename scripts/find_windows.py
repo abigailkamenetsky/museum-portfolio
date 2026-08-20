@@ -40,6 +40,16 @@ def main() -> None:
                 continue
             if x0 < 12 or x1 > lum.shape[1] - 12:   # cut off at the frame edge
                 continue
+            # Grow DOWN to the sill. The bright mask stops where daylight falls
+            # off behind the glazing bars, well above the actual opening, so the
+            # box covered the arched head and missed the lower third. Walk down
+            # the column while it stays brighter than the surrounding wall.
+            col = lum[:, x0:x1]
+            wall = float(np.median(lum[lum < 40])) if (lum < 40).any() else 12.0
+            yy = y1
+            while yy < lum.shape[0] - 1 and float(col[yy].mean()) > wall + 14:
+                yy += 1
+            y1 = yy
             boxes.append([x0 * DOWN, y0 * DOWN, x1 * DOWN, y1 * DOWN])
         dbg = im.copy(); d = ImageDraw.Draw(dbg)
         for b in boxes:
