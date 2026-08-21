@@ -37,15 +37,18 @@ import { isGrabbing, editor, resolve as resolvePlace, dragBy } from '../../museu
 import { MUSEUM_ENVIRONMENT, CALIBRATION } from '../../data/museumConfig'
 const SPAWN = CALIBRATION[MUSEUM_ENVIRONMENT].playerSpawn
 const WALK = CALIBRATION[MUSEUM_ENVIRONMENT].walkBounds
-// the camera trails the player, so it needs a little more room than they do
-const CAM_BOX = MUSEUM_ENVIRONMENT === 'marble'
-  ? [WALK[0] - 1.5, WALK[1] + 1.5, WALK[2] - 5, WALK[3] + 5, 7.5]
-  : [-W / 2 + 0.4, W / 2 - 0.4, -D / 2 + 0.4, D / 2 - 0.4, CEIL - 0.4]
 import { WINGS, PAINTINGS } from '../../data/museum'
 
 /* ── DIMENSIONS — long rectangular palace gallery (~2:1) ────── */
 const W = 18, H = 13.5, D = 78
 const CEIL = H
+
+// the camera trails the player, so it needs a little more room than they do.
+// Must stay BELOW the dimensions: the legacy branch reads them at module scope,
+// and sitting above the declarations made it a TDZ crash that blanked the site.
+const CAM_BOX = MUSEUM_ENVIRONMENT === 'marble'
+  ? [WALK[0] - 1.5, WALK[1] + 1.5, WALK[2] - 5, WALK[3] + 5, 7.5]
+  : [-W / 2 + 0.4, W / 2 - 0.4, -D / 2 + 0.4, D / 2 - 0.4, CEIL - 0.4]
 const WALL_T = 0.62                             // thick masonry wall → deep (~24in) window reveal
 const WIN_Z = [27, 13.5, 0, -13.5, -27]         // window centres down each long wall
 

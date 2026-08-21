@@ -13,6 +13,10 @@ const state = {
   teleport: null,      // command consumed by the scene: { x, z, yaw, title }
   titleCard: null,     // wing title shown briefly after a teleport
   fade: 0,             // black overlay opacity 0..1 (teleport transitions)
+  trackAt: 0,          // index into TRACKS (music.js)
+  trackOn: false,      // is the playlist currently sounding
+  trackErr: false,     // the mp3 for trackAt is missing or refused to play
+  musicOpen: false,    // the dock's track list is dropped down
 }
 
 // High-frequency mobile movement input from the on-screen joystick.
@@ -37,4 +41,4 @@ export function useMuseum() {
 
 // open/close helpers
 export const openGuide = () => museum.set({ menu: 'home', visitCat: null, card: null })
-export const closeGuide = () => museum.set({ menu: null, visitCat: null })
+export const closeGuide = () => museum.set({ menu: null, visitCat: null, musicOpen: false })

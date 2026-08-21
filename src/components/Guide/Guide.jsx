@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useProgress } from '@react-three/drei'
 import { museum, touchInput, useMuseum, openGuide, closeGuide } from '../../museum/store'
+import { TRACKS, play, toggle, step, spotifyLink } from '../../museum/music'
 import { WINGS, wingById } from '../../data/museum'
 
 const ASSET = import.meta.env.BASE_URL + 'assets/'
@@ -20,6 +21,56 @@ function teleport(w) {
 }
 function guideMe(w) { closeGuide(); museum.set({ guide: { id: w.id, pos: w.pos, title: w.wing } }) }
 
+/* ── music dock, top right of the chassis ────────────────── */
+function MusicDock({ big }) {
+  const s = useMuseum()
+  const [hover, setHover] = useState(null)
+  const cur = TRACKS[s.trackAt]
+  const mini = (key, label, title, fn) => (
+    <button key={key} title={title} onClick={fn} onMouseEnter={() => setHover(key)} onMouseLeave={() => setHover(null)} style={{
+      width: 23, height: 23, borderRadius: 23, cursor: 'pointer', flex: '0 0 auto', padding: 0, lineHeight: 1,
+      background: hover === key ? 'rgba(227,194,102,0.24)' : 'rgba(0,0,0,0.38)',
+      border: `1px solid ${GOLD}${hover === key ? 'cc' : '66'}`, color: GOLD, font: `500 11px ${serif}`,
+    }}>{label}</button>
+  )
+  return (
+    <div style={{ position: 'relative', flex: '0 0 auto', zIndex: 4 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 7px', borderRadius: 12, background: 'rgba(0,0,0,0.36)', border: `1px solid ${GOLD}44` }}>
+        <div style={{
+          width: 21, height: 21, borderRadius: 21, flex: '0 0 auto', display: 'grid', placeItems: 'center',
+          background: 'repeating-radial-gradient(circle at 50% 50%, rgba(255,255,255,0.14) 0 1px, transparent 1px 3px), #14100c',
+          border: `1px solid ${GOLD}55`, animation: s.trackOn ? 'spin 2.4s linear infinite' : 'none',
+        }}><div style={{ width: 6, height: 6, borderRadius: 6, background: GOLD, opacity: 0.8 }} /></div>
+        {mini('p', s.trackOn ? '❚❚' : '▶', s.trackOn ? 'Pause' : 'Play', toggle)}
+        {mini('n', '›', 'Next track', () => step(1))}
+        <button className="mdock-title" onClick={() => museum.set({ musicOpen: !s.musicOpen })} title="Choose a track" style={{
+          background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px', textAlign: 'left', maxWidth: big ? 122 : 88,
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#e9c9b0', font: `500 12px ${serif}`, opacity: 0.85,
+        }}>{cur.title} {s.musicOpen ? '▴' : '▾'}</button>
+      </div>
+
+      {s.musicOpen && (
+        <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 'min(320px,76vw)', background: '#0d0f0b', border: `1px solid ${GOLD}77`, borderRadius: 13, padding: 10, boxShadow: '0 18px 40px rgba(0,0,0,0.75)' }}>
+          <div style={{ color: GOLD, font: `600 11px ${serif}`, letterSpacing: 2.5, textTransform: 'uppercase', opacity: 0.8, padding: '2px 4px 8px' }}>Music while you walk</div>
+          {TRACKS.map((t, i) => (
+            <button key={t.file} onClick={() => { play(i); museum.set({ musicOpen: false }) }} onMouseEnter={() => setHover('t' + i)} onMouseLeave={() => setHover(null)} style={{
+              display: 'flex', gap: 9, width: '100%', textAlign: 'left', alignItems: 'baseline', padding: '7px 6px', borderRadius: 7,
+              background: i === s.trackAt ? 'rgba(227,194,102,0.16)' : hover === 't' + i ? 'rgba(227,194,102,0.08)' : 'transparent',
+              border: 'none', borderBottom: `1px solid ${GOLD}1f`, color: i === s.trackAt ? GOLD : '#efe7d6', cursor: 'pointer', font: `500 14px ${serif}`,
+            }}>
+              <span style={{ opacity: 0.6, font: `500 11px ${serif}`, minWidth: 15 }}>{String(i + 1).padStart(2, '0')}</span>
+              <span style={{ minWidth: 0 }}>{t.title}<span style={{ display: 'block', font: `italic 400 11.5px ${serif}`, opacity: 0.6 }}>{t.artist}</span></span>
+            </button>
+          ))}
+          <a href={spotifyLink(cur)} target="_blank" rel="noreferrer" style={{ display: 'block', marginTop: 9, padding: '8px 6px', color: GOLD, font: `500 12.5px ${serif}`, opacity: 0.85, textDecoration: 'none' }}>
+            {s.trackErr ? 'No audio file for this one yet. Hear it on Spotify ›' : 'Hear the full track on Spotify ›'}
+          </a>
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ── the handheld audio-guide device shell ───────────────── */
 function Device({ children, big }) {
   return (
@@ -29,11 +80,16 @@ function Device({ children, big }) {
       boxShadow: '0 30px 70px rgba(0,0,0,0.6), inset 0 2px 5px rgba(255,255,255,0.12), inset 0 -3px 8px rgba(0,0,0,0.4)',
       fontFamily: serif, display: 'flex', flexDirection: 'column',
     }}>
-      {/* speaker grille + brand */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 9 }}>
-        {[0, 1, 2, 3, 4, 5].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: 6, background: '#2c0a10' }} />)}
+      {/* speaker grille + brand, with the music dock in the top right */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 9 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 9 }}>
+            {[0, 1, 2, 3, 4, 5].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: 6, background: '#2c0a10' }} />)}
+          </div>
+          <div style={{ textAlign: 'center', color: '#e9c9b0', font: `600 ${big ? 15 : 11}px ${serif}`, letterSpacing: big ? 4 : 1.6, opacity: 0.7, whiteSpace: 'nowrap', overflow: 'hidden' }}>MUSEUM · AUDIO GUIDE</div>
+        </div>
+        <MusicDock big={big} />
       </div>
-      <div style={{ textAlign: 'center', color: '#e9c9b0', font: `600 15px ${serif}`, letterSpacing: 4, opacity: 0.7, marginBottom: 9 }}>MUSEUM · AUDIO GUIDE</div>
       {/* screen */}
       <div style={{
         background: '#0f120e', border: `1px solid ${GOLD}55`, borderRadius: 16, padding: '18px 20px',
@@ -427,7 +483,12 @@ export default function Guide() {
       {/* mobile-only movement joystick (bottom-left) */}
       {isMobile && ready && !s.menu && !s.card && s.phase === 'explore' && <Joystick />}
 
-      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`}</style>
+      <style>{`
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @media (max-width:560px){.mdock-title{display:none}}
+        @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+      `}</style>
     </>
   )
 }
