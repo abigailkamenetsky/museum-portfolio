@@ -32,11 +32,32 @@ function toneEl() {
   return tone
 }
 
+// Browsers refuse play() that they do not tie to a gesture, and how strictly
+// they judge that varies (Safari is harshest). A refusal is not fatal: retry on
+// the next real interaction, unless the visitor is the one who asked for quiet.
+let silenced = false
+let retrying = false
+
 export function toneStart() {
+  silenced = false
   toneEl().play().then(
     () => museum.set({ toneOn: true }),
-    () => museum.set({ toneOn: false }),   // browser refused without a gesture
+    () => { museum.set({ toneOn: false }); retryOnNextGesture() },
   )
 }
-export function toneStop() { toneEl().pause(); museum.set({ toneOn: false }) }
+
+function retryOnNextGesture() {
+  if (retrying) return
+  retrying = true
+  const go = () => {
+    window.removeEventListener('pointerdown', go)
+    window.removeEventListener('keydown', go)
+    retrying = false
+    if (!silenced) toneStart()
+  }
+  window.addEventListener('pointerdown', go)
+  window.addEventListener('keydown', go)
+}
+
+export function toneStop() { silenced = true; toneEl().pause(); museum.set({ toneOn: false }) }
 export const toneToggle = () => (museum.get().toneOn ? toneStop() : toneStart())
