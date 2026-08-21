@@ -13,9 +13,6 @@ const state = {
   teleport: null,      // command consumed by the scene: { x, z, yaw, title }
   titleCard: null,     // wing title shown briefly after a teleport
   fade: 0,             // black overlay opacity 0..1 (teleport transitions)
-  trackAt: null,       // index into TRACKS whose Spotify embed is open (music.js)
-  toneOn: false,       // the CC0 Chopin bed is looping
-  musicOpen: false,    // the dock's track list is dropped down
 }
 
 // High-frequency mobile movement input from the on-screen joystick.
@@ -40,4 +37,4 @@ export function useMuseum() {
 
 // open/close helpers
 export const openGuide = () => museum.set({ menu: 'home', visitCat: null, card: null })
-export const closeGuide = () => museum.set({ menu: null, visitCat: null, musicOpen: false })
+export const closeGuide = () => museum.set({ menu: null, visitCat: null })

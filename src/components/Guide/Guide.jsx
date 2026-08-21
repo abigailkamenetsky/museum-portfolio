@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useProgress } from '@react-three/drei'
 import { museum, touchInput, useMuseum, openGuide, closeGuide } from '../../museum/store'
-import { TRACKS, ROOM_TONE, embedSrc, toneStart, toneStop, toneToggle } from '../../museum/music'
 import { WINGS, wingById } from '../../data/museum'
 
 const ASSET = import.meta.env.BASE_URL + 'assets/'
@@ -21,94 +20,6 @@ function teleport(w) {
 }
 function guideMe(w) { closeGuide(); museum.set({ guide: { id: w.id, pos: w.pos, title: w.wing } }) }
 
-/* ── music dock, top right of the chassis ────────────────── */
-function MusicDock({ big }) {
-  const s = useMuseum()
-  const [hover, setHover] = useState(null)
-  const mini = (key, label, title, fn) => (
-    <button key={key} title={title} onClick={fn} onMouseEnter={() => setHover(key)} onMouseLeave={() => setHover(null)} style={{
-      width: 23, height: 23, borderRadius: 23, cursor: 'pointer', flex: '0 0 auto', padding: 0, lineHeight: 1,
-      background: hover === key ? 'rgba(227,194,102,0.24)' : 'rgba(0,0,0,0.38)',
-      border: `1px solid ${GOLD}${hover === key ? 'cc' : '66'}`, color: GOLD, font: `500 11px ${serif}`,
-    }}>{label}</button>
-  )
-  return (
-    <div style={{ position: 'relative', flex: '0 0 auto', zIndex: 4 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 7px', borderRadius: 12, background: 'rgba(0,0,0,0.36)', border: `1px solid ${GOLD}44` }}>
-        <div style={{
-          width: 21, height: 21, borderRadius: 21, flex: '0 0 auto', display: 'grid', placeItems: 'center',
-          background: 'repeating-radial-gradient(circle at 50% 50%, rgba(255,255,255,0.14) 0 1px, transparent 1px 3px), #14100c',
-          border: `1px solid ${GOLD}55`, animation: s.toneOn ? 'spin 2.4s linear infinite' : 'none',
-        }}><div style={{ width: 6, height: 6, borderRadius: 6, background: GOLD, opacity: 0.8 }} /></div>
-        {mini('p', s.toneOn ? '❚❚' : '▶', s.toneOn ? 'Silence the room' : 'Play the room tone', toneToggle)}
-        <button className="mdock-title" onClick={() => museum.set({ musicOpen: !s.musicOpen })} title="Music" style={{
-          background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px', textAlign: 'left', maxWidth: big ? 122 : 88,
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#e9c9b0', font: `500 12px ${serif}`, opacity: 0.85,
-        }}>Music {s.musicOpen ? '▴' : '▾'}</button>
-      </div>
-
-      {s.musicOpen && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 'min(320px,76vw)', background: '#0d0f0b', border: `1px solid ${GOLD}77`, borderRadius: 13, padding: 10, boxShadow: '0 18px 40px rgba(0,0,0,0.75)' }}>
-          <div style={{ color: GOLD, font: `600 11px ${serif}`, letterSpacing: 2.5, textTransform: 'uppercase', opacity: 0.8, padding: '2px 4px 7px' }}>The room</div>
-          <button onClick={toneToggle} onMouseEnter={() => setHover('rt')} onMouseLeave={() => setHover(null)} style={{
-            display: 'flex', gap: 9, width: '100%', textAlign: 'left', alignItems: 'center', padding: '8px 6px', borderRadius: 7, marginBottom: 4,
-            background: s.toneOn ? 'rgba(227,194,102,0.16)' : hover === 'rt' ? 'rgba(227,194,102,0.08)' : 'transparent',
-            border: 'none', color: s.toneOn ? GOLD : '#efe7d6', cursor: 'pointer', font: `500 13.5px ${serif}`,
-          }}>
-            <span style={{ opacity: 0.75, minWidth: 15 }}>{s.toneOn ? '❚❚' : '▶'}</span>
-            <span style={{ minWidth: 0 }}>{ROOM_TONE.title}
-              <span style={{ display: 'block', font: `italic 400 11.5px ${serif}`, opacity: 0.6 }}>{ROOM_TONE.by} · {ROOM_TONE.license}</span>
-            </span>
-          </button>
-
-          <div style={{ color: GOLD, font: `600 11px ${serif}`, letterSpacing: 2.5, textTransform: 'uppercase', opacity: 0.8, padding: '9px 4px 7px', borderTop: `1px solid ${GOLD}22` }}>What Abby listens to</div>
-          {TRACKS.map((t, i) => (
-            <div key={t.spotify}>
-              <button onClick={() => { if (s.trackAt !== i && s.toneOn) toneStop(); museum.set({ trackAt: s.trackAt === i ? null : i }) }}
-                onMouseEnter={() => setHover('t' + i)} onMouseLeave={() => setHover(null)} style={{
-                  display: 'flex', gap: 9, width: '100%', textAlign: 'left', alignItems: 'baseline', padding: '7px 6px', borderRadius: 7,
-                  background: i === s.trackAt ? 'rgba(227,194,102,0.16)' : hover === 't' + i ? 'rgba(227,194,102,0.08)' : 'transparent',
-                  border: 'none', borderBottom: `1px solid ${GOLD}1f`, color: i === s.trackAt ? GOLD : '#efe7d6', cursor: 'pointer', font: `500 14px ${serif}`,
-                }}>
-                <span style={{ opacity: 0.6, font: `500 11px ${serif}`, minWidth: 15 }}>{String(i + 1).padStart(2, '0')}</span>
-                <span style={{ minWidth: 0 }}>{t.title}
-                  <span style={{ display: 'block', font: `italic 400 11.5px ${serif}`, opacity: 0.6 }}>{t.artist} · {t.album}</span>
-                </span>
-              </button>
-            </div>
-          ))}
-          <div style={{ padding: '9px 6px 2px', color: '#9b9078', font: `italic 400 11.5px ${serif}`, lineHeight: 1.5 }}>
-            These six play through Spotify, in the bar at the bottom of the screen.
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-/* ── Spotify bar. Lives at the Guide root, not inside the dock, so closing
-      the device does not unmount the iframe and cut the music short. ────── */
-function NowPlaying({ isMobile }) {
-  const s = useMuseum()
-  if (s.trackAt == null) return null
-  const t = TRACKS[s.trackAt]
-  return (
-    <div style={{
-      position: 'fixed', left: '50%', transform: 'translateX(-50%)', zIndex: 32,
-      ...(isMobile ? { top: 8 } : { bottom: 16 }), width: 'min(420px,94vw)',
-      borderRadius: 12, boxShadow: '0 12px 30px rgba(0,0,0,0.6)', animation: 'fadeIn .3s ease',
-    }}>
-      <iframe title={t.title} src={embedSrc(t)} width="100%" height="80"
-        allow="encrypted-media; clipboard-write; picture-in-picture"
-        style={{ border: 0, borderRadius: 12, display: 'block' }} />
-      <button onClick={() => museum.set({ trackAt: null })} aria-label="Stop the music" style={{
-        position: 'absolute', top: -9, right: -9, width: 25, height: 25, borderRadius: 25, cursor: 'pointer',
-        background: '#2c0a10', border: `1px solid ${GOLD}88`, color: GOLD, font: `500 12px ${serif}`, lineHeight: 1, padding: 0,
-      }}>✕</button>
-    </div>
-  )
-}
-
 /* ── the handheld audio-guide device shell ───────────────── */
 function Device({ children, big }) {
   return (
@@ -118,16 +29,11 @@ function Device({ children, big }) {
       boxShadow: '0 30px 70px rgba(0,0,0,0.6), inset 0 2px 5px rgba(255,255,255,0.12), inset 0 -3px 8px rgba(0,0,0,0.4)',
       fontFamily: serif, display: 'flex', flexDirection: 'column',
     }}>
-      {/* speaker grille + brand, with the music dock in the top right */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 9 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 9 }}>
-            {[0, 1, 2, 3, 4, 5].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: 6, background: '#2c0a10' }} />)}
-          </div>
-          <div style={{ textAlign: 'center', color: '#e9c9b0', font: `600 ${big ? 15 : 11}px ${serif}`, letterSpacing: big ? 4 : 1.6, opacity: 0.7, whiteSpace: 'nowrap', overflow: 'hidden' }}>MUSEUM · AUDIO GUIDE</div>
-        </div>
-        <MusicDock big={big} />
+      {/* speaker grille + brand */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 9 }}>
+        {[0, 1, 2, 3, 4, 5].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: 6, background: '#2c0a10' }} />)}
       </div>
+      <div style={{ textAlign: 'center', color: '#e9c9b0', font: `600 15px ${serif}`, letterSpacing: 4, opacity: 0.7, marginBottom: 9 }}>MUSEUM · AUDIO GUIDE</div>
       {/* screen */}
       <div style={{
         background: '#0f120e', border: `1px solid ${GOLD}55`, borderRadius: 16, padding: '18px 20px',
@@ -225,7 +131,7 @@ export default function Guide() {
   const advance = () => {
     const m = museum.get()
     if (m.phase === 'welcome') museum.set({ phase: 'howto' })
-    else if (m.phase === 'howto') { museum.set({ phase: 'explore' }); openGuide(); toneStart() }
+    else if (m.phase === 'howto') { museum.set({ phase: 'explore' }); openGuide() }
   }
   useEffect(() => {
     const cp = museum.get().cardPiece
@@ -282,8 +188,6 @@ export default function Guide() {
           </div>
         </div>
       )}
-
-      <NowPlaying isMobile={isMobile} />
 
       {/* teleport fade */}
       <div style={{ position: 'fixed', inset: 0, background: '#000', opacity: s.fade, pointerEvents: 'none', transition: 'opacity .42s ease', zIndex: 40 }} />
@@ -501,12 +405,12 @@ export default function Guide() {
 
       {/* hover label when near/looking at a painting (tap it to open) */}
       {!s.menu && !s.card && s.phase === 'explore' && s.focus && (
-        <button onClick={() => museum.set({ card: s.focus.wingId, cardPiece: s.focus.piece })} style={{ position: 'fixed', left: '50%', ...(isMobile ? { top: s.trackAt != null ? 104 : 84 } : { bottom: s.trackAt != null ? 116 : 64 }), transform: 'translateX(-50%)', zIndex: 23, maxWidth: '92vw', padding: 'clamp(11px,3vw,14px) clamp(18px,4vw,26px)', background: INK, border: `1px solid ${GOLD}77`, borderRadius: 11, color: GOLD, font: `500 clamp(15px,3.8vw,23px) ${serif}`, cursor: 'pointer', animation: 'fadeIn .25s ease', textAlign: 'center' }}>Tap each painting to see different projects</button>
+        <button onClick={() => museum.set({ card: s.focus.wingId, cardPiece: s.focus.piece })} style={{ position: 'fixed', left: '50%', ...(isMobile ? { top: 84 } : { bottom: 64 }), transform: 'translateX(-50%)', zIndex: 23, maxWidth: '92vw', padding: 'clamp(11px,3vw,14px) clamp(18px,4vw,26px)', background: INK, border: `1px solid ${GOLD}77`, borderRadius: 11, color: GOLD, font: `500 clamp(15px,3.8vw,23px) ${serif}`, cursor: 'pointer', animation: 'fadeIn .25s ease', textAlign: 'center' }}>Tap each painting to see different projects</button>
       )}
 
       {/* desktop-only bottom hint (hidden on mobile) */}
       {!isMobile && !s.menu && !s.card && s.phase === 'explore' && (
-        <div style={{ position: 'fixed', left: '50%', bottom: s.trackAt != null ? 110 : 22, transform: 'translateX(-50%)', zIndex: 20, pointerEvents: 'none', textAlign: 'center', color: '#efe7d6', opacity: 0.55, font: `500 13px ${serif}` }}>
+        <div style={{ position: 'fixed', left: '50%', bottom: 22, transform: 'translateX(-50%)', zIndex: 20, pointerEvents: 'none', textAlign: 'center', color: '#efe7d6', opacity: 0.55, font: `500 13px ${serif}` }}>
           WASD / arrows · drag to look · <b>M</b> audio guide · click a painting
         </div>
       )}
@@ -523,12 +427,7 @@ export default function Guide() {
       {/* mobile-only movement joystick (bottom-left) */}
       {isMobile && ready && !s.menu && !s.card && s.phase === 'explore' && <Joystick />}
 
-      <style>{`
-        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-        @keyframes spin{to{transform:rotate(360deg)}}
-        @media (max-width:560px){.mdock-title{display:none}}
-        @media (prefers-reduced-motion:reduce){*{animation:none!important}}
-      `}</style>
+      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`}</style>
     </>
   )
 }
