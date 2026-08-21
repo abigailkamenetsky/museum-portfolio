@@ -13,9 +13,8 @@ const state = {
   teleport: null,      // command consumed by the scene: { x, z, yaw, title }
   titleCard: null,     // wing title shown briefly after a teleport
   fade: 0,             // black overlay opacity 0..1 (teleport transitions)
-  trackAt: 0,          // index into TRACKS (music.js)
-  trackOn: false,      // is the playlist currently sounding
-  trackErr: false,     // the mp3 for trackAt is missing or refused to play
+  trackAt: null,       // index into TRACKS whose Spotify embed is open (music.js)
+  toneOn: false,       // the CC0 Chopin bed is looping
   musicOpen: false,    // the dock's track list is dropped down
 }
 
