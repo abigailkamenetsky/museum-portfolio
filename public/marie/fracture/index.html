@@ -1,0 +1,47 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Marie &mdash; fracture test</title>
+<style>
+ *{box-sizing:border-box} html,body{margin:0;background:#000;color:#cfc6b4}
+ body{font-family:"Iowan Old Style",Palatino,Georgia,serif;padding:34px 16px 70px;-webkit-font-smoothing:antialiased}
+ h1{font-weight:400;font-size:clamp(22px,3vw,31px);text-align:center;margin:0 0 8px}
+ .kick{font-family:ui-monospace,Menlo,monospace;font-size:10px;letter-spacing:.32em;
+   text-transform:uppercase;color:#8a7a52;text-align:center;margin:0 0 22px}
+ .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:26px;max-width:1180px;margin:0 auto}
+ figure{margin:0} img{display:block;width:100%;height:auto;border:1px solid #241f16;border-radius:3px}
+ figcaption{font-size:13.5px;color:#8d846f;line-height:1.6;margin-top:11px}
+ figcaption b{color:#c9a24e;font-weight:400}
+ .note{max-width:64ch;margin:34px auto 0;font-size:14.5px;line-height:1.75;color:#8d846f}
+ .note b{color:#cfc6b4;font-weight:400}
+ .stat{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#7d7460;
+   background:#0d0b07;border:1px solid #241f16;border-radius:4px;padding:13px 16px;
+   max-width:64ch;margin:20px auto 0;line-height:1.85}
+ a{color:#c9a24e}
+</style></head><body>
+<p class="kick">Abby&rsquo;s Museum &middot; milestone 3</p>
+<h1>Fracture test</h1>
+<div class="grid">
+ <figure><img src="intact.jpg" alt="Marie intact">
+  <figcaption><b>Intact.</b> 300k triangles, the source we cut.</figcaption></figure>
+ <figure><img src="shards.jpg" alt="30 fragments exploded">
+  <figcaption><b>30 fragments, exploded.</b> Each pushed out along its own axis from the centre
+  and rotated slightly, so you can see every piece.</figcaption></figure>
+</div>
+<div class="stat">
+source&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;300,000 tris<br>
+fracture&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;30 fragments in 0.9s<br>
+total tris&nbsp;&nbsp;&nbsp;&nbsp;334,986 &nbsp;(only +12%)<br>
+closed solids&nbsp;12 / 30<br>
+largest shard&nbsp;66,738 tris &nbsp;&middot;&nbsp; smallest 44
+</div>
+<p class="note"><b>The good pieces are there.</b> The curls at the top, the drapery folds mid-left
+and the base disc at the bottom are all recognisably her.</p>
+<p class="note"><b>The problem is everything else.</b> Most fragments are big flat wedges. The scan
+is a closed <i>solid</i>, so cutting it into 30 cells gives each piece a thin rind of real surface
+and enormous flat interior faces. From outside you mostly see the flat faces. Real marble and real
+plaster break into curved shell pieces instead, which is what the storyboard depicts.</p>
+<p class="note"><b>The fix:</b> hollow her into a 2&ndash;3&nbsp;mm shell before cutting, raise the
+cell count to 60&ndash;80, and seed the cells deliberately in Blender so a face fragment and a curls
+fragment are guaranteed rather than hoped for.</p>
+<p class="note"><a href="../">&larr; back to the intact statue</a></p>
+</body></html>
