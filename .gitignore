@@ -31,3 +31,4 @@ public/audio/*.mp3
 public/audio/*.m4a
 public/audio-original/
 !public/preview/audio/
+!public/marie/
