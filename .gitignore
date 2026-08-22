@@ -25,3 +25,8 @@ public/museum/abby-museum-mesh.glb
 # abby-museum-collider.glb.
 public/museum/v4-mesh.glb
 public/museum/v4-pano.png
+
+# audio staged locally; not published until the 2D museum ships
+public/audio/*.mp3
+public/audio/*.m4a
+public/audio-original/
