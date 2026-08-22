@@ -52,6 +52,19 @@ controls.enableDamping=true; controls.dampingFactor=0.075; controls.enablePan=fa
 controls.enableZoom=false; controls.rotateSpeed=0.6;
 controls.minPolarAngle=Math.PI*0.30; controls.maxPolarAngle=Math.PI*0.70;
 
+// soft round sprite, drawn once. untextured points are hard squares, which
+// is exactly why the dust read as white confetti.
+function puff(inner, outer){
+  const c=document.createElement('canvas'); c.width=c.height=64;
+  const g=c.getContext('2d');
+  const grd=g.createRadialGradient(32,32,0,32,32,32);
+  grd.addColorStop(0,inner); grd.addColorStop(0.35,outer); grd.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle=grd; g.fillRect(0,0,64,64);
+  const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; return t;
+}
+const TEX_DUST=puff('rgba(240,232,214,0.55)','rgba(214,200,176,0.18)');
+const TEX_MOTE=puff('rgba(226,220,206,0.42)','rgba(180,172,155,0.10)');
+
 // ── speed streaks: the void has nothing to blur, so rush motes past the lens ──
 const NS=1500;
 const sg=new THREE.BufferGeometry();
@@ -61,7 +74,7 @@ for(let i=0;i<NS;i++){
   sp[i*3]=Math.cos(a)*r; sp[i*3+1]=(Math.random()-0.5)*4.0; sp[i*3+2]=Math.sin(a)*r-0.1;
 }
 sg.setAttribute('position',new THREE.BufferAttribute(sp,3));
-const sm=new THREE.PointsMaterial({color:0xcfc7b6,size:0.010,transparent:true,opacity:0,
+const sm=new THREE.PointsMaterial({map:TEX_MOTE,size:0.030,transparent:true,opacity:0,
   depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true});
 const streakPts=new THREE.Points(sg,sm); scene.add(streakPts);
 function streaks(dt,k,y){
@@ -74,30 +87,31 @@ function streaks(dt,k,y){
       sp[i*3]=Math.cos(a)*r; sp[i*3+2]=Math.sin(a)*r-0.2; }
   }
   sg.attributes.position.needsUpdate=true;
-  sm.size=0.010+0.030*k;
+  sm.size=0.026+0.055*k;
 }
 
 // ── dust: cheap additive sprites, thousands of them cost nothing ──────
-const DUST=1400;
+const DUST=1600;
 const dg=new THREE.BufferGeometry();
 const dp=new Float32Array(DUST*3), dv=new Float32Array(DUST*3), dl=new Float32Array(DUST);
 dg.setAttribute('position',new THREE.BufferAttribute(dp,3));
-const dm=new THREE.PointsMaterial({color:0xe8e0cf,size:0.016,transparent:true,opacity:0,
-  depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true});
-const dust=new THREE.Points(dg,dm); scene.add(dust);
+const dm=new THREE.PointsMaterial({map:TEX_DUST,size:0.055,transparent:true,opacity:0,
+  depthWrite:false,blending:THREE.NormalBlending,sizeAttenuation:true});
+const dust=new THREE.Points(dg,dm); dust.renderOrder=-1; scene.add(dust);
 function burst(y){
   for(let i=0;i<DUST;i++){
-    const a=Math.random()*Math.PI*2, r=Math.random()**0.5*0.10;
-    dp[i*3]=Math.cos(a)*r; dp[i*3+1]=y+Math.random()*0.05; dp[i*3+2]=Math.sin(a)*r;
-    const s=0.45+Math.random()*1.5;
-    dv[i*3]=Math.cos(a)*s*0.55; dv[i*3+1]=Math.random()*1.25+0.15; dv[i*3+2]=Math.sin(a)*s*0.55;
+    const a=Math.random()*Math.PI*2, r=Math.random()**0.6*0.13;
+    dp[i*3]=Math.cos(a)*r; dp[i*3+1]=y+Math.random()*0.04; dp[i*3+2]=Math.sin(a)*r;
+    // low and wide first, the way a real impact throws a skirt of dust
+    const sp2=0.6+Math.random()*2.2;
+    dv[i*3]=Math.cos(a)*sp2; dv[i*3+1]=0.08+Math.random()*0.85; dv[i*3+2]=Math.sin(a)*sp2;
     dl[i]=0.6+Math.random()*0.9;
   }
-  dg.attributes.position.needsUpdate=true; dm.opacity=0.9;
+  dg.attributes.position.needsUpdate=true; dm.opacity=0.30; dm.size=0.05;
 }
 
 let bust=null, shards=[], group=null, state='LOADING', t0=0, fellTo=0;
-let camY=CAM0.y;
+let camY=CAM0.y, INTACT_H=1;
 const FLOOR=-0.62;
 const draco=new DRACOLoader(); draco.setDecoderPath('../vendor/draco/');
 const L=new GLTFLoader(); L.setDRACOLoader(draco);
@@ -107,10 +121,16 @@ L.load('./intact.glb',(g)=>{
   const b=new THREE.Box3().setFromObject(g.scene), c=new THREE.Vector3(); b.getCenter(c);
   g.scene.position.sub(c);
   bust=new THREE.Group(); bust.add(g.scene); scene.add(bust);
+  const bs=new THREE.Vector3(); b.getSize(bs); INTACT_H=bs.y;
   L.load('./shards.glb',(s)=>{
     const b2=new THREE.Box3().setFromObject(s.scene), c2=new THREE.Vector3(); b2.getCenter(c2);
     s.scene.position.sub(c2);
     group=new THREE.Group(); group.add(s.scene); group.visible=false; scene.add(group);
+    // the shard export came through a different pipeline; match it to the bust
+    const s2=new THREE.Vector3(); b2.getSize(s2);
+    const fit = s2.y > 1e-6 ? INTACT_H / s2.y : 1;
+    group.scale.setScalar(fit);
+    console.log('shard fit scale', fit.toFixed(4));
     s.scene.traverse(o=>{
       if(!o.isMesh) return; o.material=marble2;
       const wp=new THREE.Vector3(); o.getWorldPosition(wp);
@@ -119,10 +139,10 @@ L.load('./intact.glb',(g)=>{
       const hero=/^hero/i.test(o.name);
       // heroes are art-directed toward the camera; the rest is constrained randomness
       const v=hero
-        ? new THREE.Vector3(d.x*1.5+(Math.random()-.5)*.5, 0.9+Math.random()*0.8, 2.3+Math.random()*1.4)
-        : new THREE.Vector3(d.x*(1.6+Math.random()*2.4), Math.abs(d.y)*1.4+Math.random()*2.1, d.z*(1.4+Math.random()*2.0)+Math.random()*0.9);
-      shards.push({m:o, home:o.position.clone(), v, hero,
-        w:new THREE.Vector3((Math.random()-.5)*9,(Math.random()-.5)*9,(Math.random()-.5)*9),
+        ? new THREE.Vector3(d.x*0.55+(Math.random()-.5)*0.30, 0.62+Math.random()*0.42, 0.95+Math.random()*0.65)
+        : new THREE.Vector3(d.x*(0.45+Math.random()*0.85), 0.55+Math.random()*1.05, d.z*(0.40+Math.random()*0.70)+Math.random()*0.30);
+      shards.push({m:o, vel:v.clone(), rest:false, home:o.position.clone(), v, hero,
+        w:new THREE.Vector3((Math.random()-.5)*4.2,(Math.random()-.5)*4.2,(Math.random()-.5)*4.2),
         delay: hero ? 0 : Math.random()*0.16});          // staggered, not one frame
     });
     state='IDLE'; document.getElementById('hint').classList.add('in');
@@ -151,7 +171,8 @@ document.getElementById('again').addEventListener('click',()=>{
   bust.visible=true; bust.position.set(0,0,0); bust.rotation.set(0,0,0);
   group.visible=false; dm.opacity=0; sm.opacity=0; glow.intensity=0;
   cam.position.copy(CAM0); camY=CAM0.y; cam.position.x=0; cam.lookAt(0,0,0);
-  for(const s of shards){ s.m.position.copy(s.home); s.m.rotation.set(0,0,0); }
+  for(const s of shards){ s.m.position.copy(s.home); s.m.rotation.set(0,0,0);
+    s.rest=false; s.vel.copy(s.v); s.w.set((Math.random()-.5)*4.2,(Math.random()-.5)*4.2,(Math.random()-.5)*4.2); }
   controls.enabled=true; state='IDLE';
   document.getElementById('hint').classList.remove('out');
   document.getElementById('again').classList.remove('show');
@@ -188,23 +209,34 @@ let f=0,last=performance.now(); const clock=new THREE.Clock();
     const st=t-0.65;
     for(const s of shards){
       const lt=st-s.delay; if(lt<=0) continue;
-      s.m.position.x=s.home.x+s.v.x*lt;
-      s.m.position.y=s.home.y+s.v.y*lt-0.5*9.2*lt*lt;
-      s.m.position.z=s.home.z+s.v.z*lt;
+      if(s.rest) continue;
+      s.vel.y-=5.6*dt;                                  // gravity
+      s.m.position.addScaledVector(s.vel, dt);
       s.m.rotation.x+=s.w.x*dt; s.m.rotation.y+=s.w.y*dt; s.m.rotation.z+=s.w.z*dt;
+      const floorY = -0.14;                             // group-local floor
+      if(s.m.position.y < floorY){
+        s.m.position.y = floorY;
+        if(Math.abs(s.vel.y) < 0.35){ s.rest=true; s.vel.set(0,0,0); s.w.multiplyScalar(0); }
+        else { s.vel.y*=-0.34; s.vel.x*=0.62; s.vel.z*=0.62; s.w.multiplyScalar(0.55); }
+      }
     }
     for(let i=0;i<DUST;i++){
       dp[i*3]+=dv[i*3]*dt; dp[i*3+1]+=dv[i*3+1]*dt; dp[i*3+2]+=dv[i*3+2]*dt;
-      dv[i*3+1]-=2.4*dt; dv[i*3]*=0.985; dv[i*3+2]*=0.985;
+      dv[i*3+1]-=1.05*dt;                    // hangs, rather than falling like gravel
+      dv[i*3]*=0.955; dv[i*3+2]*=0.955; dv[i*3+1]*=0.985;
     }
     dg.attributes.position.needsUpdate=true;
-    dm.opacity=Math.max(0,0.9*(1-st/1.7));
+    dm.opacity=Math.max(0,0.30*(1-st/1.6));
+    dm.size=0.045+st*0.075;   // the cloud expands as it thins
     sm.opacity=Math.max(0,sm.opacity-dt*3.6);
     glow.intensity+=(2.2-glow.intensity)*Math.min(1,dt*3.0);
-    const rest=CAM0.y+FLOOR*0.55;
-    cam.position.y+=(rest-cam.position.y)*Math.min(1,dt*2.2);
+    // pull back and rise, so the blast is framed instead of swallowing the lens
+    const restY=CAM0.y+FLOOR*1.02, restZ=CAM0.z+0.62;
+    const e=Math.min(1,dt*1.9);
+    cam.position.y+=(restY-cam.position.y)*e;
+    cam.position.z+=(restZ-cam.position.z)*e;
     cam.position.x*=0.88;
-    cam.lookAt(0,FLOOR+0.10,0);
+    cam.lookAt(0,FLOOR-0.14,0);
     if(st>2.0){ state='COMPLETE'; document.getElementById('again').classList.add('show'); }
   }
 
@@ -218,7 +250,6 @@ function impact(){
   state='SHATTER';
   bust.visible=false;
   group.position.set(0,fellTo,0); group.visible=true;
-  for(const s of shards) s.home.copy(s.m.position);
   burst(0);
   cam.position.y-=0.05; camY=cam.position.y; glow.intensity=14;   // micro kick + flash
 }
