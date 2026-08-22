@@ -1,47 +1,114 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex,nofollow"><title>Marie &mdash; fracture test</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow"><title>Marie &mdash; fracture, interactive</title>
 <style>
- *{box-sizing:border-box} html,body{margin:0;background:#000;color:#cfc6b4}
- body{font-family:"Iowan Old Style",Palatino,Georgia,serif;padding:34px 16px 70px;-webkit-font-smoothing:antialiased}
- h1{font-weight:400;font-size:clamp(22px,3vw,31px);text-align:center;margin:0 0 8px}
- .kick{font-family:ui-monospace,Menlo,monospace;font-size:10px;letter-spacing:.32em;
-   text-transform:uppercase;color:#8a7a52;text-align:center;margin:0 0 22px}
- .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:26px;max-width:1180px;margin:0 auto}
- figure{margin:0} img{display:block;width:100%;height:auto;border:1px solid #241f16;border-radius:3px}
- figcaption{font-size:13.5px;color:#8d846f;line-height:1.6;margin-top:11px}
- figcaption b{color:#c9a24e;font-weight:400}
- .note{max-width:64ch;margin:34px auto 0;font-size:14.5px;line-height:1.75;color:#8d846f}
- .note b{color:#cfc6b4;font-weight:400}
- .stat{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#7d7460;
-   background:#0d0b07;border:1px solid #241f16;border-radius:4px;padding:13px 16px;
-   max-width:64ch;margin:20px auto 0;line-height:1.85}
- a{color:#c9a24e}
+ *{box-sizing:border-box} html,body{margin:0;height:100%;background:#000;overflow:hidden}
+ body{font-family:"Iowan Old Style",Palatino,Georgia,serif;color:#cfc6b4;touch-action:none}
+ canvas{display:block;position:fixed;inset:0}
+ .hud{position:fixed;left:14px;top:12px;z-index:3;color:#5a5348;font-size:11px;line-height:1.75;
+   font-family:ui-monospace,Menlo,monospace}
+ .hud b{color:#9a8b63;font-weight:400}
+ .panel{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;z-index:4;
+   display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:center;
+   background:rgba(10,9,6,.82);border:1px solid #2b2419;border-radius:11px;padding:12px 18px;
+   backdrop-filter:blur(6px);max-width:94vw}
+ .panel label{font-size:12px;letter-spacing:.12em;color:#8d846f;text-transform:uppercase}
+ input[type=range]{width:clamp(120px,22vw,220px);accent-color:#c9a24e}
+ button{font-family:inherit;font-size:12.5px;letter-spacing:.1em;cursor:pointer;
+   background:#171208;color:#c9a24e;border:1px solid #3d3524;border-radius:6px;padding:7px 13px}
+ button:hover{border-color:#c9a24e;color:#e8ce93}
+ button.on{background:#2a1f0c;color:#e8ce93;border-color:#c9a24e}
+ .tip{position:fixed;left:0;right:0;bottom:96px;text-align:center;z-index:3;
+   font-size:13px;color:#6d6555;letter-spacing:.08em}
+ a{color:#8d7a4a;font-size:12px}
 </style></head><body>
-<p class="kick">Abby&rsquo;s Museum &middot; milestone 3</p>
-<h1>Fracture test</h1>
-<div class="grid">
- <figure><img src="intact.jpg" alt="Marie intact">
-  <figcaption><b>Intact.</b> 300k triangles, the source we cut.</figcaption></figure>
- <figure><img src="shards.jpg" alt="30 fragments exploded">
-  <figcaption><b>30 fragments, exploded.</b> Each pushed out along its own axis from the centre
-  and rotated slightly, so you can see every piece.</figcaption></figure>
+<div class="hud" id="hud">loading&hellip;</div>
+<div class="tip">drag to orbit &middot; scroll to zoom</div>
+<div class="panel">
+  <label>explode</label><input type="range" id="ex" min="0" max="100" value="42">
+  <button id="spin" class="on">spin</button>
+  <button id="iso">front view</button>
+  <button id="hero">colour by size</button>
+  <a href="../">&larr; statue</a>
 </div>
-<div class="stat">
-source&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;300,000 tris<br>
-fracture&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;30 fragments in 0.9s<br>
-total tris&nbsp;&nbsp;&nbsp;&nbsp;334,986 &nbsp;(only +12%)<br>
-closed solids&nbsp;12 / 30<br>
-largest shard&nbsp;66,738 tris &nbsp;&middot;&nbsp; smallest 44
-</div>
-<p class="note"><b>The good pieces are there.</b> The curls at the top, the drapery folds mid-left
-and the base disc at the bottom are all recognisably her.</p>
-<p class="note"><b>The problem is everything else.</b> Most fragments are big flat wedges. The scan
-is a closed <i>solid</i>, so cutting it into 30 cells gives each piece a thin rind of real surface
-and enormous flat interior faces. From outside you mostly see the flat faces. Real marble and real
-plaster break into curved shell pieces instead, which is what the storyboard depicts.</p>
-<p class="note"><b>The fix:</b> hollow her into a 2&ndash;3&nbsp;mm shell before cutting, raise the
-cell count to 60&ndash;80, and seed the cells deliberately in Blender so a face fragment and a curls
-fragment are guaranteed rather than hoped for.</p>
-<p class="note"><a href="../">&larr; back to the intact statue</a></p>
-</body></html>
+<script type="importmap">
+{"imports":{"three":"../vendor/three.module.js","three/addons/":"../vendor/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from '../vendor/loaders/GLTFLoader.js';
+import { DRACOLoader } from '../vendor/loaders/DRACOLoader.js';
+import { OrbitControls } from '../vendor/controls/OrbitControls.js';
+
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight); renderer.setClearColor(0x000000,1);
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+document.body.appendChild(renderer.domElement);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,0.05,80);
+camera.position.set(0,0.1,3.0);
+const key=new THREE.DirectionalLight(0xfff8ef,2.4); key.position.set(-1.4,1.2,1.6); scene.add(key);
+const fill=new THREE.DirectionalLight(0xd8e4ff,0.5); fill.position.set(1.6,0.2,1.0); scene.add(fill);
+const rim=new THREE.DirectionalLight(0xfff2dd,1.3); rim.position.set(0.8,0.9,-1.7); scene.add(rim);
+scene.add(new THREE.AmbientLight(0x35363c,0.8));
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true; controls.dampingFactor=0.08; controls.enablePan=false;
+controls.target.set(0,0,0);
+
+const group=new THREE.Group(); scene.add(group);
+const shards=[]; let spinning=true, coloured=false;
+const plain=new THREE.MeshStandardMaterial({color:0xdcd8d1,roughness:0.46,metalness:0});
+
+const draco=new DRACOLoader(); draco.setDecoderPath('../vendor/draco/');
+const loader=new GLTFLoader(); loader.setDRACOLoader(draco);
+loader.load('./shards.glb',(g)=>{
+  const box=new THREE.Box3().setFromObject(g.scene), c=new THREE.Vector3(); box.getCenter(c);
+  let tris=0;
+  g.scene.traverse(o=>{
+    if(!o.isMesh) return;
+    const geo=o.geometry; geo.computeBoundingSphere();
+    const n=(geo.index?geo.index.count:geo.attributes.position.count)/3; tris+=n;
+    o.material=plain;
+    const wp=new THREE.Vector3(); o.getWorldPosition(wp); wp.sub(c);
+    const dir=wp.clone(); if(dir.length()<1e-5) dir.set(Math.random()-.5,Math.random()-.5,Math.random()-.5);
+    shards.push({mesh:o, home:o.position.clone(), dir:dir.normalize(), tris:n,
+      r:geo.boundingSphere.radius, spin:new THREE.Vector3((Math.random()-.5)*.5,(Math.random()-.5)*.5,(Math.random()-.5)*.5)});
+  });
+  g.scene.position.sub(c); group.add(g.scene);
+  const rr=shards.map(s=>s.r).sort((a,b)=>b-a);
+  document.getElementById('hud').innerHTML=
+    '<b>fragments</b> '+shards.length+
+    '<br><b>triangles</b> '+Math.round(tris).toLocaleString()+
+    '<br><b>glb</b> 1.60 MB draco'+
+    '<br><b>largest</b> '+rr[0].toFixed(3)+'u  <b>smallest</b> '+rr[rr.length-1].toFixed(4)+'u'+
+    '<br><b>fps</b> <span id="fps">--</span>';
+  apply();
+});
+
+function apply(){
+  const k=+document.getElementById('ex').value/100;
+  for(const s of shards){
+    s.mesh.position.copy(s.home).addScaledVector(s.dir, k*0.9);
+    if(coloured){
+      const t=Math.min(1,s.r/0.35);
+      s.mesh.material=new THREE.MeshStandardMaterial({
+        color:new THREE.Color().setHSL(0.09+0.5*(1-t),0.55,0.35+0.35*t),roughness:.5});
+    } else s.mesh.material=plain;
+  }
+}
+document.getElementById('ex').addEventListener('input',apply);
+document.getElementById('spin').addEventListener('click',e=>{spinning=!spinning;e.target.classList.toggle('on',spinning);});
+document.getElementById('iso').addEventListener('click',()=>{
+  camera.position.set(0,0.1,3.0); controls.target.set(0,0,0); group.rotation.y=0;});
+document.getElementById('hero').addEventListener('click',e=>{coloured=!coloured;e.target.classList.toggle('on',coloured);apply();});
+
+let f=0,last=performance.now();
+(function tick(){requestAnimationFrame(tick);
+ if(spinning) group.rotation.y+=0.0035;
+ controls.update(); renderer.render(scene,camera);
+ f++; const now=performance.now();
+ if(now-last>1000){const el=document.getElementById('fps'); if(el)el.textContent=Math.round(f*1000/(now-last)); f=0; last=now;}
+})();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+</script></body></html>
