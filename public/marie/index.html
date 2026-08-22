@@ -39,12 +39,13 @@ import { OrbitControls } from './vendor/controls/OrbitControls.js';
 
 const hud = document.getElementById('hud');
 const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false, powerPreference:'high-performance' });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2.5));
 renderer.setSize(innerWidth, innerHeight);
 renderer.setClearColor(0x000000, 1);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
-renderer.shadowMap.enabled = false;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
@@ -55,18 +56,25 @@ camera.position.set(0, 0.06, 1.92);
 
 // the three lights from the Blender look: soft key upper left, cool dim fill
 // opposite, low rim behind for separation. no environment, no floor.
-const key = new THREE.DirectionalLight(0xfff8ef, 2.5);
-key.position.set(-1.35, 1.15, 1.55); scene.add(key);
+const key = new THREE.DirectionalLight(0xfff8ef, 2.2);
+key.position.set(-1.35, 1.15, 1.55);
+key.castShadow = true;
+key.shadow.mapSize.set(4096, 4096);
+key.shadow.radius = 3; key.shadow.bias = -0.00015; key.shadow.normalBias = 0.035;
+const c = key.shadow.camera; c.left=-0.8; c.right=0.8; c.top=0.9; c.bottom=-0.9;
+c.near=0.2; c.far=6; c.updateProjectionMatrix();
+scene.add(key);
 const fill = new THREE.DirectionalLight(0xd8e4ff, 0.42);
 fill.position.set(1.55, 0.18, 0.95); scene.add(fill);
 const rim = new THREE.DirectionalLight(0xfff2dd, 1.15);
 rim.position.set(0.75, 0.85, -1.6); scene.add(rim);
-scene.add(new THREE.AmbientLight(0x2a2b30, 0.55));
+scene.add(new THREE.AmbientLight(0x33343a, 0.72));
 
 const marble = new THREE.MeshPhysicalMaterial({
-  color: 0xdad6cf, roughness: 0.44, metalness: 0.0,
-  clearcoat: 0.10, clearcoatRoughness: 0.7,
-  sheen: 0.22, sheenColor: new THREE.Color(0xfffaf0), sheenRoughness: 0.9,
+  color: 0xdcd8d1, roughness: 0.46, metalness: 0.0,
+  vertexColors: true,                       // baked AO rides in the mesh
+  clearcoat: 0.08, clearcoatRoughness: 0.75,
+  sheen: 0.26, sheenColor: new THREE.Color(0xfffaf0), sheenRoughness: 0.88,
 });
 
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -85,8 +93,8 @@ loader.load('./marie.glb', (gltf) => {
   let tris = 0, verts = 0;
   gltf.scene.traverse(o => {
     if (!o.isMesh) return;
-    o.material = marble; o.castShadow = false; o.receiveShadow = false;
-    const g = o.geometry; g.computeVertexNormals();
+    o.material = marble; o.castShadow = true; o.receiveShadow = true;
+    const g = o.geometry;   // keep the baked smooth-by-angle normals
     verts += g.attributes.position.count;
     tris += (g.index ? g.index.count : g.attributes.position.count) / 3;
   });
@@ -100,7 +108,7 @@ loader.load('./marie.glb', (gltf) => {
   requestAnimationFrame(()=>document.getElementById('hint').classList.add('in'));
   hud.innerHTML = '<b>triangles</b> '+Math.round(tris).toLocaleString()+
     '<br><b>vertices</b> '+verts.toLocaleString()+
-    '<br><b>glb</b> 0.71 MB draco'+
+    '<br><b>glb</b> 2.57 MB draco + baked AO'+
     '<br><b>load+decode</b> '+Math.round(load)+' ms'+
     '<br><b>fps</b> <span id="fps">--</span>';
 }, undefined, (e) => { document.getElementById('load').textContent = 'FAILED: '+e; });
