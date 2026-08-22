@@ -30,3 +30,4 @@ public/museum/v4-pano.png
 public/audio/*.mp3
 public/audio/*.m4a
 public/audio-original/
+!public/preview/audio/
