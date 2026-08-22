@@ -11,6 +11,14 @@
  .hud{position:fixed;left:14px;top:12px;z-index:3;color:#544d42;font-size:11px;line-height:1.75;
    font-family:ui-monospace,Menlo,monospace}
  .hud b{color:#8d7f5c;font-weight:400}
+ #tl{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:9;display:flex;
+   gap:9px;align-items:center;background:rgba(9,8,5,.9);border:1px solid #2b2419;border-radius:9px;
+   padding:9px 13px;font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#c9a24e}
+ #tl button{font:inherit;background:#171208;color:#c9a24e;border:1px solid #3d3524;border-radius:5px;
+   padding:5px 9px;cursor:pointer}
+ #tl button:hover{border-color:#c9a24e}
+ #tl input{width:min(360px,46vw);accent-color:#c9a24e}
+ #fn{min-width:96px;letter-spacing:.08em}
  .again{position:fixed;right:14px;top:12px;z-index:4;font-family:inherit;font-size:12px;
    letter-spacing:.1em;background:#171208;color:#c9a24e;border:1px solid #3d3524;border-radius:6px;
    padding:7px 13px;cursor:pointer;opacity:0;transition:opacity .5s;pointer-events:none}
@@ -28,12 +36,17 @@ import { GLTFLoader } from '../vendor/loaders/GLTFLoader.js';
 import { DRACOLoader } from '../vendor/loaders/DRACOLoader.js';
 import { OrbitControls } from '../vendor/controls/OrbitControls.js';
 
+// abby-museum-marie-v1
+let _seed=0x9E3779B9;
+function rnd(){ _seed^=_seed<<13; _seed^=_seed>>>17; _seed^=_seed<<5; return ((_seed>>>0)/4294967296); }
+const FPS=24, LAST=96, DUR=LAST/FPS;      // the 97-frame review grid
+
 const R=new THREE.WebGLRenderer({antialias:true});
 R.setPixelRatio(Math.min(devicePixelRatio,2)); R.setSize(innerWidth,innerHeight);
 R.setClearColor(0x000000,1); R.toneMapping=THREE.ACESFilmicToneMapping;
 document.body.appendChild(R.domElement);
 const scene=new THREE.Scene();
-const cam=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,0.05,80);
+const cam=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,0.012,80);
 const CAM0=new THREE.Vector3(0,0.06,1.92); cam.position.copy(CAM0);
 
 // point lights, not directional: she must fall AWAY from them and dim
@@ -70,8 +83,8 @@ const NS=1500;
 const sg=new THREE.BufferGeometry();
 const sp=new Float32Array(NS*3);
 for(let i=0;i<NS;i++){
-  const a=Math.random()*Math.PI*2, r=0.30+Math.random()*2.2;
-  sp[i*3]=Math.cos(a)*r; sp[i*3+1]=(Math.random()-0.5)*4.0; sp[i*3+2]=Math.sin(a)*r-0.1;
+  const a=rnd()*Math.PI*2, r=0.30+rnd()*2.2;
+  sp[i*3]=Math.cos(a)*r; sp[i*3+1]=(rnd()-0.5)*4.0; sp[i*3+2]=Math.sin(a)*r-0.1;
 }
 sg.setAttribute('position',new THREE.BufferAttribute(sp,3));
 const sm=new THREE.PointsMaterial({map:TEX_MOTE,size:0.030,transparent:true,opacity:0,
@@ -83,7 +96,7 @@ function streaks(dt,k,y){
   for(let i=0;i<NS;i++){
     sp[i*3+1]+=(9.0+k*30)*dt;             // rush upward past the lens
     if(sp[i*3+1]>1.7){ sp[i*3+1]=-1.7;
-      const a=Math.random()*Math.PI*2, r=0.25+Math.random()*1.5;
+      const a=rnd()*Math.PI*2, r=0.25+rnd()*1.5;
       sp[i*3]=Math.cos(a)*r; sp[i*3+2]=Math.sin(a)*r-0.2; }
   }
   sg.attributes.position.needsUpdate=true;
@@ -93,19 +106,20 @@ function streaks(dt,k,y){
 // ── dust: cheap additive sprites, thousands of them cost nothing ──────
 const DUST=1600;
 const dg=new THREE.BufferGeometry();
-const dp=new Float32Array(DUST*3), dv=new Float32Array(DUST*3), dl=new Float32Array(DUST);
+const dp=new Float32Array(DUST*3), dv=new Float32Array(DUST*3), dh=new Float32Array(DUST*3), dl=new Float32Array(DUST);
 dg.setAttribute('position',new THREE.BufferAttribute(dp,3));
 const dm=new THREE.PointsMaterial({map:TEX_DUST,size:0.055,transparent:true,opacity:0,
   depthWrite:false,blending:THREE.NormalBlending,sizeAttenuation:true});
 const dust=new THREE.Points(dg,dm); dust.renderOrder=-1; scene.add(dust);
 function burst(y){
   for(let i=0;i<DUST;i++){
-    const a=Math.random()*Math.PI*2, r=Math.random()**0.6*0.13;
-    dp[i*3]=Math.cos(a)*r; dp[i*3+1]=y+Math.random()*0.04; dp[i*3+2]=Math.sin(a)*r;
+    const a=rnd()*Math.PI*2, r=rnd()**0.6*0.13;
+    dh[i*3]=Math.cos(a)*r; dh[i*3+1]=y+rnd()*0.04; dh[i*3+2]=Math.sin(a)*r;
+    dp[i*3]=dh[i*3]; dp[i*3+1]=dh[i*3+1]; dp[i*3+2]=dh[i*3+2];
     // low and wide first, the way a real impact throws a skirt of dust
-    const sp2=0.6+Math.random()*2.2;
-    dv[i*3]=Math.cos(a)*sp2; dv[i*3+1]=0.08+Math.random()*0.85; dv[i*3+2]=Math.sin(a)*sp2;
-    dl[i]=0.6+Math.random()*0.9;
+    const sp2=0.6+rnd()*2.2;
+    dv[i*3]=Math.cos(a)*sp2; dv[i*3+1]=0.08+rnd()*0.85; dv[i*3+2]=Math.sin(a)*sp2;
+    dl[i]=0.6+rnd()*0.9;
   }
   dg.attributes.position.needsUpdate=true; dm.opacity=0.30; dm.size=0.05;
 }
@@ -134,16 +148,21 @@ L.load('./intact.glb',(g)=>{
     s.scene.traverse(o=>{
       if(!o.isMesh) return; o.material=marble2;
       const wp=new THREE.Vector3(); o.getWorldPosition(wp);
-      const d=wp.clone().sub(group.position); if(d.length()<1e-5) d.set(Math.random()-.5,Math.random()-.5,Math.random()-.5);
+      const d=wp.clone().sub(group.position); if(d.length()<1e-5) d.set(rnd()-.5,rnd()-.5,rnd()-.5);
       d.normalize();
       const hero=/^hero/i.test(o.name);
       // heroes are art-directed toward the camera; the rest is constrained randomness
-      const v=hero
-        ? new THREE.Vector3(d.x*0.55+(Math.random()-.5)*0.30, 0.62+Math.random()*0.42, 0.95+Math.random()*0.65)
-        : new THREE.Vector3(d.x*(0.45+Math.random()*0.85), 0.55+Math.random()*1.05, d.z*(0.40+Math.random()*0.70)+Math.random()*0.30);
-      shards.push({m:o, vel:v.clone(), rest:false, home:o.position.clone(), v, hero,
-        w:new THREE.Vector3((Math.random()-.5)*4.2,(Math.random()-.5)*4.2,(Math.random()-.5)*4.2),
-        delay: hero ? 0 : Math.random()*0.16});          // staggered, not one frame
+      // heroes are aimed straight past the lens so they wipe the frame;
+      // roughly half the debris follows them, the rest scatters and falls
+      const toCam = hero || rnd() < 0.55;
+      const v = hero
+        ? new THREE.Vector3((rnd()-.5)*2.6, 0.9+rnd()*1.5, 4.6+rnd()*3.0)
+        : toCam
+          ? new THREE.Vector3(d.x*(1.1+rnd()*2.2), 0.7+rnd()*2.0, 2.6+rnd()*4.4)
+          : new THREE.Vector3(d.x*(1.4+rnd()*2.6), 1.0+rnd()*2.4, d.z*(0.8+rnd()*1.6)-0.4);
+      shards.push({m:o, dir:d.clone(), vel:v.clone(), rest:false, home:o.position.clone(), v, hero,
+        w:new THREE.Vector3((rnd()-.5)*7.5,(rnd()-.5)*7.5,(rnd()-.5)*7.5),
+        delay: hero ? 0 : rnd()*0.16});          // staggered, not one frame
     });
     state='IDLE'; document.getElementById('hint').classList.add('in');
     hud();
@@ -162,85 +181,123 @@ R.domElement.addEventListener('pointerup',e=>{
   if(moved<8) go();
 });
 function go(){
-  state='RELEASE'; t0=performance.now()/1000;
-  controls.enabled=false;
+  state='PLAY'; T=0; playing=true; controls.enabled=false;
+  if(!ui.fn) buildUI();
+  ui.pp.textContent='pause';
+  burst(0);
   document.getElementById('hint').classList.add('out');
   document.getElementById('again').classList.remove('show');
 }
 document.getElementById('again').addEventListener('click',()=>{
+  playing=false; T=0; if(ui.fn) sync();
   bust.visible=true; bust.position.set(0,0,0); bust.rotation.set(0,0,0);
   group.visible=false; dm.opacity=0; sm.opacity=0; glow.intensity=0;
   cam.position.copy(CAM0); camY=CAM0.y; cam.position.x=0; cam.lookAt(0,0,0);
   for(const s of shards){ s.m.position.copy(s.home); s.m.rotation.set(0,0,0);
-    s.rest=false; s.vel.copy(s.v); s.w.set((Math.random()-.5)*4.2,(Math.random()-.5)*4.2,(Math.random()-.5)*4.2); }
+    s.rest=false; s.vel.copy(s.v); s.w.set((rnd()-.5)*7.5,(rnd()-.5)*7.5,(rnd()-.5)*7.5); }
   controls.enabled=true; state='IDLE';
   document.getElementById('hint').classList.remove('out');
   document.getElementById('again').classList.remove('show');
 });
 
-let f=0,last=performance.now(); const clock=new THREE.Clock();
+// ── the shot as a pure function of frame ────────────────────────────────
+// nothing integrates. every element is evaluated from T, which is what makes
+// the timeline scrubbable and what lets us author poses instead of tuning
+// initial velocities and hoping.
+const K = {                       // art-direction checkpoints, in frames
+  release:[0,2], fall:[2,29], impact:29, seams:[30,37], burst:[37,55], settle:[55,96]
+};
+const fr = n => n/FPS;
+const span = (T,a,b) => Math.min(1, Math.max(0, (T-fr(a))/(fr(b)-fr(a))));
+const ease = x => x<0.5 ? 4*x*x*x : 1-Math.pow(-2*x+2,3)/2;
+
+function renderAt(T){
+  const yFall = t => -0.5*13.5*t*t;
+  if(T < fr(K.impact)){                                  // FALL
+    bust.visible=true; group.visible=false;
+    const rel=span(T,K.release[0],K.release[1]);
+    const ft=Math.max(0,T-fr(K.fall[0]));
+    const y = T<fr(K.fall[0]) ? 0.012*Math.sin(rel*Math.PI) : Math.max(FLOOR, yFall(ft));
+    bust.position.y=y; bust.rotation.z=ft*0.30; bust.rotation.x=ft*0.16;
+    const k=Math.min(1,(-y)/Math.abs(FLOOR));
+    // the camera is keyframed: follows, then brakes, then lets her outrun it
+    const lag = k<0.72 ? 0.96 : 0.96-(k-0.72)/0.28*0.34;
+    cam.position.set(Math.sin(T*38)*0.006*k, CAM0.y+y*lag, CAM0.z-k*0.22);
+    cam.lookAt(0,y+0.02,0);
+    glow.intensity=k*k*9.0;
+    sm.opacity=0.30+0.55*k; sm.size=0.026+0.055*k;
+    dm.opacity=0;
+    return;
+  }
+  // ── IMPACT ONWARD ──────────────────────────────────────────────────────
+  bust.visible=false; group.visible=true;
+  group.position.set(0,FLOOR,0);
+  const st=T-fr(K.impact);
+  // seams open before anything flies: the eye must see it come apart
+  const seam=ease(span(T,K.seams[0],K.seams[1]));
+  const out =ease(span(T,K.burst[0],K.burst[1]));
+  for(const s of shards){
+    const d=s.delay*0.5;
+    const sSeam=Math.max(0,Math.min(1,(seam-d)/(1-d||1)));
+    const sOut =Math.max(0,Math.min(1,(out -d)/(1-d||1)));
+    const lt=sOut*1.35;
+    s.m.position.copy(s.home)
+      .addScaledVector(s.dir, sSeam*0.035)                 // millimetre separation
+      .addScaledVector(s.v, lt);
+    s.m.position.y -= 0.5*3.0*lt*lt;
+    if(s.vel.z<1.2 && s.m.position.y < -0.18) s.m.position.y=-0.18;
+    s.m.rotation.set(s.w.x*lt*0.9, s.w.y*lt*0.9, s.w.z*lt*0.9);
+  }
+  // dust is keyed, not emitted
+  const dgrow=span(T,29,34), dfade=span(T,39,58);
+  dm.opacity=0.34*dgrow*(1-dfade*0.92);
+  dm.size=0.05+dgrow*0.05+dfade*0.09;
+  for(let i=0;i<DUST;i++){
+    const t2=Math.max(0,st);
+    dp[i*3]=dh[i*3]+dv[i*3]*t2*0.55;
+    dp[i*3+1]=dh[i*3+1]+dv[i*3+1]*t2-0.5*0.9*t2*t2;
+    dp[i*3+2]=dh[i*3+2]+dv[i*3+2]*t2*0.55;
+  }
+  dg.attributes.position.needsUpdate=true;
+  sm.opacity=Math.max(0,0.85*(1-span(T,29,32)));
+  glow.intensity=14*(1-span(T,29,33))+2.2*span(T,29,33);
+  const cy=CAM0.y+FLOOR*0.86, cz=CAM0.z-0.10;
+  const rec=ease(span(T,29,36));
+  cam.position.set(0, (CAM0.y+FLOOR*0.96)*(1-rec)+cy*rec - 0.05*(1-span(T,29,31)), CAM0.z*(1-rec)+cz*rec);
+  cam.lookAt(0,FLOOR+0.04,0);
+}
+
+// ── playback and the review scrubber ───────────────────────────────────
+let playing=false, T=0, f=0,last=performance.now();
+const clock=new THREE.Clock();
+const ui={};
+function buildUI(){
+  const d=document.createElement('div'); d.id='tl';
+  d.innerHTML='<button id="pp">play</button>'+
+    '<button id="pv">&#9664;</button><button id="nx">&#9654;</button>'+
+    '<span id="fn">FRAME 0 / 96</span>'+
+    '<input type="range" id="sc" min="0" max="96" step="1" value="0">'+
+    '<button id="rs">reset</button>';
+  document.body.appendChild(d);
+  ui.fn=d.querySelector('#fn'); ui.sc=d.querySelector('#sc'); ui.pp=d.querySelector('#pp');
+  ui.sc.addEventListener('input',()=>{ playing=false; ui.pp.textContent='play'; T=+ui.sc.value/FPS; sync(); });
+  ui.pp.addEventListener('click',()=>{ playing=!playing; ui.pp.textContent=playing?'pause':'play'; if(T>=DUR)T=0; });
+  d.querySelector('#pv').addEventListener('click',()=>{ playing=false; ui.pp.textContent='play'; T=Math.max(0,T-1/FPS); sync(); });
+  d.querySelector('#nx').addEventListener('click',()=>{ playing=false; ui.pp.textContent='play'; T=Math.min(DUR,T+1/FPS); sync(); });
+  d.querySelector('#rs').addEventListener('click',()=>{ playing=false; ui.pp.textContent='play'; T=0; sync(); });
+}
+function sync(){ const n=Math.round(T*FPS); ui.fn.textContent='FRAME '+n+' / '+LAST; ui.sc.value=n; renderAt(T); }
+
 (function tick(){
   requestAnimationFrame(tick);
-  const dt=Math.min(clock.getDelta(),0.05), now=performance.now()/1000, t=now-t0;
-
-  if(state==='IDLE'&&bust){ bust.position.y=Math.sin(now*0.55)*0.006; bust.rotation.z=Math.sin(now*0.42)*0.0045; }
-
-  if(state==='RELEASE'){                       // 0.00-0.10 tiny suspension release
-    bust.position.y=0.012*Math.sin(t/0.10*Math.PI);
-    if(t>=0.10){ state='FALLING'; }
+  const dt=Math.min(clock.getDelta(),0.05);
+  if(state==='IDLE'&&bust){ const n=performance.now()/1000;
+    bust.position.y=Math.sin(n*0.55)*0.006; bust.rotation.z=Math.sin(n*0.42)*0.0045; }
+  else if(state==='PLAY'){
+    if(playing){ T+=dt; if(T>=DUR){ T=DUR; playing=false; if(ui.pp)ui.pp.textContent='play';
+      document.getElementById('again').classList.add('show'); } sync(); }
   }
-  else if(state==='FALLING'){                  // 0.10-0.65 the camera falls with her
-    const ft=t-0.10, y=-0.5*13.5*ft*ft;
-    const k=Math.min(1,(-y)/Math.abs(FLOOR));
-    bust.position.y=y;
-    bust.rotation.z=ft*0.30;                   // tumble: visible even when tracked
-    bust.rotation.x=ft*0.16;
-    // ride down with her, trailing slightly so she floats a touch in frame
-    camY += ((CAM0.y+y*0.94) - camY) * Math.min(1, dt*20);
-    cam.position.y=camY;
-    cam.position.x=Math.sin(now*43)*0.006*k;
-    cam.position.z=CAM0.z-k*0.22;              // creep in as she drops
-    cam.lookAt(0, y + 0.02, 0);
-    glow.intensity=k*k*9.0;                    // the floor announces itself
-    streaks(dt, k, y);
-    if(y<=FLOOR){ fellTo=y; impact(); }
-  }
-  else if(state==='SHATTER'){
-    const st=t-0.65;
-    for(const s of shards){
-      const lt=st-s.delay; if(lt<=0) continue;
-      if(s.rest) continue;
-      s.vel.y-=5.6*dt;                                  // gravity
-      s.m.position.addScaledVector(s.vel, dt);
-      s.m.rotation.x+=s.w.x*dt; s.m.rotation.y+=s.w.y*dt; s.m.rotation.z+=s.w.z*dt;
-      const floorY = -0.14;                             // group-local floor
-      if(s.m.position.y < floorY){
-        s.m.position.y = floorY;
-        if(Math.abs(s.vel.y) < 0.35){ s.rest=true; s.vel.set(0,0,0); s.w.multiplyScalar(0); }
-        else { s.vel.y*=-0.34; s.vel.x*=0.62; s.vel.z*=0.62; s.w.multiplyScalar(0.55); }
-      }
-    }
-    for(let i=0;i<DUST;i++){
-      dp[i*3]+=dv[i*3]*dt; dp[i*3+1]+=dv[i*3+1]*dt; dp[i*3+2]+=dv[i*3+2]*dt;
-      dv[i*3+1]-=1.05*dt;                    // hangs, rather than falling like gravel
-      dv[i*3]*=0.955; dv[i*3+2]*=0.955; dv[i*3+1]*=0.985;
-    }
-    dg.attributes.position.needsUpdate=true;
-    dm.opacity=Math.max(0,0.30*(1-st/1.6));
-    dm.size=0.045+st*0.075;   // the cloud expands as it thins
-    sm.opacity=Math.max(0,sm.opacity-dt*3.6);
-    glow.intensity+=(2.2-glow.intensity)*Math.min(1,dt*3.0);
-    // pull back and rise, so the blast is framed instead of swallowing the lens
-    const restY=CAM0.y+FLOOR*1.02, restZ=CAM0.z+0.62;
-    const e=Math.min(1,dt*1.9);
-    cam.position.y+=(restY-cam.position.y)*e;
-    cam.position.z+=(restZ-cam.position.z)*e;
-    cam.position.x*=0.88;
-    cam.lookAt(0,FLOOR-0.14,0);
-    if(st>2.0){ state='COMPLETE'; document.getElementById('again').classList.add('show'); }
-  }
-
-  const st=document.getElementById('st'); if(st) st.textContent=state;
+  const stEl=document.getElementById('st'); if(stEl) stEl.textContent=state;
   controls.update(); R.render(scene,cam);
   f++; const p=performance.now();
   if(p-last>1000){const e=document.getElementById('fps'); if(e)e.textContent=Math.round(f*1000/(p-last)); f=0; last=p;}
