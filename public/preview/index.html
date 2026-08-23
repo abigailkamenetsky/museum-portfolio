@@ -517,7 +517,7 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
      which is why one work always sat on top of its neighbours. Here size is
      declared metadata and overlap is measured and solved by shrinking. */
   var DEBUG_LAYOUT = /[?&]debuglayout=1/.test(location.search);
-  var TIER = { hero:0.265, medium:0.196, small:0.152 };
+  var TIER = { hero:0.265, medium:0.196, small:0.152 };   // used as ratios
   var SALON = {
     about: [
       { tier:'hero',   ax:0.06, row:0, jit:18 },
@@ -631,15 +631,17 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
       [].forEach.call(works, function(el,i){
         var a=spec[i%spec.length];
         el.style.setProperty('--r','0deg');
-        var dense = works.length>=5 ? 1 - Math.min(0.26,(works.length-4)*0.075) : 1;
-        var narrow = safe.w<1150 ? 0.78 : (safe.w<1320 ? 0.88 : 1);
-        var w=safe.w*TIER[a.tier]*scale*dense*narrow;
+        // fair share of the wall, then the tier redistributes emphasis
+        var n=works.length, GAP=30;
+        var share=(safe.w-(n-1)*GAP)/n;
+        var wt=TIER[a.tier]/TIER.medium;               // hero 1.35, small 0.78
+        var w=share*wt*scale;
         // the readable-measure floor must come BEFORE the height cap: applied
         // after, it re-inflated whatever the cap had just shrunk and the item
         // overran its band again.
         w=Math.max(w, Math.min(172, safe.w*0.12));
         var ar=parseFloat(el.dataset.ar)||1.25;
-        var maxH=safe.h*0.325*scale;
+        var maxH=safe.h*0.92*scale;
         if(w*ar>maxH) w=maxH/ar;                      // fitting wins over measure
         var bw=Math.max(8, Math.min(26, w*0.085));
         el.style.setProperty('--bw', bw.toFixed(1)+'px');
@@ -649,19 +651,26 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
       });
       // measure once laid out, so the plaque's wrapped height is real
       var boxes=[].map.call(works,function(el){ return el.getBoundingClientRect(); });
-      var rowMax=(safe.h-96)/2;                 // two bands plus a real gap
+      var rowMax=safe.h;                 // two bands plus a real gap
       var rows=spec.map(function(a){return a.row;});
       var twoBand=rows.indexOf(1)>=0;
       var cap=twoBand?rowMax:safe.h-24;
       var tooTall=boxes.some(function(b){ return b.height>cap; });
       var tooWide=boxes.some(function(b){ return b.width>safe.w*0.34; });
+      // lay them across the wall in order, sharing leftover space evenly, and
+      // stagger the vertical anchor so it reads as a hang rather than a shelf
+      var used=0; boxes.forEach(function(b){ used+=b.width; });
+      var free=Math.max(0, safe.w-used);
+      var step=boxes.length>1 ? free/(boxes.length-1) : 0;
+      var cx=safe.x, tallest=Math.max.apply(null, boxes.map(function(b){return b.height;}));
       [].forEach.call(works, function(el,i){
         var a=spec[i%spec.length], b=boxes[i];
-        var slackX=Math.max(0, safe.w-b.width);
-        var y = a.row===0 ? a.jit : (safe.h - b.height - a.jit);
-        y = Math.max(0, Math.min(y, safe.h - b.height));   // never leave the wall
-        el.style.left=((safe.x + a.ax*slackX)/wall.width*100).toFixed(3)+'%';
-        el.style.top =((safe.y + Math.max(0,y))/wall.height*100).toFixed(3)+'%';
+        var band=(safe.h-tallest)/2;
+        var y=band + (a.row===0 ? -a.jit : a.jit) + ((i%2)?10:-10);
+        y=Math.max(0, Math.min(y, safe.h-b.height));
+        el.style.left=(cx/wall.width*100).toFixed(3)+'%';
+        el.style.top =((safe.y+y)/wall.height*100).toFixed(3)+'%';
+        cx += b.width + step;
       });
       // Final containment pass. Whatever the solver decided, an item that
       // measures outside the safe box gets shifted back in. This is a
