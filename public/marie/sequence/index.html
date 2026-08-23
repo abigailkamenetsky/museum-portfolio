@@ -230,11 +230,20 @@ function renderAt(T){
     return;
   }
   // ── IMPACT ONWARD ──────────────────────────────────────────────────────
-  bust.visible=false; group.visible=true;
+  // the shards do not seal when assembled, so the intact mesh covers the
+  // first frames and hands over once separation hides the seams
+  const HANDOFF=34;
+  const cross=span(T,K.impact,HANDOFF);
+  // hard switch, never both: overlapping them showed shard cut faces
+  // as flat planes across her surface
+  bust.visible = cross<1;
+  group.visible = !bust.visible;
+  if(bust.visible){ bust.position.y=FLOOR; bust.rotation.z=0.30*(fr(K.impact)-fr(K.fall[0])); }
   group.position.set(0,FLOOR,0);
   const st=T-fr(K.impact);
+  const reveal=cross;
   // seams open before anything flies: the eye must see it come apart
-  const seam=ease(span(T,K.seams[0],K.seams[1]));
+  const seam=ease(span(T,K.impact,K.seams[1]));
   const out =ease(span(T,K.burst[0],K.burst[1]));
   for(const s of shards){
     const d=s.delay*0.5;
@@ -242,7 +251,7 @@ function renderAt(T){
     const sOut =Math.max(0,Math.min(1,(out -d)/(1-d||1)));
     const lt=sOut*1.35;
     s.m.position.copy(s.home)
-      .addScaledVector(s.dir, sSeam*0.035)                 // millimetre separation
+      .addScaledVector(s.dir, 0.045+sSeam*0.070)           // already parted at handover
       .addScaledVector(s.v, lt);
     s.m.position.y -= 0.5*3.0*lt*lt;
     if(s.vel.z<1.2 && s.m.position.y < -0.18) s.m.position.y=-0.18;
