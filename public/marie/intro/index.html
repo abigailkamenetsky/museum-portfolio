@@ -64,7 +64,7 @@ function radial(stops){
 }
 // untextured points draw as hard squares. a single clean radial also reads as
 // fog, so each puff is several offset blobs: irregular edges, like real dust.
-const DUST_RGB=[214,209,199];           // the marble itself, not the surface tint
+const DUST_RGB=[196,189,176];           // warm light grey, off pure white
 function puff(){
   const N=256, c=document.createElement('canvas'); c.width=c.height=N;
   const g=c.getContext('2d');
@@ -139,7 +139,12 @@ const dMat=new THREE.ShaderMaterial({
     uniform float uTime, uPix;
     void main(){
       float age = uTime - aBirth;
-      vD = aDirt; vR = aRot + age * 0.22;   // each puff sits at its own angle and drifts
+      vR = aRot + age * 0.22;              // each puff sits at its own angle and drifts
+      vec3 Ldir = normalize(vec3(-1.4, 1.2, 1.6));      // the scene's key light
+      vec3 rel  = normalize(position - vec3(0.0, 0.45, 0.0));
+      float lam = dot(rel, Ldir) * 0.5 + 0.5;           // lit side vs far side
+      float deep = smoothstep(-0.1, 1.9, position.y);   // low in the cloud is buried
+      vD = aDirt * mix(0.26, 1.06, lam) * mix(0.48, 1.0, deep);
       if(age < 0.0){ vA = 0.0; gl_Position = vec4(2.0,2.0,2.0,1.0); gl_PointSize = 0.0; return; }
       float t = age / aLife;
       float fadeIn  = smoothstep(0.0, 0.18, t);
