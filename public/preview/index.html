@@ -581,8 +581,8 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
   /** The map and cassette are permanent UI, so their union is off limits. */
   function controlsLeft(){
     var edge = Infinity;
-    ['.plaque','.note']               // banners, plus the hint note while shown
-      .forEach(function(sel){
+    ['.plaque']                       // the fixed banners only; the hint note
+      .forEach(function(sel){          // is transient and must not reshape the wall
         [].forEach.call(document.querySelectorAll(sel), function(el){
           var r = el.getBoundingClientRect();
           if (!r.width || !r.height) return;
