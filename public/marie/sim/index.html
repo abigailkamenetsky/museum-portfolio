@@ -63,7 +63,10 @@ L.load('./sim.glb',(g)=>{
     gi.scene.position.sub(ic); gi.scene.position.y+=c.y;
     const is=(b.max.y-b.min.y)/(ib.max.y-ib.min.y);
     gi.scene.scale.setScalar(is);
-    intact=gi.scene; scene.add(intact); sync();
+    intact=gi.scene; scene.add(intact);
+    const qf=new URLSearchParams(location.search).get('f');
+    if(qf!==null) T=Math.max(0,Math.min(95,+qf))/FPS;
+    sync();
   });
 
   document.getElementById('hud').innerHTML='<b>pieces</b> '+n+'<br><b>triangles</b> '+
