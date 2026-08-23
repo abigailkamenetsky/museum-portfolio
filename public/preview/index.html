@@ -601,6 +601,14 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
   }
 
   function salonPlace(sec, spec0){
+    var wEl=sec.querySelector('.wall');
+    if(wEl){
+      var wb=wEl.getBoundingClientRect();
+      var sig=Math.round(wb.width)+'x'+Math.round(wb.height)+':'+
+              sec.querySelectorAll('.work').length+':'+Math.round(controlsLeft());
+      if(sec.dataset.salonSig===sig) return;      // already solved for this size
+      sec.dataset.salonSig=sig;
+    }
     var spec = spec0.map(function(a){ return {tier:a.tier, ax:a.ax, row:a.row, jit:a.jit}; });
     var stage=sec.querySelector('.works'), works=sec.querySelectorAll('.work');
     var wallEl=sec.querySelector('.wall'), wall=wallEl.getBoundingClientRect();
