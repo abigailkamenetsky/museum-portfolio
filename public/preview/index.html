@@ -83,8 +83,11 @@
      and nothing is stacked to hide a collision. long titles wrap instead. */
   .room.salon .work{z-index:5!important;transition:transform .2s cubic-bezier(.2,.8,.3,1),opacity .2s ease,filter .2s}
   .room.salon .work .card{box-sizing:border-box;width:100%!important;max-width:100%!important;
-    min-width:0;text-align:center;line-height:1.26;overflow-wrap:anywhere;margin:11px auto 0}
-  .room.salon .work .card b{-webkit-line-clamp:3;text-overflow:clip}
+    min-width:0;text-align:center;line-height:1.3;overflow-wrap:normal;word-break:normal;
+    hyphens:auto;margin:10px auto 0;min-height:0;padding:9px 10px}
+  .room.salon .work .card b{display:block;-webkit-line-clamp:none;overflow:visible;
+    text-overflow:clip;white-space:normal;font-size:12px;letter-spacing:.09em;line-height:1.28}
+  .room.salon .work .card i{font-size:11.5px;line-height:1.3;opacity:.82;margin-top:2px}
   .room.salon .work:hover{transform:rotate(var(--r)) scale(1.03) translateY(-3px);z-index:20!important}
   .room.salon .arw{display:none}
   @media (hover:hover){
@@ -525,7 +528,7 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
       { tier:'hero',   ax:0.72, row:0, jit:0  }
     ],
     professional: [                   // 4 works, asymmetric 2 over 2
-      { tier:'hero',   ax:0.02, row:0, jit:26 },
+      { tier:'hero',   ax:0.02, row:0, jit:13 },
       { tier:'medium', ax:0.62, row:0, jit:0  },
       { tier:'medium', ax:0.20, row:1, jit:14 },
       { tier:'small',  ax:0.92, row:1, jit:0  }
@@ -533,44 +536,44 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
     research: [                       // 4 works, hero left, three supporting
       { tier:'hero',   ax:0.00, row:0, jit:18 },
       { tier:'medium', ax:0.58, row:0, jit:0  },
-      { tier:'small',  ax:1.00, row:0, jit:34 },
+      { tier:'small',  ax:1.00, row:0, jit:14 },
       { tier:'medium', ax:0.44, row:1, jit:10 }
     ],
     uchicago: [                       // 5 works, 3 over 2
-      { tier:'medium', ax:0.00, row:0, jit:20 },
+      { tier:'medium', ax:0.00, row:0, jit:10 },
       { tier:'medium', ax:0.46, row:0, jit:0  },
-      { tier:'small',  ax:1.00, row:0, jit:28 },
+      { tier:'small',  ax:1.00, row:0, jit:14 },
       { tier:'hero',   ax:0.14, row:1, jit:0  },
       { tier:'medium', ax:0.74, row:1, jit:16 }
     ],
     awards: [                         // 4 works, lightest touch: keep the shape
       { tier:'medium', ax:0.00, row:0, jit:16 },
       { tier:'medium', ax:0.40, row:0, jit:0  },
-      { tier:'small',  ax:0.86, row:0, jit:26 },
+      { tier:'small',  ax:0.86, row:0, jit:13 },
       { tier:'medium', ax:0.60, row:1, jit:8  }
     ],
     leadership: [                     // 5 works, 2 - hero - 2
-      { tier:'small',  ax:0.00, row:0, jit:22 },
+      { tier:'small',  ax:0.00, row:0, jit:11 },
       { tier:'hero',   ax:0.40, row:0, jit:0  },
-      { tier:'small',  ax:1.00, row:0, jit:30 },
+      { tier:'small',  ax:1.00, row:0, jit:14 },
       { tier:'medium', ax:0.10, row:1, jit:10 },
       { tier:'medium', ax:0.80, row:1, jit:0  }
     ],
     hobbies: [                        // 7 works, 4 over 3
-      { tier:'medium', ax:0.00, row:0, jit:24 },
+      { tier:'medium', ax:0.00, row:0, jit:12 },
       { tier:'small',  ax:0.33, row:0, jit:0  },
       { tier:'hero',   ax:0.66, row:0, jit:12 },
-      { tier:'small',  ax:1.00, row:0, jit:32 },
+      { tier:'small',  ax:1.00, row:0, jit:14 },
       { tier:'medium', ax:0.06, row:1, jit:8  },
-      { tier:'small',  ax:0.50, row:1, jit:20 },
+      { tier:'small',  ax:0.50, row:1, jit:10 },
       { tier:'medium', ax:0.96, row:1, jit:0  }
     ],
     projects: [                       // 6 works, staggered 3 over 3
-      { tier:'medium', ax:0.00, row:0, jit:22 },  // HelpMynd
+      { tier:'medium', ax:0.00, row:0, jit:10 },  // HelpMynd
       { tier:'medium', ax:0.44, row:0, jit:0  },  // Museum Portfolio
       { tier:'hero',   ax:0.04, row:1, jit:0  },  // Tech Showcase / Dali
-      { tier:'medium', ax:0.52, row:1, jit:16 },  // Handshake
-      { tier:'small',  ax:1.00, row:0, jit:30 },  // SporeKeeper
+      { tier:'medium', ax:0.52, row:1, jit:8  },  // Handshake
+      { tier:'small',  ax:1.00, row:0, jit:14 },  // SporeKeeper
       { tier:'small',  ax:1.00, row:1, jit:8  }   // Lyft/Via
     ]
   };
@@ -611,6 +614,7 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
         var a=spec[i%spec.length];
         el.style.setProperty('--r','0deg');
         var w=safe.w*TIER[a.tier]*scale;
+        w=Math.max(w, Math.min(172, safe.w*0.12));   // readable caption measure
         var ar=parseFloat(el.dataset.ar)||1.25;
         var maxH=safe.h*0.385*scale;
         if(w*ar>maxH) w=maxH/ar;
