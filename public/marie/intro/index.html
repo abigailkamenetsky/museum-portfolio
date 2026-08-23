@@ -64,7 +64,7 @@ function radial(stops){
 }
 // untextured points draw as hard squares. a single clean radial also reads as
 // fog, so each puff is several offset blobs: irregular edges, like real dust.
-const DUST_RGB=[140,122,97];            // = #8C7A61, the baked surface dust
+const DUST_RGB=[214,209,199];           // the marble itself, not the surface tint
 function puff(){
   const c=document.createElement('canvas'); c.width=c.height=256;
   const g=c.getContext('2d');
@@ -99,10 +99,17 @@ for(let i=0;i<DUST;i++){
   dSeed[i]=Math.random()*6.283;
   dScale[i]=(kind<4?0.5:kind<8?1.5:2.6)*(0.55+Math.random()*1.5);
 }
+const dCol=new Float32Array(DUST*3);
+for(let i=0;i<DUST;i++){
+  const dirt=Math.random()<0.18 ? 0.58+Math.random()*0.2 : 0.93+Math.random()*0.07;
+  dCol[i*3]=dirt; dCol[i*3+1]=dirt*0.985; dCol[i*3+2]=dirt*0.95;
+}
 const dGeo=new THREE.BufferGeometry();
 dGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(DUST*3),3));
+dGeo.setAttribute('color',new THREE.BufferAttribute(dCol,3));
 const dMat=new THREE.PointsMaterial({map:dustTex,transparent:true,depthWrite:false,
-  size:0.42,sizeAttenuation:true,opacity:0,color:0x8c7a61});  // same dust as the marble
+  size:0.42,sizeAttenuation:true,opacity:0,color:0xd6d1c7,
+  vertexColors:true});                  // per-puff dirt specks
 const dust=new THREE.Points(dGeo,dMat); dust.frustumCulled=false; scene.add(dust);
 
 const T_EASE=0.34, T_FALL=0.46, T_IMPACT=T_EASE+T_FALL, DUR=5.0;
@@ -159,21 +166,22 @@ function sync(){
 
   if(impacted){
     const arr=dGeo.attributes.position.array;
-    const drag=1-Math.exp(-ta*0.95);          // billows hard, then stalls and hangs
+    const rise=Math.max(0,ta-0.30);           // let the break read first
+    const drag=1-Math.exp(-rise*0.80);        // then billow up and take over
     for(let i=0;i<DUST;i++){
       const sw=Math.sin(dSeed[i]+ta*1.15), sw2=Math.cos(dSeed[i]*1.7+ta*0.85);
-      arr[i*3]  =dPos[i*3]  +dVel[i*3]  *drag*1.25+sw*0.14*ta;
+      arr[i*3]  =dPos[i*3]  +dVel[i*3]  *drag*1.25+sw*0.14*rise;
       arr[i*3+1]=Math.max(0.004,dPos[i*3+1]+dVel[i*3+1]*drag*0.95
-                 -0.06*ta*ta+sw2*0.11*ta);
-      arr[i*3+2]=dPos[i*3+2]+dVel[i*3+2]*drag*1.25+sw2*0.12*ta;
+                 -0.06*rise*rise+sw2*0.11*rise);
+      arr[i*3+2]=dPos[i*3+2]+dVel[i*3+2]*drag*1.25+sw2*0.12*rise;
     }
     dGeo.attributes.position.needsUpdate=true;
-    dMat.size=0.42+ta*0.95;
-    dMat.opacity=Math.min(0.62,ta*1.15)*Math.max(0,1-Math.pow(Math.max(0,ta-2.2)/1.5,1.6));
+    dMat.size=0.34+rise*0.85;
+    dMat.opacity=Math.min(0.60,rise*0.62)*Math.max(0,1-Math.pow(Math.max(0,ta-3.2)/1.6,1.6));
   } else dMat.opacity=0;
 
   const rv=document.getElementById('reveal');
-  if(rv) rv.style.opacity = impacted ? Math.max(0,Math.min(1,(ta-1.25)/0.9)).toFixed(3) : '0';
+  if(rv) rv.style.opacity = impacted ? Math.max(0,Math.min(1,(ta-2.35)/1.0)).toFixed(3) : '0';
 
   document.getElementById('tn').textContent=t.toFixed(2)+'s';
   document.getElementById('sc').value=Math.round(t/DUR*500);
