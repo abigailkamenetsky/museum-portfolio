@@ -319,7 +319,8 @@ function sync(){
     az*=(1-k); el=el*(1-k)+0.06*k;
   }
   const follow=(state==='IDLE'||t<T_EASE)?1.0:0.72;   // lag only during the fall
-  const ty=baseY+(camAimY||1.0)+lift*follow;
+  const frameH=2*R_ORB*Math.tan(THREE.MathUtils.degToRad(cam.fov*0.5));
+  const ty=baseY+(camAimY||1.0)+lift*follow+frameH*0.09;
   cam.position.set(
     R_ORB*Math.cos(el)*Math.sin(az),
     ty + R_ORB*Math.sin(el),
