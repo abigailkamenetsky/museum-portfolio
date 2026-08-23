@@ -140,14 +140,23 @@ L.load('../sim/sim.glb',(s)=>{
     // the bake settles on the floor; this pushes pieces past the lens instead
     mixer.setTime(0);
     shards.updateMatrixWorld(true);
-    shards.traverse(o=>{ if(!o.isMesh) return;
+    // the push has to land on the node the clip drives. mixer.setTime rewrites
+    // that node every frame, so += is safe there; on any other node the offset
+    // would compound forever and throw the piece out of the world.
+    const driven=new Set();
+    for(const cl of s.animations) for(const tr of cl.tracks){
+      const pb=THREE.PropertyBinding.parseTrackName(tr.name);
+      const node=THREE.PropertyBinding.findNode(shards,pb.nodeName);
+      if(node) driven.add(node);
+    }
+    driven.forEach(o=>{
       const p=o.position.clone();
       const out=new THREE.Vector3(p.x,Math.max(p.y,0.05)*0.55,p.z);
       if(out.lengthSq()<1e-6) out.set(Math.random()-0.5,0.4,Math.random()-0.5);
       out.normalize();
       out.z-=0.62; out.y+=0.18; out.normalize();       // bias hard toward the lens
       pieces.push({o,out,base:p.clone(),
-        gain:2.4+Math.random()*7.0, spin:new THREE.Vector3(
+        gain:0.9+Math.random()*2.6, spin:new THREE.Vector3(
           Math.random()*7-3.5,Math.random()*7-3.5,Math.random()*7-3.5)});
     });
     hud.innerHTML='<b>shards</b> '+pieces.length+'<br><b>chips</b> '+CHIPS+'<br><b>dust</b> '+DUST+
@@ -208,7 +217,7 @@ function render(){
   if(mixer && impacted){
     mixer.setTime(Math.min(ta,simDur));
     // the procedural push rides on top of the bake, so the physics still leads
-    const ramp=Math.min(1,ta/0.16), grow=Math.pow(Math.max(0,ta-0.03),1.35);
+    const ramp=Math.min(1,ta/0.22), grow=Math.pow(Math.max(0,ta-0.04),1.9);
     for(const p of pieces){
       const k=ramp*grow*p.gain;
       p.o.position.x+=p.out.x*k; p.o.position.y+=p.out.y*k; p.o.position.z+=p.out.z*k;
@@ -245,11 +254,11 @@ function render(){
       arr[i*3]=px; arr[i*3+1]=Math.max(0.005,py); arr[i*3+2]=pz;
     }
     dGeo.attributes.position.needsUpdate=true;
-    dMat.size=0.16+ta*0.20;
-    dMat.opacity=Math.min(0.40,ta*3.0)*Math.max(0,1-Math.pow(ta/2.4,1.5));
+    dMat.size=0.13+ta*0.13;
+    dMat.opacity=Math.min(0.26,ta*2.2)*Math.max(0,1-Math.pow(ta/2.0,1.4));
   } else dMat.opacity=0;
 
-  flash.intensity = impacted ? Math.max(0,1-ta/0.20)*26 : 0;
+  flash.intensity = impacted ? Math.max(0,1-ta/0.16)*9 : 0;
 
   document.getElementById('tn').textContent=t.toFixed(2)+'s';
   document.getElementById('sc').value=Math.round(t/DUR*500);
