@@ -567,7 +567,7 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
         var bw=Math.max(8, Math.min(26, w*0.085));
         el.style.setProperty('--bw', bw.toFixed(1)+'px');
         el.style.width=w.toFixed(1)+'px';
-        el.style.left='0px'; el.style.top='0px';
+        el.style.left='0%'; el.style.top='0%';
         el.classList.remove('pre');
       });
       // measure once laid out, so the plaque's wrapped height is real
@@ -575,8 +575,8 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
       [].forEach.call(works, function(el,i){
         var a=spec[i%spec.length], b=boxes[i];
         var slackX=Math.max(0, safe.w-b.width), slackY=Math.max(0, safe.h-b.height);
-        el.style.left=(safe.x + a.ax*slackX).toFixed(1)+'px';
-        el.style.top =(safe.y + a.ay*slackY).toFixed(1)+'px';
+        el.style.left=((safe.x + a.ax*slackX)/wall.width*100).toFixed(3)+'%';
+        el.style.top =((safe.y + a.ay*slackY)/wall.height*100).toFixed(3)+'%';
       });
       rects=[].map.call(works,function(el){ return el.getBoundingClientRect(); });
       var gap=32, bad=false;
