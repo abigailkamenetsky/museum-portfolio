@@ -412,7 +412,7 @@ let f=0,last=performance.now(); const clock=new THREE.Clock();
 (function tick(){ requestAnimationFrame(tick);
   const dt=Math.min(clock.getDelta(),0.05);
   if(state==='RUN'){ t+=dt; if(t>=DUR){ t=DUR; state='DONE'; } sync(); }
-  if(state==='IDLE'){ if(!dragging) az+=dt*0.10; sync(); }
+  if(state==='IDLE') sync();
   // pass 1: dust alone, half res, transparent clear
   cam.layers.disableAll(); cam.layers.enable(DUST_LAYER);
   R.setRenderTarget(rt); R.setClearColor(0x000000,0); R.clear(true,false,false);
