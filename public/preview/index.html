@@ -600,15 +600,16 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
     if(dy) el.style.top =(ct + dy/w.height*100).toFixed(3)+'%';
   }
 
-  function salonPlace(sec, spec0){
+  function salonPlace(sec, spec0, force){
     var wEl=sec.querySelector('.wall');
-    if(wEl){
+    if(wEl && !force){
       var wb=wEl.getBoundingClientRect();
       var sig=Math.round(wb.width)+'x'+Math.round(wb.height)+':'+
               sec.querySelectorAll('.work').length+':'+Math.round(controlsLeft());
       if(sec.dataset.salonSig===sig) return;      // already solved for this size
       sec.dataset.salonSig=sig;
     }
+    if(force && wEl) sec.dataset.salonSig='';
     var spec = spec0.map(function(a){ return {tier:a.tier, ax:a.ax, row:a.row, jit:a.jit}; });
     var stage=sec.querySelector('.works'), works=sec.querySelectorAll('.work');
     var wallEl=sec.querySelector('.wall'), wall=wallEl.getBoundingClientRect();
@@ -767,9 +768,9 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
     });
   }
 
-  function place(sec){
+  function place(sec, force){
     var spec = SALON[(sec.id||'').replace('sec-','')];
-    if(spec){ sec.classList.add('salon'); return salonPlace(sec, spec); }
+    if(spec){ sec.classList.add('salon'); return salonPlace(sec, spec, force); }
     var stage=sec.querySelector('.works'), works=stage.querySelectorAll('.work');
     var wall=sec.querySelector('.wall').getBoundingClientRect();
     if(!wall.width) return;
@@ -838,17 +839,17 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
     // anything that changes those boxes settles: fonts, images, size, and the
     // moment the section is actually on screen. Without this the result is a
     // race and the same viewport can pass or fail between loads.
-    requestAnimationFrame(function(){ place(sec); });
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ place(sec); });
+    requestAnimationFrame(function(){ place(sec, true); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ place(sec, true); });
     [].forEach.call(sec.querySelectorAll('.work img'), function(im){
-      if (!im.complete) im.addEventListener('load', function(){ place(sec); }, {once:true});
+      if (!im.complete) im.addEventListener('load', function(){ place(sec, true); }, {once:true});
     });
     if (window.IntersectionObserver){
       new IntersectionObserver(function(en){
         en.forEach(function(e){ if (e.isIntersecting) place(sec); });
       }, {threshold:0.15}).observe(sec);
     }
-    var rz; addEventListener('resize', function(){ clearTimeout(rz); rz=setTimeout(function(){ place(sec); },120); });
+    var rz; addEventListener('resize', function(){ clearTimeout(rz); rz=setTimeout(function(){ place(sec, true); },120); });
     // arrows pan the wall, since it is wider than the window
     var Lb=sec.querySelector('.arw.l'), Rb=sec.querySelector('.arw.r'), pan=0;
     var maxPan=0;
