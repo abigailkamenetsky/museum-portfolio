@@ -554,10 +554,10 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
     ],
     leadership: [                     // 5 works, 2 - hero - 2
       { tier:'small',  ax:0.00, row:0, jit:11 },
-      { tier:'hero',   ax:0.40, row:0, jit:0  },
-      { tier:'small',  ax:1.00, row:0, jit:14 },
-      { tier:'medium', ax:0.10, row:1, jit:10 },
-      { tier:'medium', ax:0.80, row:1, jit:0  }
+      { tier:'hero',   ax:0.52, row:0, jit:0  },
+      { tier:'medium', ax:0.00, row:1, jit:10 },
+      { tier:'small',  ax:0.46, row:1, jit:0  },
+      { tier:'medium', ax:1.00, row:1, jit:6  }
     ],
     hobbies: [                        // 7 works, 4 over 3
       { tier:'medium', ax:0.00, row:0, jit:12 },
@@ -615,7 +615,9 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
       [].forEach.call(works, function(el,i){
         var a=spec[i%spec.length];
         el.style.setProperty('--r','0deg');
-        var w=safe.w*TIER[a.tier]*scale;
+        var dense = works.length>=5 ? 1 - Math.min(0.16,(works.length-4)*0.05) : 1;
+        var narrow = safe.w<1150 ? 0.87 : (safe.w<1320 ? 0.94 : 1);
+        var w=safe.w*TIER[a.tier]*scale*dense*narrow;
         // the readable-measure floor must come BEFORE the height cap: applied
         // after, it re-inflated whatever the cap had just shrunk and the item
         // overran its band again.
