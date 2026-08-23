@@ -570,22 +570,24 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
     ],
     projects: [                       // 6 works, staggered 3 over 3
       { tier:'medium', ax:0.00, row:0, jit:10 },  // HelpMynd
-      { tier:'medium', ax:0.44, row:0, jit:0  },  // Museum Portfolio
-      { tier:'hero',   ax:0.04, row:1, jit:0  },  // Tech Showcase / Dali
-      { tier:'medium', ax:0.52, row:1, jit:8  },  // Handshake
-      { tier:'small',  ax:1.00, row:0, jit:14 },  // SporeKeeper
-      { tier:'small',  ax:1.00, row:1, jit:8  }   // Lyft/Via
+      { tier:'medium', ax:0.40, row:0, jit:0  },  // Museum Portfolio
+      { tier:'hero',   ax:0.00, row:1, jit:0  },  // Tech Showcase / Dali
+      { tier:'medium', ax:0.50, row:1, jit:8  },  // Handshake
+      { tier:'small',  ax:0.86, row:0, jit:14 },  // SporeKeeper, clear of the note
+      { tier:'small',  ax:1.00, row:1, jit:6  }   // Lyft/Via
     ]
   };
 
   /** The map and cassette are permanent UI, so their union is off limits. */
   function controlsLeft(){
     var edge = Infinity;
-    ['.plaque']                       // the fixed right-hand map/cassette banners
+    ['.plaque','.note']               // banners, plus the hint note while shown
       .forEach(function(sel){
         [].forEach.call(document.querySelectorAll(sel), function(el){
           var r = el.getBoundingClientRect();
-          if (r.width && r.height && r.top < window.innerHeight*0.75) edge = Math.min(edge, r.left);
+          if (!r.width || !r.height) return;
+          if (parseFloat(getComputedStyle(el).opacity) < 0.05) return;   // hidden
+          if (r.top < window.innerHeight*0.75) edge = Math.min(edge, r.left);
         });
       });
     return isFinite(edge) ? edge : window.innerWidth - Math.max(190, window.innerWidth*0.13);
