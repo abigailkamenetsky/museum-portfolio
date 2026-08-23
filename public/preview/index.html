@@ -616,10 +616,13 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
         var a=spec[i%spec.length];
         el.style.setProperty('--r','0deg');
         var w=safe.w*TIER[a.tier]*scale;
-        w=Math.max(w, Math.min(172, safe.w*0.12));   // readable caption measure
+        // the readable-measure floor must come BEFORE the height cap: applied
+        // after, it re-inflated whatever the cap had just shrunk and the item
+        // overran its band again.
+        w=Math.max(w, Math.min(172, safe.w*0.12));
         var ar=parseFloat(el.dataset.ar)||1.25;
         var maxH=safe.h*0.325*scale;
-        if(w*ar>maxH) w=maxH/ar;
+        if(w*ar>maxH) w=maxH/ar;                      // fitting wins over measure
         var bw=Math.max(8, Math.min(26, w*0.085));
         el.style.setProperty('--bw', bw.toFixed(1)+'px');
         el.style.width=w.toFixed(1)+'px';
@@ -633,6 +636,7 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
       var twoBand=rows.indexOf(1)>=0;
       var cap=twoBand?rowMax:safe.h-24;
       var tooTall=boxes.some(function(b){ return b.height>cap; });
+      var tooWide=boxes.some(function(b){ return b.width>safe.w*0.34; });
       [].forEach.call(works, function(el,i){
         var a=spec[i%spec.length], b=boxes[i];
         var slackX=Math.max(0, safe.w-b.width);
