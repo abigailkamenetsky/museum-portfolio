@@ -273,10 +273,11 @@ function sync(){
       if(age<0){ arr[i*3]=0; arr[i*3+1]=-999; arr[i*3+2]=0; continue; }
       const drag=1-Math.exp(-age*0.85);          // billows, then stalls and hangs
       const sw=Math.sin(dSeed[i]+age*1.15), sw2=Math.cos(dSeed[i]*1.7+age*0.85);
-      arr[i*3]  =dPos[i*3]  +dVel[i*3]  *drag*1.25+sw*0.16*age;
+      const flare=0.35+age*1.15;            // widens with height
+      arr[i*3]  =dPos[i*3]  +dVel[i*3]  *drag*1.25*flare+sw*0.20*age;
       arr[i*3+1]=Math.max(0.004,dPos[i*3+1]+dVel[i*3+1]*drag*1.35
                  -0.035*age*age+sw2*0.13*age);
-      arr[i*3+2]=dPos[i*3+2]+dVel[i*3+2]*drag*1.25+sw2*0.14*age;
+      arr[i*3+2]=dPos[i*3+2]+dVel[i*3+2]*drag*1.25*flare+sw2*0.18*age;
     }
     dGeo.attributes.position.needsUpdate=true;
     dMat.uniforms.uTime.value=ta;
