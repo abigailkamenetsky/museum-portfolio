@@ -245,13 +245,13 @@ function sizeRT(){
 sizeRT();
 
 const T_EASE=0.34, T_FALL=0.46, T_IMPACT=T_EASE+T_FALL, DUR=6.2;
-const DROP=0.72;                    // she falls this far. the camera never moves.
+const DROP=0.62;                    // she falls this far. the camera never moves.
 const easeOut=x=>1-Math.pow(1-x,3), easeIn=x=>x*x;
 
 let intact=null, shards=null, mixer=null, simDur=1, baseY=0, camAimY=1.0;
 let state='IDLE', t=0, dragAmt=0, spin=0;
 let az=0, el=0.06;                    // full orbit while idle
-const R_ORB=4.75, EL_MIN=-1.15, EL_MAX=1.30;   // under the chin to over the crown
+const R_ORB=5.35, EL_MIN=-1.15, EL_MAX=1.30;   // under the chin to over the crown
 
 // baked Mantaflow dust. two encodes because only safari does HEVC alpha and
 // only chrome/firefox do VP9 alpha; whichever loads first wins.
@@ -308,7 +308,7 @@ function sync(){
     const k=Math.min(1,t/T_EASE);
     az*=(1-k); el=el*(1-k)+0.06*k;
   }
-  const ty=baseY+(camAimY||1.0);
+  const ty=baseY+(camAimY||1.0)+lift*0.72;
   cam.position.set(
     R_ORB*Math.cos(el)*Math.sin(az),
     ty + R_ORB*Math.sin(el),
