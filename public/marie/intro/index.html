@@ -197,7 +197,7 @@ function render(){
     const k=easeIn((t-T_EASE)/T_FALL);
     lag=0.42*k; camZ=3.15-0.30*k;
   } else if(impacted){
-    lag=0.42; camZ=2.85-Math.min(1.75,ta*3.4);
+    lag=0.42; camZ=2.85-Math.min(0.62,ta*1.1);
   }
   const camY=y+LIFT+lag;
   rig.position.set(0,camY,0); cam.position.set(0,0,camZ);
