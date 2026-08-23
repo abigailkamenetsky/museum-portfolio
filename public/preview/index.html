@@ -764,11 +764,21 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
     });
 
     place(sec);
-    // the first call can land before the wall has width or the plaque text has
-    // wrapped, and both change the box the solver measures
+    // The solver measures real caption boxes, so it must re-run whenever
+    // anything that changes those boxes settles: fonts, images, size, and the
+    // moment the section is actually on screen. Without this the result is a
+    // race and the same viewport can pass or fail between loads.
     requestAnimationFrame(function(){ place(sec); });
-    setTimeout(function(){ place(sec); }, 350);
-    addEventListener('resize', function(){ place(sec); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ place(sec); });
+    [].forEach.call(sec.querySelectorAll('.work img'), function(im){
+      if (!im.complete) im.addEventListener('load', function(){ place(sec); }, {once:true});
+    });
+    if (window.IntersectionObserver){
+      new IntersectionObserver(function(en){
+        en.forEach(function(e){ if (e.isIntersecting) place(sec); });
+      }, {threshold:0.15}).observe(sec);
+    }
+    var rz; addEventListener('resize', function(){ clearTimeout(rz); rz=setTimeout(function(){ place(sec); },120); });
     // arrows pan the wall, since it is wider than the window
     var Lb=sec.querySelector('.arw.l'), Rb=sec.querySelector('.arw.r'), pan=0;
     var maxPan=0;
