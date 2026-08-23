@@ -70,7 +70,7 @@ L.load('./sim.glb',(g)=>{
   });
 
   document.getElementById('hud').innerHTML='<b>pieces</b> '+n+'<br><b>triangles</b> '+
-    Math.round(tris).toLocaleString()+'<br><b>glb</b> 1.54 MB draco + baked sim'+
+    Math.round(tris).toLocaleString()+'<br><b>glb</b> 1.06 MB draco + baked sim'+
     '<br><b>clip</b> '+DUR.toFixed(2)+'s<br><b>fps</b> <span id="fps">--</span>';
   sync();
 },undefined,(e)=>{document.getElementById('hud').textContent='FAILED '+e;});
