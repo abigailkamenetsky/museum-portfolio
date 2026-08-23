@@ -622,8 +622,8 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
       [].forEach.call(works, function(el,i){
         var a=spec[i%spec.length];
         el.style.setProperty('--r','0deg');
-        var dense = works.length>=5 ? 1 - Math.min(0.16,(works.length-4)*0.05) : 1;
-        var narrow = safe.w<1150 ? 0.87 : (safe.w<1320 ? 0.94 : 1);
+        var dense = works.length>=5 ? 1 - Math.min(0.26,(works.length-4)*0.075) : 1;
+        var narrow = safe.w<1150 ? 0.78 : (safe.w<1320 ? 0.88 : 1);
         var w=safe.w*TIER[a.tier]*scale*dense*narrow;
         // the readable-measure floor must come BEFORE the height cap: applied
         // after, it re-inflated whatever the cap had just shrunk and the item
@@ -675,7 +675,7 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
       // Separation pass, in measured pixels. Anchor nudging is coarse and can
       // oscillate against containment; this resolves the actual overlap and
       // then re-clamps, so both post-conditions hold together.
-      for(var sepIt=0; sepIt<6; sepIt++){
+      for(var sepIt=0; sepIt<14; sepIt++){
         var rr=[].map.call(works,function(el){ return el.getBoundingClientRect(); });
         var moved=false;
         for(var i3=0;i3<rr.length;i3++){
@@ -739,7 +739,7 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
             fixedAny=true;
           }
         }
-        if(scale>MIN) scale=Math.max(MIN, scale-0.025);
+        if(scale>MIN) scale=Math.max(MIN, scale-0.05);   // always make progress
       }
     }
     if(DEBUG_LAYOUT) drawDebug(sec, wallEl, wall, safe, rects);
