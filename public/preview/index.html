@@ -589,24 +589,29 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
       }
       if(!bad){ ok=true; }
       else {
-        // push the offending pair apart along their dominant axis before
-        // shrinking: uniform shrink keeps the same relative spots, so
-        // overlapping anchors stay overlapping however small they get.
-        for(var i2=0;i2<rects.length;i2++){
-          for(var j2=i2+1;j2<rects.length;j2++){
+        // nudge ONE pair per pass and stop. nudging every pair every pass
+        // compounds: the same spec objects get shifted repeatedly and the whole
+        // composition drifts right until it piles against the frame edge.
+        var done=false;
+        for(var i2=0;i2<rects.length && !done;i2++){
+          for(var j2=i2+1;j2<rects.length && !done;j2++){
             var A2=rects[i2],B2=rects[j2];
             if(A2.right+gap<=B2.left||B2.right+gap<=A2.left||
                A2.bottom+gap<=B2.top||B2.bottom+gap<=A2.top) continue;
             var a1=spec[i2%spec.length], b1=spec[j2%spec.length];
             var dx=(A2.left+A2.width/2)-(B2.left+B2.width/2);
             var dy=(A2.top+A2.height/2)-(B2.top+B2.height/2);
-            if(Math.abs(dx)>=Math.abs(dy)){
-              var sx=dx>=0?0.05:-0.05;
-              a1.ax=Math.max(0,Math.min(1,a1.ax+sx)); b1.ax=Math.max(0,Math.min(1,b1.ax-sx));
-            } else {
-              var sy=dy>=0?0.06:-0.06;
-              a1.ay=Math.max(0,Math.min(1,a1.ay+sy)); b1.ay=Math.max(0,Math.min(1,b1.ay-sy));
+            // never drift more than 0.18 from the curated template anchor
+            function nudge(o,key,d){
+              var base=o[key+'0']!==undefined?o[key+'0']:(o[key+'0']=o[key]);
+              o[key]=Math.max(0,Math.min(1,Math.max(base-0.18,Math.min(base+0.18,o[key]+d))));
             }
+            if(Math.abs(dx)>=Math.abs(dy)){
+              var sx=dx>=0?0.05:-0.05; nudge(a1,'ax',sx); nudge(b1,'ax',-sx);
+            } else {
+              var sy=dy>=0?0.06:-0.06; nudge(a1,'ay',sy); nudge(b1,'ay',-sy);
+            }
+            done=true;
           }
         }
         if(scale>MIN) scale=Math.max(MIN, scale-0.025);
