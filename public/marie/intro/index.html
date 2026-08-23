@@ -19,6 +19,8 @@
   padding:5px 9px;cursor:pointer} #tl button:hover{border-color:#c9a24e}
  #tl input{width:min(320px,42vw);accent-color:#c9a24e} #tn{min-width:78px}
  #tl.hide{display:none}
+ #dustvid{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:3;
+  opacity:0;pointer-events:none;mix-blend-mode:normal}
  #reveal{position:fixed;inset:0;z-index:2;opacity:0;pointer-events:none;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   background:radial-gradient(ellipse 72% 62% at 50% 56%,#3d2c18 0%,#1e1409 46%,#080503 79%,#000 100%)}
@@ -30,6 +32,7 @@
 </style></head><body>
 <div class="hud" id="hud">loading&hellip;</div>
 <div id="reveal"><div id="rtitle">Abby&rsquo;s Museum</div><div id="rsub">est. 2026 &middot; Chicago</div></div>
+<video id="dustvid" playsinline muted preload="auto" disablepictureinpicture></video>
 <div id="hint">tap to shatter</div>
 <div id="tl"><button id="pp">replay</button><span id="tn">0.00s</span>
 <input type="range" id="sc" min="0" max="500" step="1" value="0"><button id="hd">hide</button></div>
@@ -248,6 +251,18 @@ const easeOut=x=>1-Math.pow(1-x,3), easeIn=x=>x*x;
 let intact=null, shards=null, mixer=null, simDur=1, baseY=0;
 let state='IDLE', t=0, dragAmt=0, spin=0;
 
+// baked Mantaflow dust. two encodes because only safari does HEVC alpha and
+// only chrome/firefox do VP9 alpha; whichever loads first wins.
+const dv=document.getElementById('dustvid');
+let vidReady=false;
+(function(){
+  const canHevc = dv.canPlayType('video/mp4; codecs="hvc1"') !== '';
+  const src = canHevc ? './dust_hevc.mp4' : './dust_vp9.webm';
+  dv.src = src;
+  dv.addEventListener('canplaythrough', ()=>{ vidReady=true; }, {once:true});
+  dv.addEventListener('error', ()=>{ vidReady=false; });
+})();
+
 const draco=new DRACOLoader(); draco.setDecoderPath('../vendor/draco/');
 const L=new GLTFLoader(); L.setDRACOLoader(draco);
 const hud=document.getElementById('hud');
@@ -297,7 +312,15 @@ function sync(){
   // the bake plays straight, exactly as it does in the sim viewer
   if(mixer && impacted) mixer.setTime(Math.min(ta,simDur));
 
-  if(impacted){
+  if(vidReady){
+    dv.style.opacity = impacted ? '1' : '0';
+    if(impacted){
+      const want=Math.min(dv.duration||1.83, ta);
+      if(state==='SCRUB'){ if(Math.abs(dv.currentTime-want)>0.04) dv.currentTime=want; }
+      else if(dv.paused && ta<0.05){ dv.currentTime=0; dv.play().catch(()=>{}); }
+    } else if(!dv.paused) dv.pause();
+  }
+  if(impacted && !vidReady){
     const arr=dGeo.attributes.position.array;
     for(let i=0;i<DUST;i++){
       const age=ta-aBirth[i];
@@ -320,7 +343,7 @@ function sync(){
     flGeo.attributes.position.needsUpdate=true;
     flMat.opacity=Math.min(0.85,fa*6.0)*Math.max(0,1-fa/1.1);
     dMat.uniforms.uTime.value=ta;
-  } else { dMat.uniforms.uTime.value=-1; flMat.opacity=0; }
+  } else { dMat.uniforms.uTime.value=-1; if(!vidReady) flMat.opacity=0; }
 
   const rv=document.getElementById('reveal');
   // hard cut behind the veil, never a crossfade, then the title emerges through haze
