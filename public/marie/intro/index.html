@@ -325,10 +325,10 @@ function sync(){
   const rv=document.getElementById('reveal');
   // hard cut behind the veil, never a crossfade, then the title emerges through haze
   if(rv){
-    const swapped = impacted && ta>=1.62;
+    const swapped = impacted && ta>=2.62;
     rv.style.opacity = swapped ? '1' : '0';
     const ti=document.getElementById('rtitle'), sb=document.getElementById('rsub');
-    const k=Math.max(0,Math.min(1,(ta-1.92)/0.62));
+    const k=Math.max(0,Math.min(1,(ta-2.95)/0.70));
     const e=k<0.5 ? 4*k*k*k : 1-Math.pow(-2*k+2,3)/2;
     if(ti) ti.style.opacity=e.toFixed(3);
     if(sb) sb.style.opacity=e.toFixed(3);
