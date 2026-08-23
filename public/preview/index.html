@@ -621,7 +621,7 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
     var safe = {
       x: wall.width*0.035,
       y: wall.height*0.02,
-      w: Math.max(320, Math.min(wall.width*0.965, railX) - wall.width*0.035),
+      w: Math.max(320, Math.min(wall.width*0.965, railX-46) - wall.width*0.035),
       h: wall.height*0.94
     };
 
