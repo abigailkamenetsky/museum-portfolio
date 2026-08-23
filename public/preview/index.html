@@ -642,7 +642,8 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
         // the readable-measure floor must come BEFORE the height cap: applied
         // after, it re-inflated whatever the cap had just shrunk and the item
         // overran its band again.
-        w=Math.max(w, Math.min(172, safe.w*0.12));
+        w=Math.max(w, Math.min(172, safe.w*0.12, budget/n));   // never break the budget
+        w=Math.min(w, safe.w*0.92);                            // never exceed the wall
         var ar=parseFloat(el.dataset.ar)||1.25;
         var maxH=safe.h*0.92*scale;
         if(w*ar>maxH) w=maxH/ar;                      // fitting wins over measure
