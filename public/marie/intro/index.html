@@ -133,9 +133,9 @@ for(let i=0;i<DUST;i++){
   dVel[i*3+2]=Math.sin(a)*sp+toward*(0.6+Math.random());
   dSeed[i]=Math.random()*6.283;
   // most of the cloud is thrown in the first moments, the rest keeps feeding
-  aBirth[i]= kind<4 ? Math.random()*0.45          // impact puff, immediate
-         : kind<8 ? 0.75+Math.random()*1.70     // the body, after the break reads
-         :          1.70+Math.random()*1.30;    // rolls at the lens last
+  aBirth[i]= kind<4 ? 0.66+Math.random()*0.30     // as the first pieces land
+           : kind<8 ? 1.00+Math.random()*1.40     // the body, as the pile settles
+           :          1.80+Math.random()*1.20;    // rolls at the lens last
   aLife[i]=2.2+Math.random()*2.2;
   aSize[i]=(kind<4?1.1:kind<8?2.3:3.6)*(0.55+Math.pow(Math.random(),1.5)*1.4);
   aDirt[i]=Math.random()<0.22 ? 0.72+Math.random()*0.14 : 0.94+Math.random()*0.06;
