@@ -19,17 +19,9 @@
   padding:5px 9px;cursor:pointer} #tl button:hover{border-color:#c9a24e}
  #tl input{width:min(320px,42vw);accent-color:#c9a24e} #tn{min-width:78px}
  #tl.hide{display:none}
- #reveal{position:fixed;inset:0;z-index:2;opacity:0;pointer-events:none;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  background:radial-gradient(ellipse 70% 60% at 50% 58%,#3a2a17 0%,#1d1409 46%,#080503 78%,#000 100%)}
- #rtitle{font-size:clamp(30px,6.4vw,74px);color:#f2e4c6;letter-spacing:.015em;
-  text-shadow:0 0 44px rgba(201,162,78,.45)}
- #rsub{margin-top:.7em;font-family:ui-monospace,Menlo,monospace;font-size:11px;
-  letter-spacing:.34em;color:#9d8657;text-transform:uppercase}
  @media (prefers-reduced-motion:reduce){#hint{transition:none}}
 </style></head><body>
 <div class="hud" id="hud">loading&hellip;</div>
-<div id="reveal"><div id="rtitle">Abby&rsquo;s Museum</div><div id="rsub">est. 2026 &middot; Chicago</div></div>
 <div id="hint">tap to shatter</div>
 <div id="tl"><button id="pp">replay</button><span id="tn">0.00s</span>
 <input type="range" id="sc" min="0" max="500" step="1" value="0"><button id="hd">hide</button></div>
@@ -41,289 +33,141 @@ import * as THREE from 'three';
 import { GLTFLoader } from '../vendor/loaders/GLTFLoader.js';
 import { DRACOLoader } from '../vendor/loaders/DRACOLoader.js';
 
-const R=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
-R.setPixelRatio(Math.min(devicePixelRatio,2)); R.setSize(innerWidth,innerHeight);
-R.setClearColor(0x000000,1); R.toneMapping=THREE.ACESFilmicToneMapping;
-document.body.appendChild(R.domElement);
+// camera, lights, material and 1:1 playback are copied from the sim viewer so
+// the frame at impact is identical to it. the only addition is the drop.
+const R=new THREE.WebGLRenderer({antialias:true}); R.setPixelRatio(Math.min(devicePixelRatio,2));
+R.setSize(innerWidth,innerHeight); R.setClearColor(0x000000,1);
+R.toneMapping=THREE.ACESFilmicToneMapping; document.body.appendChild(R.domElement);
 
 const scene=new THREE.Scene();
-const cam=new THREE.PerspectiveCamera(40,innerWidth/innerHeight,0.02,120);
-const rig=new THREE.Group(); rig.add(cam); scene.add(rig);   // rig falls, cam shakes
-
+const cam=new THREE.PerspectiveCamera(40,innerWidth/innerHeight,0.02,80); cam.position.set(0,0.35,3.1);
 scene.add(new THREE.AmbientLight(0x33343a,0.75));
 const key=new THREE.DirectionalLight(0xfff8ef,2.4); key.position.set(-1.4,1.2,1.6); scene.add(key);
 const fill=new THREE.DirectionalLight(0xd8e4ff,0.5); fill.position.set(1.6,0.2,1.0); scene.add(fill);
 const rim=new THREE.DirectionalLight(0xfff2dd,1.3); rim.position.set(0.8,0.9,-1.7); scene.add(rim);
-const flash=new THREE.PointLight(0xfff0d8,0,7); flash.position.set(0,0.15,0.5); scene.add(flash);
-
 const marble=new THREE.MeshStandardMaterial({color:0xdcd8d1,roughness:0.47});
 
-// ── ground: the only thing that makes falling legible against pure black ──
 function radial(stops){
   const c=document.createElement('canvas'); c.width=c.height=256;
   const g=c.getContext('2d'), rg=g.createRadialGradient(128,128,0,128,128,128);
   for(const [o,col] of stops) rg.addColorStop(o,col);
   g.fillStyle=rg; g.fillRect(0,0,256,256); return new THREE.CanvasTexture(c);
 }
-const floorTex=radial([[0,'rgba(150,140,125,0.85)'],[0.45,'rgba(70,64,55,0.34)'],[1,'rgba(0,0,0,0)']]);
-const floor=new THREE.Mesh(new THREE.PlaneGeometry(15,15),
-  new THREE.MeshBasicMaterial({map:floorTex,transparent:true,depthWrite:false}));
-floor.rotation.x=-Math.PI/2; floor.position.y=-0.001; floor.material.opacity=0; scene.add(floor);
-const shadowTex=radial([[0,'rgba(0,0,0,0.82)'],[0.6,'rgba(0,0,0,0.30)'],[1,'rgba(0,0,0,0)']]);
-const contact=new THREE.Mesh(new THREE.PlaneGeometry(1,1),
-  new THREE.MeshBasicMaterial({map:shadowTex,transparent:true,depthWrite:false}));
-contact.rotation.x=-Math.PI/2; contact.position.y=0.004; scene.add(contact);
-
-// ── dust: untextured points draw as hard squares, so every puff needs a sprite ──
+// untextured points draw as hard squares, so the dust needs a soft sprite
 const dustTex=radial([[0,'rgba(255,252,246,0.95)'],[0.35,'rgba(226,218,203,0.42)'],[1,'rgba(190,182,168,0)']]);
-const DUST=3400, dPos=new Float32Array(DUST*3), dVel=new Float32Array(DUST*3),
-      dSeed=new Float32Array(DUST), dSize=new Float32Array(DUST);
+const DUST=1500, dPos=new Float32Array(DUST*3), dVel=new Float32Array(DUST*3), dSeed=new Float32Array(DUST);
 for(let i=0;i<DUST;i++){
-  const a=Math.random()*Math.PI*2, r=Math.pow(Math.random(),0.42)*0.34;
-  dPos[i*3]=Math.cos(a)*r; dPos[i*3+1]=Math.random()*0.06; dPos[i*3+2]=Math.sin(a)*r;
-  // a third of the cloud rolls at the lens. that is what wipes the frame,
-  // the way a real collapse buries the camera in its own dust.
-  const toCam=i%3===0;
-  const sp=(toCam?1.5:0.5)+Math.random()*(toCam?2.6:1.4);
-  const lift=(toCam?0.5:0.25)+Math.random()*1.0;
-  dVel[i*3]=Math.cos(a)*sp*(toCam?0.55:1);
-  dVel[i*3+1]=lift;
-  dVel[i*3+2]=(toCam? 1.4+Math.random()*2.8 : Math.sin(a)*sp*0.8-Math.random()*0.5);
-  dSeed[i]=Math.random()*6.283; dSize[i]=(toCam?0.18:0.05)+Math.random()*(toCam?0.5:0.2);
+  const a=Math.random()*Math.PI*2, r=Math.pow(Math.random(),0.45)*0.32;
+  dPos[i*3]=Math.cos(a)*r; dPos[i*3+1]=Math.random()*0.05; dPos[i*3+2]=Math.sin(a)*r;
+  const sp=0.35+Math.random()*1.25, lift=0.20+Math.random()*0.7;
+  dVel[i*3]=Math.cos(a)*sp; dVel[i*3+1]=lift; dVel[i*3+2]=Math.sin(a)*sp*0.8-Math.random()*0.4;
+  dSeed[i]=Math.random()*6.283;
 }
 const dGeo=new THREE.BufferGeometry();
 dGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(DUST*3),3));
-dGeo.setAttribute('size',new THREE.BufferAttribute(dSize,1));
 const dMat=new THREE.PointsMaterial({map:dustTex,transparent:true,depthWrite:false,
-  blending:THREE.NormalBlending,size:0.3,sizeAttenuation:true,opacity:0,color:0xd9d2c4});
+  size:0.15,sizeAttenuation:true,opacity:0,color:0xd9d2c4});
 const dust=new THREE.Points(dGeo,dMat); dust.frustumCulled=false; scene.add(dust);
 
-// ── marble chips: cheap extra density so the burst reads as debris, not 113 slabs ──
-const CHIPS=190;
-const chipGeo=new THREE.TetrahedronGeometry(0.019,0);
-const chipMat=new THREE.MeshStandardMaterial({color:0xe8e3da,roughness:0.55,
-  emissive:0x2a2822,emissiveIntensity:0.6});
-const chips=new THREE.InstancedMesh(chipGeo,chipMat,CHIPS);
-chips.instanceMatrix.setUsage(THREE.DynamicDrawUsage); chips.frustumCulled=false;
-chips.visible=false; scene.add(chips);
-const cDir=[],cSpin=[],cScale=[];
-for(let i=0;i<CHIPS;i++){
-  const a=Math.random()*Math.PI*2, e=(Math.random()-0.28)*1.5, sp=1.2+Math.random()*4.4;
-  cDir.push(new THREE.Vector3(Math.cos(a)*Math.cos(e),Math.sin(e)+0.35,Math.sin(a)*Math.cos(e)-0.55)
-    .normalize().multiplyScalar(sp));
-  cSpin.push(new THREE.Vector3(Math.random()*9-4.5,Math.random()*9-4.5,Math.random()*9-4.5));
-  cScale.push(0.4+Math.random()*1.5);
-}
-const _m=new THREE.Matrix4(), _q=new THREE.Quaternion(), _e=new THREE.Euler(),
-      _v=new THREE.Vector3(), _s=new THREE.Vector3();
+const T_EASE=0.34, T_FALL=0.46, T_IMPACT=T_EASE+T_FALL, DUR=5.0;
+const DROP=1.45;                    // she falls this far. the camera never moves.
+const easeOut=x=>1-Math.pow(1-x,3), easeIn=x=>x*x;
 
-// ── timeline, all seconds. every value below is a pure function of t. ─────
-const T_EASE=0.42, T_FALL=0.60, T_IMPACT=T_EASE+T_FALL, DUR=5.0;
-const Y0=2.35;                       // she starts this high and drops to the floor
-const easeOut=x=>1-Math.pow(1-x,3);
-const easeIn =x=>x*x;
-
-let intact=null, shards=null, mixer=null, simDur=1, pieces=[];
-let state='IDLE', t=0, tapped=false, dragX=0, dragY=0, spin=0, tilt=0;
+let intact=null, shards=null, mixer=null, simDur=1, baseY=0;
+let state='IDLE', t=0, dragAmt=0, spin=0;
 
 const draco=new DRACOLoader(); draco.setDecoderPath('../vendor/draco/');
 const L=new GLTFLoader(); L.setDRACOLoader(draco);
 const hud=document.getElementById('hud');
 
 L.load('../sim/sim.glb',(s)=>{
-  {
-    shards=s.scene; shards.visible=false; scene.add(shards);
-    let n=0; shards.traverse(o=>{ if(o.isMesh){ o.material=marble; n++; } });
-    const sb=new THREE.Box3().setFromObject(shards);
-    const sh=sb.max.y-sb.min.y;                 // the fracture was cut at a different scale
-    L.load('../marie.glb',(g)=>{
-      const b=new THREE.Box3().setFromObject(g.scene), c=new THREE.Vector3(); b.getCenter(c);
-      g.scene.position.sub(c);
-      intact=new THREE.Group(); intact.add(g.scene);
-      intact.scale.setScalar(sh/(b.max.y-b.min.y));
-      g.scene.position.y+=(c.y-b.min.y);        // feet on y=0 after scaling
-      intact.traverse(o=>{ if(o.isMesh) o.material=marble; });
-      scene.add(intact);
-    });
-  }
-  {
-    mixer=new THREE.AnimationMixer(shards); simDur=0;
-    for(const cl of s.animations){ const a=mixer.clipAction(cl);
-      a.loop=THREE.LoopOnce; a.clampWhenFinished=true; a.play();
-      simDur=Math.max(simDur,cl.duration); }
-    // the bake settles on the floor; this pushes pieces past the lens instead
-    mixer.setTime(0);
-    shards.updateMatrixWorld(true);
-    // the push has to land on the node the clip drives. mixer.setTime rewrites
-    // that node every frame, so += is safe there; on any other node the offset
-    // would compound forever and throw the piece out of the world.
-    const driven=new Set();
-    for(const cl of s.animations) for(const tr of cl.tracks){
-      const pb=THREE.PropertyBinding.parseTrackName(tr.name);
-      const node=THREE.PropertyBinding.findNode(shards,pb.nodeName);
-      if(node) driven.add(node);
-    }
-    driven.forEach(o=>{
-      const p=o.position.clone();
-      const out=new THREE.Vector3(p.x,Math.max(p.y,0.05)*0.55,p.z);
-      if(out.lengthSq()<1e-6) out.set(Math.random()-0.5,0.4,Math.random()-0.5);
-      out.normalize();
-      out.z-=0.62; out.y+=0.18; out.normalize();       // bias hard toward the lens
-      pieces.push({o,out,base:p.clone(),
-        gain:0.55+Math.random()*1.5, spin:new THREE.Vector3(
-          Math.random()*7-3.5,Math.random()*7-3.5,Math.random()*7-3.5)});
-    });
-    hud.innerHTML='<b>shards</b> '+pieces.length+'<br><b>chips</b> '+CHIPS+'<br><b>dust</b> '+DUST+
-      '<br><b>drop</b> '+T_IMPACT.toFixed(2)+'s<br><b>fps</b> <span id="fps">--</span>';
+  shards=s.scene; shards.visible=false; scene.add(shards);
+  let n=0; shards.traverse(o=>{ if(o.isMesh){ o.material=marble; n++; } });
+  const sb=new THREE.Box3().setFromObject(shards), c=new THREE.Vector3(); sb.getCenter(c);
+  baseY=sb.min.y; cam.lookAt(0,c.y,0); dust.position.y=baseY;
+  mixer=new THREE.AnimationMixer(shards); simDur=0;
+  for(const cl of s.animations){ const a=mixer.clipAction(cl);
+    a.loop=THREE.LoopOnce; a.clampWhenFinished=true; a.play(); simDur=Math.max(simDur,cl.duration); }
+
+  L.load('../marie.glb',(g)=>{
+    const b=new THREE.Box3().setFromObject(g.scene), ic=new THREE.Vector3(); b.getCenter(ic);
+    g.scene.position.sub(ic);
+    intact=new THREE.Group(); intact.add(g.scene);
+    intact.scale.setScalar((sb.max.y-sb.min.y)/(b.max.y-b.min.y));
+    g.scene.position.y+=(ic.y-b.min.y);
+    intact.traverse(o=>{ if(o.isMesh) o.material=marble; });
+    scene.add(intact);
+    hud.innerHTML='<b>shards</b> '+n+'<br><b>dust</b> '+DUST+'<br><b>drop</b> '+
+      T_IMPACT.toFixed(2)+'s<br><b>fps</b> <span id="fps">--</span>';
     document.getElementById('hint').classList.add('in');
-  }
+    sync();
+  });
 },undefined,(e)=>{hud.textContent='FAILED '+e;});
 
-function render(){
+function sync(){
   const impacted = state!=='IDLE' && t>=T_IMPACT;
-  const ta = Math.max(0, t-T_IMPACT);            // seconds since impact
+  const ta = Math.max(0,t-T_IMPACT);
 
-  // ── the statue ─────────────────────────────────────────────────────────
-  let y=Y0, rot=spin;
-  if(state==='IDLE'){ y=Y0; }
-  else if(t<T_EASE){                              // anticipation: she settles back
-    const k=easeOut(t/T_EASE); y=Y0+k*0.12; rot=spin+k*0.05;
-  } else if(!impacted){
-    const k=easeIn((t-T_EASE)/T_FALL);            // gravity, not linear
-    y=(Y0+0.12)*(1-k); rot=spin+0.05+k*0.16;
-  } else y=0;
+  let lift=DROP, rot=spin;
+  if(state==='IDLE') lift=DROP;
+  else if(!impacted){
+    if(t<T_EASE){ const k=easeOut(t/T_EASE); lift=DROP+k*0.10; rot=spin+k*0.04; }
+    else { const k=easeIn((t-T_EASE)/T_FALL); lift=(DROP+0.10)*(1-k); rot=spin+0.04+k*0.10; }
+  } else lift=0;
 
-  if(intact){
-    intact.position.y=y; intact.rotation.y=rot; intact.rotation.x=tilt;
-    intact.visible=!impacted;
-  }
-  if(shards){
-    shards.visible=impacted;
-    shards.rotation.y=rot; shards.rotation.x=tilt;
-  }
+  if(intact){ intact.position.y=baseY+lift; intact.rotation.y=rot; intact.visible=!impacted; }
+  if(shards){ shards.visible=impacted; shards.rotation.y=rot; }
 
-  // ── camera rides the fall, then shakes on the hit ──────────────────────
-  // it frames her wherever she is, and lags a little on the way down so she
-  // sinks in shot. without this the whole drop happened above the top edge.
-  const LIFT=0.66;
-  let lag=0, camZ=3.15;
-  if(state!=='IDLE' && t>=T_EASE && !impacted){
-    const k=easeIn((t-T_EASE)/T_FALL);
-    lag=0.42*k; camZ=3.15-0.30*k;
-  } else if(impacted){
-    lag=0.42; camZ=2.85-Math.min(0.62,ta*1.1);
-  }
-  const camY=y+LIFT+lag;
-  rig.position.set(0,camY,0); cam.position.set(0,0,camZ);
-  let shake=0;
-  if(impacted && ta<0.55){ shake=(1-ta/0.55); shake*=shake*0.085; }
-  cam.position.x=Math.sin(ta*97)*shake; cam.position.y=Math.cos(ta*113)*shake;
-  cam.lookAt(0,y+0.52,0);
+  // the bake plays straight, exactly as it does in the sim viewer
+  if(mixer && impacted) mixer.setTime(Math.min(ta,simDur));
 
-  // ── ground reads only as she nears it ──────────────────────────────────
-  const near=1-Math.min(1,y/Y0);
-  floor.material.opacity = state==='IDLE' ? 0 : Math.min(0.55,near*near*0.62)+(impacted?0.16:0);
-  const cs=1.9-near*0.85;
-  contact.scale.set(cs,cs,cs);
-  contact.material.opacity = state==='IDLE' ? 0 : Math.min(0.7,near*near*0.8)*(impacted?Math.max(0,1-ta*0.7):1);
-
-  // ── the shatter itself ─────────────────────────────────────────────────
-  if(mixer && impacted){
-    // the bake plays straight. an earlier version added a procedural push to
-    // force the screen-cover and it fought the solver, which read worse than
-    // the physics alone. coverage comes from the camera now, not from shoving
-    // the pieces around.
-    mixer.setTime(Math.min(ta,simDur));
-  }
-
-  // ── chips ──────────────────────────────────────────────────────────────
-  chips.visible=impacted && ta<3.2;
-  if(chips.visible){
-    for(let i=0;i<CHIPS;i++){
-      const d=cDir[i];
-      _v.set(d.x*ta, d.y*ta-4.4*ta*ta*0.5+0.12, d.z*ta);
-      if(_v.y<0.01) _v.y=0.01;
-      _e.set(cSpin[i].x*ta,cSpin[i].y*ta,cSpin[i].z*ta);
-      _q.setFromEuler(_e);
-      const sc=cScale[i]*Math.max(0,1-ta/3.2);
-      _s.set(sc,sc,sc);
-      chips.setMatrixAt(i,_m.compose(_v,_q,_s));
-    }
-    chips.instanceMatrix.needsUpdate=true;
-  }
-
-  // ── dust ───────────────────────────────────────────────────────────────
   if(impacted){
-    const arr=dGeo.attributes.position.array;
+    const arr=dGeo.attributes.position.array, drag=1-Math.exp(-ta*1.4);
     for(let i=0;i<DUST;i++){
-      const drag=1-Math.exp(-ta*1.15);              // billows out then stalls
-      const px=dPos[i*3]+dVel[i*3]*drag*0.95;
-      const py=dPos[i*3+1]+dVel[i*3+1]*drag*0.62-0.05*ta*ta
-              +Math.sin(dSeed[i]+ta*1.3)*0.055*ta;
-      const pz=dPos[i*3+2]+dVel[i*3+2]*drag*1.25;
-      arr[i*3]=px; arr[i*3+1]=Math.max(0.005,py); arr[i*3+2]=pz;
+      arr[i*3]=dPos[i*3]+dVel[i*3]*drag*0.95;
+      arr[i*3+1]=Math.max(0.004,dPos[i*3+1]+dVel[i*3+1]*drag*0.6-0.05*ta*ta
+                 +Math.sin(dSeed[i]+ta*1.3)*0.05*ta);
+      arr[i*3+2]=dPos[i*3+2]+dVel[i*3+2]*drag*0.95;
     }
     dGeo.attributes.position.needsUpdate=true;
-    dMat.size=0.20+ta*0.62;
-    dMat.opacity=Math.min(0.92,ta*1.9)*Math.max(0,1-Math.pow(Math.max(0,ta-1.5)/1.6,1.5));
+    dMat.size=0.15+ta*0.16;
+    dMat.opacity=Math.min(0.34,ta*2.6)*Math.max(0,1-Math.pow(ta/2.6,1.5));
   } else dMat.opacity=0;
-
-  // the cloud peaks, the museum is already behind it, and the thinning reveals it
-  const rev=document.getElementById('reveal');
-  rev.style.opacity = impacted ? Math.max(0,Math.min(1,(ta-0.85)/0.75)).toFixed(3) : '0';
-
-  flash.intensity = impacted ? Math.max(0,1-ta/0.16)*9 : 0;
 
   document.getElementById('tn').textContent=t.toFixed(2)+'s';
   document.getElementById('sc').value=Math.round(t/DUR*500);
-  R.render(scene,cam);
 }
 
-// ── input ────────────────────────────────────────────────────────────────
-let dragging=false,lx=0,ly=0;
-addEventListener('pointerdown',e=>{
+let dragging=false,lx=0;
+addEventListener('pointerdown',e=>{ if(e.target.closest('#tl')) return;
+  dragging=true; lx=e.clientX; dragAmt=0;
+  try{R.domElement.setPointerCapture(e.pointerId);}catch(_){} });
+addEventListener('pointermove',e=>{ if(!dragging) return;
+  const dx=e.clientX-lx; lx=e.clientX; dragAmt+=Math.abs(dx);
+  if(state==='IDLE') spin+=dx*0.006; });
+addEventListener('pointerup',e=>{ if(!dragging) return; dragging=false;
   if(e.target.closest('#tl')) return;
-  dragging=true; lx=e.clientX; ly=e.clientY; dragX=0;
-  try{R.domElement.setPointerCapture(e.pointerId);}catch(_){}
-});
-addEventListener('pointermove',e=>{
-  if(!dragging) return;
-  const dx=e.clientX-lx, dy=e.clientY-ly; lx=e.clientX; ly=e.clientY;
-  dragX+=Math.abs(dx)+Math.abs(dy);
-  if(state==='IDLE'){ spin+=dx*0.006; tilt=Math.max(-0.3,Math.min(0.3,tilt+dy*0.003)); }
-});
-addEventListener('pointerup',e=>{
-  if(!dragging) return; dragging=false;
-  if(e.target.closest('#tl')) return;
-  if(dragX<6 && state==='IDLE' && shards){       // a tap, not the end of a drag
-    state='RUN'; t=0; tapped=true;
+  if(dragAmt<6 && state==='IDLE' && shards){ state='RUN'; t=0;
     document.body.classList.add('tapped');
-    document.getElementById('hint').classList.remove('in');
-  }
-});
+    document.getElementById('hint').classList.remove('in'); } });
 document.getElementById('pp').addEventListener('click',()=>{ if(shards){state='RUN'; t=0;} });
-document.getElementById('sc').addEventListener('input',e=>{
-  if(!shards) return; state='SCRUB'; t=+e.target.value/500*DUR;
-  document.getElementById('hint').classList.remove('in'); render();
-});
+document.getElementById('sc').addEventListener('input',e=>{ if(!shards) return;
+  state='SCRUB'; t=+e.target.value/500*DUR;
+  document.getElementById('hint').classList.remove('in'); sync(); });
 document.getElementById('hd').addEventListener('click',()=>{
-  document.getElementById('tl').classList.toggle('hide');
-});
+  document.getElementById('tl').classList.toggle('hide'); });
 const qt=new URLSearchParams(location.search).get('t');
 if(qt!==null){ state='SCRUB'; t=Math.max(0,Math.min(DUR,+qt)); }
 
 let f=0,last=performance.now(); const clock=new THREE.Clock();
-(function tick(){
-  requestAnimationFrame(tick);
+(function tick(){ requestAnimationFrame(tick);
   const dt=Math.min(clock.getDelta(),0.05);
-  if(state==='RUN'){ t+=dt; if(t>=DUR){ t=DUR; state='DONE'; } }
-  if(state==='IDLE'&&!dragging) spin+=dt*0.12;
-  render();
+  if(state==='RUN'){ t+=dt; if(t>=DUR){ t=DUR; state='DONE'; } sync(); }
+  if(state==='IDLE'){ if(!dragging) spin+=dt*0.12; sync(); }
+  R.render(scene,cam);
   f++; const p=performance.now();
   if(p-last>1000){ const el=document.getElementById('fps');
-    if(el) el.textContent=Math.round(f*1000/(p-last)); f=0; last=p; }
-})();
-addEventListener('resize',()=>{
-  cam.aspect=innerWidth/innerHeight; cam.updateProjectionMatrix(); R.setSize(innerWidth,innerHeight);
-});
+    if(el) el.textContent=Math.round(f*1000/(p-last)); f=0; last=p; } })();
+addEventListener('resize',()=>{ cam.aspect=innerWidth/innerHeight;
+  cam.updateProjectionMatrix(); R.setSize(innerWidth,innerHeight); });
 </script></body></html>
