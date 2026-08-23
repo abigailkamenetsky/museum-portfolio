@@ -33,7 +33,7 @@
 <div class="hud" id="hud">loading&hellip;</div>
 <div id="reveal"><div id="rtitle">Abby&rsquo;s Museum</div><div id="rsub">est. 2026 &middot; Chicago</div></div>
 <video id="dustvid" playsinline muted preload="auto" disablepictureinpicture></video>
-<div id="hint">tap to shatter</div>
+<div id="hint">drag to look &middot; tap to shatter</div>
 <div id="tl"><button id="pp">replay</button><span id="tn">0.00s</span>
 <input type="range" id="sc" min="0" max="500" step="1" value="0"><button id="hd">hide</button></div>
 <script type="importmap">
@@ -248,8 +248,10 @@ const T_EASE=0.34, T_FALL=0.46, T_IMPACT=T_EASE+T_FALL, DUR=6.2;
 const DROP=0.72;                    // she falls this far. the camera never moves.
 const easeOut=x=>1-Math.pow(1-x,3), easeIn=x=>x*x;
 
-let intact=null, shards=null, mixer=null, simDur=1, baseY=0;
+let intact=null, shards=null, mixer=null, simDur=1, baseY=0, camAimY=1.0;
 let state='IDLE', t=0, dragAmt=0, spin=0;
+let az=0, el=0.06;                    // full orbit while idle
+const R_ORB=4.75, EL_MIN=-1.15, EL_MAX=1.30;   // under the chin to over the crown
 
 // baked Mantaflow dust. two encodes because only safari does HEVC alpha and
 // only chrome/firefox do VP9 alpha; whichever loads first wins.
@@ -301,6 +303,17 @@ function sync(){
     if(t<T_EASE){ const k=easeOut(t/T_EASE); lift=DROP+k*0.10; rot=spin+k*0.04; }
     else { const k=easeIn((t-T_EASE)/T_FALL); lift=(DROP+0.10)*(1-k); rot=spin+0.04+k*0.10; }
   } else lift=0;
+
+  if(state!=='IDLE'){                       // ease home before she drops
+    const k=Math.min(1,t/T_EASE);
+    az*=(1-k); el=el*(1-k)+0.06*k;
+  }
+  const ty=baseY+(camAimY||1.0);
+  cam.position.set(
+    R_ORB*Math.cos(el)*Math.sin(az),
+    ty + R_ORB*Math.sin(el),
+    R_ORB*Math.cos(el)*Math.cos(az));
+  cam.lookAt(0,ty,0);
 
   if(intact){ intact.position.y=baseY+lift; intact.rotation.y=rot; intact.visible=!impacted; }
   // 3-6px equivalent, damped over ~180ms. not an earthquake.
@@ -361,13 +374,17 @@ function sync(){
   document.getElementById('sc').value=Math.round(t/DUR*500);
 }
 
-let dragging=false,lx=0,tDown=0;
+let dragging=false,lx=0,ly=0,tDown=0;
 addEventListener('pointerdown',e=>{ if(e.target.closest('#tl')) return;
-  dragging=true; lx=e.clientX; dragAmt=0; tDown=performance.now();
+  dragging=true; lx=e.clientX; ly=e.clientY; dragAmt=0; tDown=performance.now();
   try{R.domElement.setPointerCapture(e.pointerId);}catch(_){} });
 addEventListener('pointermove',e=>{ if(!dragging) return;
-  const dx=e.clientX-lx; lx=e.clientX; dragAmt+=Math.abs(dx);
-  if(state==='IDLE') spin+=dx*0.006; });
+  const dx=e.clientX-lx, dy=e.clientY-ly; lx=e.clientX; ly=e.clientY;
+  dragAmt+=Math.abs(dx)+Math.abs(dy);
+  if(state==='IDLE'){
+    az-=dx*0.0062;
+    el=Math.max(EL_MIN,Math.min(EL_MAX, el+dy*0.0052));
+  } });
 addEventListener('pointerup',e=>{ if(!dragging) return; dragging=false;
   if(e.target.closest('#tl')) return;
   const quick=performance.now()-tDown<400;
@@ -387,7 +404,7 @@ let f=0,last=performance.now(); const clock=new THREE.Clock();
 (function tick(){ requestAnimationFrame(tick);
   const dt=Math.min(clock.getDelta(),0.05);
   if(state==='RUN'){ t+=dt; if(t>=DUR){ t=DUR; state='DONE'; } sync(); }
-  if(state==='IDLE'){ if(!dragging) spin+=dt*0.12; sync(); }
+  if(state==='IDLE'){ if(!dragging) az+=dt*0.10; sync(); }
   // pass 1: dust alone, half res, transparent clear
   cam.layers.disableAll(); cam.layers.enable(DUST_LAYER);
   R.setRenderTarget(rt); R.setClearColor(0x000000,0); R.clear(true,false,false);
