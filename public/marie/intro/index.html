@@ -177,16 +177,17 @@ function sync(){
   document.getElementById('sc').value=Math.round(t/DUR*500);
 }
 
-let dragging=false,lx=0;
+let dragging=false,lx=0,tDown=0;
 addEventListener('pointerdown',e=>{ if(e.target.closest('#tl')) return;
-  dragging=true; lx=e.clientX; dragAmt=0;
+  dragging=true; lx=e.clientX; dragAmt=0; tDown=performance.now();
   try{R.domElement.setPointerCapture(e.pointerId);}catch(_){} });
 addEventListener('pointermove',e=>{ if(!dragging) return;
   const dx=e.clientX-lx; lx=e.clientX; dragAmt+=Math.abs(dx);
   if(state==='IDLE') spin+=dx*0.006; });
 addEventListener('pointerup',e=>{ if(!dragging) return; dragging=false;
   if(e.target.closest('#tl')) return;
-  if(dragAmt<6 && state==='IDLE' && shards){ state='RUN'; t=0;
+  const quick=performance.now()-tDown<400;
+  if((dragAmt<14||quick) && state==='IDLE' && shards){ state='RUN'; t=0;
     document.body.classList.add('tapped');
     document.getElementById('hint').classList.remove('in'); } });
 document.getElementById('pp').addEventListener('click',()=>{ if(shards){state='RUN'; t=0;} });
