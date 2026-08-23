@@ -645,6 +645,24 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
         el.style.left=((safe.x + a.ax*slackX)/wall.width*100).toFixed(3)+'%';
         el.style.top =((safe.y + Math.max(0,y))/wall.height*100).toFixed(3)+'%';
       });
+      // Final containment pass. Whatever the solver decided, an item that
+      // measures outside the safe box gets shifted back in. This is a
+      // post-condition on the real rect, not another guess at the cause.
+      var wr=wallEl.getBoundingClientRect();
+      var sL=wr.left+safe.x, sT=wr.top+safe.y, sR=sL+safe.w, sB=sT+safe.h;
+      [].forEach.call(works, function(el){
+        var b=el.getBoundingClientRect();
+        var dx=0, dy=0;
+        if(b.right>sR) dx=sR-b.right;
+        if(b.left+dx<sL) dx=sL-b.left;
+        if(b.bottom>sB) dy=sB-b.bottom;
+        if(b.top+dy<sT) dy=sT-b.top;
+        if(dx||dy){
+          var cl=parseFloat(el.style.left)||0, ct=parseFloat(el.style.top)||0;
+          el.style.left=(cl + dx/wall.width*100).toFixed(3)+'%';
+          el.style.top =(ct + dy/wall.height*100).toFixed(3)+'%';
+        }
+      });
       rects=[].map.call(works,function(el){ return el.getBoundingClientRect(); });
       var gap=32, bad=false;
       for(var i=0;i<rects.length && !bad;i++){
