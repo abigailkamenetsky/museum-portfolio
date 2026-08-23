@@ -197,7 +197,7 @@ function render(){
     const k=easeIn((t-T_EASE)/T_FALL);
     lag=0.42*k; camZ=3.15-0.30*k;
   } else if(impacted){
-    lag=0.42; camZ=2.85-Math.min(0.55,ta*0.9);
+    lag=0.42; camZ=2.85+Math.min(1.45,ta*1.6);
   }
   const camY=y+LIFT+lag;
   rig.position.set(0,camY,0); cam.position.set(0,0,camZ);
@@ -215,7 +215,7 @@ function render(){
 
   // ── the shatter itself ─────────────────────────────────────────────────
   if(mixer && impacted){
-    mixer.setTime(Math.min(ta,simDur));
+    mixer.setTime(Math.min(ta*0.42,simDur));
     // the procedural push rides on top of the bake, so the physics still leads
     const ramp=Math.min(1,ta/0.22), grow=Math.pow(Math.max(0,ta-0.04),1.9);
     for(const p of pieces){
