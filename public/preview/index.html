@@ -610,7 +610,7 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
     };
 
     var scale=1.0, MIN=0.66, rects=[], ok=false;
-    for(var pass=0; pass<26 && !ok; pass++){
+    for(var pass=0; pass<34 && !ok; pass++){
       // size first, then measure the real item (frame + plaque) and place it
       [].forEach.call(works, function(el,i){
         var a=spec[i%spec.length];
@@ -618,7 +618,7 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
         var w=safe.w*TIER[a.tier]*scale;
         w=Math.max(w, Math.min(172, safe.w*0.12));   // readable caption measure
         var ar=parseFloat(el.dataset.ar)||1.25;
-        var maxH=safe.h*0.385*scale;
+        var maxH=safe.h*0.325*scale;
         if(w*ar>maxH) w=maxH/ar;
         var bw=Math.max(8, Math.min(26, w*0.085));
         el.style.setProperty('--bw', bw.toFixed(1)+'px');
@@ -628,7 +628,7 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
       });
       // measure once laid out, so the plaque's wrapped height is real
       var boxes=[].map.call(works,function(el){ return el.getBoundingClientRect(); });
-      var rowMax=(safe.h-84)/2;                 // two bands plus a real gap
+      var rowMax=(safe.h-96)/2;                 // two bands plus a real gap
       var rows=spec.map(function(a){return a.row;});
       var twoBand=rows.indexOf(1)>=0;
       var cap=twoBand?rowMax:safe.h-24;
@@ -637,6 +637,7 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
         var a=spec[i%spec.length], b=boxes[i];
         var slackX=Math.max(0, safe.w-b.width);
         var y = a.row===0 ? a.jit : (safe.h - b.height - a.jit);
+        y = Math.max(0, Math.min(y, safe.h - b.height));   // never leave the wall
         el.style.left=((safe.x + a.ax*slackX)/wall.width*100).toFixed(3)+'%';
         el.style.top =((safe.y + Math.max(0,y))/wall.height*100).toFixed(3)+'%';
       });
