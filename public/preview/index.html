@@ -555,14 +555,14 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
     };
 
     var scale=1.0, MIN=0.66, rects=[], ok=false;
-    for(var pass=0; pass<12 && !ok; pass++){
+    for(var pass=0; pass<26 && !ok; pass++){
       // size first, then measure the real item (frame + plaque) and place it
       [].forEach.call(works, function(el,i){
         var a=spec[i%spec.length];
         el.style.setProperty('--r','0deg');
         var w=safe.w*TIER[a.tier]*scale;
         var ar=parseFloat(el.dataset.ar)||1.25;
-        var maxH=safe.h*0.46*scale;
+        var maxH=safe.h*0.415*scale;
         if(w*ar>maxH) w=maxH/ar;
         var bw=Math.max(8, Math.min(26, w*0.085));
         el.style.setProperty('--bw', bw.toFixed(1)+'px');
@@ -592,9 +592,9 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
         // nudge ONE pair per pass and stop. nudging every pair every pass
         // compounds: the same spec objects get shifted repeatedly and the whole
         // composition drifts right until it piles against the frame edge.
-        var done=false;
-        for(var i2=0;i2<rects.length && !done;i2++){
-          for(var j2=i2+1;j2<rects.length && !done;j2++){
+        var done=false; var fixedAny=false;
+        for(var i2=0;i2<rects.length;i2++){
+          for(var j2=i2+1;j2<rects.length;j2++){
             var A2=rects[i2],B2=rects[j2];
             if(A2.right+gap<=B2.left||B2.right+gap<=A2.left||
                A2.bottom+gap<=B2.top||B2.bottom+gap<=A2.top) continue;
@@ -611,7 +611,7 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
             } else {
               var sy=dy>=0?0.06:-0.06; nudge(a1,'ay',sy); nudge(b1,'ay',-sy);
             }
-            done=true;
+            fixedAny=true;
           }
         }
         if(scale>MIN) scale=Math.max(MIN, scale-0.025);
