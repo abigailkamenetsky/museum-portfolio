@@ -283,7 +283,9 @@ L.load('../sim/sim.glb',(s_)=>{
   const bustH=sb.max.y-sb.min.y;
   const halfFov=THREE.MathUtils.degToRad(cam.fov*0.5);
   // bust occupies ~62% of frame height, leaving real headroom above and below
-  R_ORB=(bustH*0.5/0.31)/Math.tan(halfFov);
+  // she occupies 26% of frame height (brief says 22-30). frame height at
+  // distance R is 2*R*tan(halfFov), so R = bustH / (2 * frac * tan).
+  R_ORB=bustH/(2*0.26*Math.tan(halfFov));
   console.log('bustH',bustH.toFixed(3),'R_ORB',R_ORB.toFixed(2));
 
   L.load('../marie.glb',(g)=>{
@@ -316,7 +318,8 @@ function sync(){
     const k=Math.min(1,t/T_EASE);
     az*=(1-k); el=el*(1-k)+0.06*k;
   }
-  const ty=baseY+(camAimY||1.0)+lift*0.72;
+  const follow=(state==='IDLE'||t<T_EASE)?1.0:0.72;   // lag only during the fall
+  const ty=baseY+(camAimY||1.0)+lift*follow;
   cam.position.set(
     R_ORB*Math.cos(el)*Math.sin(az),
     ty + R_ORB*Math.sin(el),
