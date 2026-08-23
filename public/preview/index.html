@@ -516,6 +516,14 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
   var DEBUG_LAYOUT = /[?&]debuglayout=1/.test(location.search);
   var TIER = { hero:0.265, medium:0.196, small:0.152 };
   var SALON = {
+    about: [
+      { tier:'hero',   ax:0.06, row:0, jit:18 },
+      { tier:'medium', ax:0.78, row:0, jit:0  }
+    ],
+    skills: [
+      { tier:'medium', ax:0.04, row:0, jit:14 },
+      { tier:'hero',   ax:0.72, row:0, jit:0  }
+    ],
     professional: [                   // 4 works, asymmetric 2 over 2
       { tier:'hero',   ax:0.02, row:0, jit:26 },
       { tier:'medium', ax:0.62, row:0, jit:0  },
@@ -604,7 +612,7 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
         el.style.setProperty('--r','0deg');
         var w=safe.w*TIER[a.tier]*scale;
         var ar=parseFloat(el.dataset.ar)||1.25;
-        var maxH=safe.h*0.415*scale;
+        var maxH=safe.h*0.385*scale;
         if(w*ar>maxH) w=maxH/ar;
         var bw=Math.max(8, Math.min(26, w*0.085));
         el.style.setProperty('--bw', bw.toFixed(1)+'px');
@@ -614,8 +622,11 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
       });
       // measure once laid out, so the plaque's wrapped height is real
       var boxes=[].map.call(works,function(el){ return el.getBoundingClientRect(); });
-      var rowMax=(safe.h-46)/2;                 // two bands plus a real gap
-      var tooTall=boxes.some(function(b){ return b.height>rowMax; });
+      var rowMax=(safe.h-84)/2;                 // two bands plus a real gap
+      var rows=spec.map(function(a){return a.row;});
+      var twoBand=rows.indexOf(1)>=0;
+      var cap=twoBand?rowMax:safe.h-24;
+      var tooTall=boxes.some(function(b){ return b.height>cap; });
       [].forEach.call(works, function(el,i){
         var a=spec[i%spec.length], b=boxes[i];
         var slackX=Math.max(0, safe.w-b.width);
