@@ -251,7 +251,7 @@ const easeOut=x=>1-Math.pow(1-x,3), easeIn=x=>x*x;
 let intact=null, shards=null, mixer=null, simDur=1, baseY=0, camAimY=1.0;
 let state='IDLE', t=0, dragAmt=0, spin=0;
 let az=0, el=0.06;                    // full orbit while idle
-const R_ORB=5.35, EL_MIN=-1.15, EL_MAX=1.30;   // under the chin to over the crown
+let R_ORB=5.35; const EL_MIN=-1.15, EL_MAX=1.30;   // under the chin to over the crown
 
 // baked Mantaflow dust. two encodes because only safari does HEVC alpha and
 // only chrome/firefox do VP9 alpha; whichever loads first wins.
@@ -280,6 +280,11 @@ L.load('../sim/sim.glb',(s_)=>{
   mixer0.setTime(0); shards.updateMatrixWorld(true);
   const sb=new THREE.Box3().setFromObject(shards), c=new THREE.Vector3(); sb.getCenter(c);
   baseY=sb.min.y; camAimY=c.y-sb.min.y; dust.position.y=baseY;
+  const bustH=sb.max.y-sb.min.y;
+  const halfFov=THREE.MathUtils.degToRad(cam.fov*0.5);
+  // bust occupies ~62% of frame height, leaving real headroom above and below
+  R_ORB=(bustH*0.5/0.31)/Math.tan(halfFov);
+  console.log('bustH',bustH.toFixed(3),'R_ORB',R_ORB.toFixed(2));
 
   L.load('../marie.glb',(g)=>{
     const b=new THREE.Box3().setFromObject(g.scene), ic=new THREE.Vector3(); b.getCenter(ic);
