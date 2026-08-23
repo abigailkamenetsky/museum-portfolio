@@ -45,7 +45,8 @@ scene.add(new THREE.AmbientLight(0x33343a,0.75));
 const key=new THREE.DirectionalLight(0xfff8ef,2.4); key.position.set(-1.4,1.2,1.6); scene.add(key);
 const fill=new THREE.DirectionalLight(0xd8e4ff,0.5); fill.position.set(1.6,0.2,1.0); scene.add(fill);
 const rim=new THREE.DirectionalLight(0xfff2dd,1.3); rim.position.set(0.8,0.9,-1.7); scene.add(rim);
-const marble=new THREE.MeshStandardMaterial({color:0xdcd8d1,roughness:0.47});
+const marble=new THREE.MeshStandardMaterial({color:0xdcd8d1,roughness:0.47,
+  vertexColors:true});   // baked AO + dust buildup ride in the mesh
 
 function radial(stops){
   const c=document.createElement('canvas'); c.width=c.height=256;
