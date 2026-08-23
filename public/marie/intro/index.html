@@ -269,14 +269,17 @@ const draco=new DRACOLoader(); draco.setDecoderPath('../vendor/draco/');
 const L=new GLTFLoader(); L.setDRACOLoader(draco);
 const hud=document.getElementById('hud');
 
-L.load('../sim/sim.glb',(s)=>{
-  shards=s.scene; shards.visible=false; scene.add(shards);
+L.load('../sim/sim.glb',(s_)=>{
+  shards=s_.scene; shards.visible=false; scene.add(shards);
   let n=0; shards.traverse(o=>{ if(o.isMesh){ o.material=marble; n++; } });
+  const mixer0=new THREE.AnimationMixer(shards); simDur=0;
+  for(const cl of s_.animations){ const a=mixer0.clipAction(cl);
+    a.loop=THREE.LoopOnce; a.clampWhenFinished=true; a.play(); a.paused=false;
+    simDur=Math.max(simDur,cl.duration); }
+  mixer=mixer0;
+  mixer0.setTime(0); shards.updateMatrixWorld(true);
   const sb=new THREE.Box3().setFromObject(shards), c=new THREE.Vector3(); sb.getCenter(c);
-  baseY=sb.min.y; cam.lookAt(0,c.y+0.30,0); dust.position.y=baseY;
-  mixer=new THREE.AnimationMixer(shards); simDur=0;
-  for(const cl of s.animations){ const a=mixer.clipAction(cl);
-    a.loop=THREE.LoopOnce; a.clampWhenFinished=true; a.play(); simDur=Math.max(simDur,cl.duration); }
+  baseY=sb.min.y; camAimY=c.y-sb.min.y; dust.position.y=baseY;
 
   L.load('../marie.glb',(g)=>{
     const b=new THREE.Box3().setFromObject(g.scene), ic=new THREE.Vector3(); b.getCenter(ic);
