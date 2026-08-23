@@ -68,13 +68,13 @@ const DUST_RGB=[214,209,199];           // the marble itself, not the surface ti
 function puff(){
   const c=document.createElement('canvas'); c.width=c.height=256;
   const g=c.getContext('2d');
-  for(let i=0;i<7;i++){
+  for(let i=0;i<11;i++){
     const px=128+(Math.random()-0.5)*96, py=128+(Math.random()-0.5)*96,
           pr=44+Math.random()*74;
     const rg=g.createRadialGradient(px,py,0,px,py,pr);
     const [r,g_,b]=DUST_RGB;
-    rg.addColorStop(0,   `rgba(${r+26},${g_+24},${b+21},0.30)`);
-    rg.addColorStop(0.45,`rgba(${r},${g_},${b},0.13)`);
+    rg.addColorStop(0,   `rgba(${r+26},${g_+24},${b+21},0.13)`);
+    rg.addColorStop(0.30,`rgba(${r},${g_},${b},0.06)`);
     rg.addColorStop(1,   `rgba(${r-16},${g_-16},${b-14},0)`);
     g.fillStyle=rg; g.beginPath(); g.arc(px,py,pr,0,6.2832); g.fill();
   }
@@ -85,7 +85,7 @@ const dustTex=puff();
 // dust is emitted continuously while the rubble keeps settling, not all at
 // once. every puff gets its own birth time, so the cloud grows instead of
 // appearing. that needs per-particle size and alpha, hence the shader.
-const DUST=3000;
+const DUST=3600;
 const dPos=new Float32Array(DUST*3), dVel=new Float32Array(DUST*3),
       dSeed=new Float32Array(DUST), aBirth=new Float32Array(DUST),
       aSize=new Float32Array(DUST), aDirt=new Float32Array(DUST),
@@ -105,7 +105,7 @@ for(let i=0;i<DUST;i++){
   // most of the cloud is thrown in the first moments, the rest keeps feeding
   aBirth[i]=Math.pow(Math.random(),2.1)*1.9;
   aLife[i]=2.2+Math.random()*2.2;
-  aSize[i]=(kind<4?0.5:kind<8?1.5:2.6)*(0.55+Math.random()*1.5);
+  aSize[i]=(kind<4?0.35:kind<8?1.0:1.9)*(0.30+Math.pow(Math.random(),1.8)*2.4);
   aDirt[i]=Math.random()<0.20 ? 0.50+Math.random()*0.22 : 0.93+Math.random()*0.07;
 }
 const dGeo=new THREE.BufferGeometry();
@@ -130,7 +130,7 @@ const dMat=new THREE.ShaderMaterial({
       float fadeOut = 1.0 - smoothstep(0.55, 1.0, t);
       vA = fadeIn * fadeOut;
       vec4 mv = modelViewMatrix * vec4(position,1.0);
-      float grow = 0.30 + 1.5 * pow(t, 0.55);      // each puff expands as it ages
+      float grow = 0.34 + 0.72 * pow(t, 0.5);      // gentle, so no puff reads as a disc
       gl_PointSize = aSize * grow * uPix * 0.22 / max(0.001, -mv.z);
       gl_Position = projectionMatrix * mv;
     }`,
