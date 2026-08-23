@@ -79,6 +79,19 @@
     transition:transform .55s cubic-bezier(.2,.8,.3,1), opacity .55s ease, filter .25s}
   .work.pre{opacity:0;--s:.86}
   .work:hover{filter:brightness(1.16)}
+  /* salon rooms: the plaque is the painting's caption, never wider than it,
+     and nothing is stacked to hide a collision. long titles wrap instead. */
+  .room.salon .work{z-index:5!important;transition:transform .2s cubic-bezier(.2,.8,.3,1),opacity .2s ease,filter .2s}
+  .room.salon .work .card{box-sizing:border-box;width:100%;max-width:100%;min-width:0;
+    text-align:center;line-height:1.28;overflow-wrap:anywhere}
+  .room.salon .work:hover{transform:rotate(var(--r)) scale(1.03) translateY(-3px);z-index:20!important}
+  .room.salon .arw{display:none}
+  @media (hover:hover){
+    .room.salon .works:hover .work{opacity:.86}
+    .room.salon .works:hover .work:hover{opacity:1}
+  }
+  .dbg-box{position:absolute;border:1px solid rgba(255,90,90,.9);pointer-events:none;z-index:60}
+  .dbg-safe{position:absolute;border:1px dashed rgba(90,200,255,.9);pointer-events:none;z-index:59}
   .work:focus-visible{outline:2px solid var(--gilt);outline-offset:8px}
   .work.dragging{cursor:grabbing;transition:none;z-index:40;
     filter:brightness(1.22) drop-shadow(0 32px 42px rgba(0,0,0,.75))}
@@ -493,7 +506,108 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
   };
   function pick(map,n,fb){ if(map[n]) return map[n];
     var r=[]; for(var i=0;i<n;i++) r.push(fb(i)); return r; }
+
+  /* ── salon layout ────────────────────────────────────────────────────────
+     Replaces the ribbon for rooms listed here. The ribbon sized by array
+     index (middle piece 1.26x) and resolved every collision with z-index,
+     which is why one work always sat on top of its neighbours. Here size is
+     declared metadata and overlap is measured and solved by shrinking. */
+  var DEBUG_LAYOUT = /[?&]debuglayout=1/.test(location.search);
+  var TIER = { hero:0.265, medium:0.196, small:0.152 };
+  var SALON = {
+    projects: [                       // 6 works, staggered 3 over 3
+      { tier:'medium', ax:0.00, ay:0.10 },   // HelpMynd
+      { tier:'medium', ax:0.42, ay:0.00 },   // Museum Portfolio
+      { tier:'hero',   ax:0.04, ay:1.00 },   // Tech Showcase / Dali, landscape
+      { tier:'medium', ax:0.56, ay:0.92 },   // Handshake
+      { tier:'small',  ax:1.00, ay:0.13 },   // SporeKeeper
+      { tier:'small',  ax:1.00, ay:1.00 }    // Lyft/Via
+    ]
+  };
+
+  /** The map and cassette are permanent UI, so their union is off limits. */
+  function controlsLeft(){
+    var edge = Infinity;
+    ['.mapbtn','.map-btn','.cassette','.tape','.controls','.rail','.hud']
+      .forEach(function(sel){
+        [].forEach.call(document.querySelectorAll(sel), function(el){
+          var r = el.getBoundingClientRect();
+          if (r.width && r.height && r.top < window.innerHeight*0.75) edge = Math.min(edge, r.left);
+        });
+      });
+    return isFinite(edge) ? edge : window.innerWidth - Math.max(190, window.innerWidth*0.13);
+  }
+
+  function salonPlace(sec, spec){
+    var stage=sec.querySelector('.works'), works=sec.querySelectorAll('.work');
+    var wallEl=sec.querySelector('.wall'), wall=wallEl.getBoundingClientRect();
+    if(!wall.width || !works.length) return;
+    stage.style.setProperty('--sw', wall.width+'px');   // contained: no pan
+    stage.style.transform='none';
+
+    var railX = controlsLeft() - wall.left - 28;        // wall-local
+    var safe = {
+      x: wall.width*0.035,
+      y: wall.height*0.02,
+      w: Math.max(320, Math.min(wall.width*0.965, railX) - wall.width*0.035),
+      h: wall.height*0.94
+    };
+
+    var scale=1.0, MIN=0.66, rects=[], ok=false;
+    for(var pass=0; pass<12 && !ok; pass++){
+      // size first, then measure the real item (frame + plaque) and place it
+      [].forEach.call(works, function(el,i){
+        var a=spec[i%spec.length];
+        el.style.setProperty('--r','0deg');
+        var w=safe.w*TIER[a.tier]*scale;
+        var ar=parseFloat(el.dataset.ar)||1.25;
+        var maxH=safe.h*0.46*scale;
+        if(w*ar>maxH) w=maxH/ar;
+        var bw=Math.max(8, Math.min(26, w*0.085));
+        el.style.setProperty('--bw', bw.toFixed(1)+'px');
+        el.style.width=w.toFixed(1)+'px';
+        el.style.left='0px'; el.style.top='0px';
+        el.classList.remove('pre');
+      });
+      // measure once laid out, so the plaque's wrapped height is real
+      var boxes=[].map.call(works,function(el){ return el.getBoundingClientRect(); });
+      [].forEach.call(works, function(el,i){
+        var a=spec[i%spec.length], b=boxes[i];
+        var slackX=Math.max(0, safe.w-b.width), slackY=Math.max(0, safe.h-b.height);
+        el.style.left=(safe.x + a.ax*slackX).toFixed(1)+'px';
+        el.style.top =(safe.y + a.ay*slackY).toFixed(1)+'px';
+      });
+      rects=[].map.call(works,function(el){ return el.getBoundingClientRect(); });
+      var gap=32, bad=false;
+      for(var i=0;i<rects.length && !bad;i++){
+        for(var j=i+1;j<rects.length;j++){
+          var A=rects[i],B=rects[j];
+          if(!(A.right+gap<=B.left || B.right+gap<=A.left ||
+               A.bottom+gap<=B.top || B.bottom+gap<=A.top)){ bad=true; break; }
+        }
+      }
+      if(!bad) ok=true; else if(scale<=MIN) ok=true; else scale=Math.max(MIN, scale-0.03);
+    }
+    if(DEBUG_LAYOUT) drawDebug(sec, wallEl, wall, safe, rects);
+    return { scale:scale, fits:ok };
+  }
+
+  function drawDebug(sec, wallEl, wall, safe, rects){
+    [].forEach.call(sec.querySelectorAll('.dbg-box,.dbg-safe'),function(n){n.remove();});
+    var s=document.createElement('div'); s.className='dbg-safe';
+    s.style.cssText+=';left:'+safe.x+'px;top:'+safe.y+'px;width:'+safe.w+'px;height:'+safe.h+'px';
+    wallEl.appendChild(s);
+    rects.forEach(function(r,i){
+      var d=document.createElement('div'); d.className='dbg-box';
+      d.style.cssText+=';left:'+(r.left-wall.left)+'px;top:'+(r.top-wall.top)+
+        'px;width:'+r.width+'px;height:'+r.height+'px';
+      wallEl.appendChild(d);
+    });
+  }
+
   function place(sec){
+    var spec = SALON[(sec.id||'').replace('sec-','')];
+    if(spec){ sec.classList.add('salon'); return salonPlace(sec, spec); }
     var stage=sec.querySelector('.works'), works=stage.querySelectorAll('.work');
     var wall=sec.querySelector('.wall').getBoundingClientRect();
     if(!wall.width) return;
