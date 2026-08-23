@@ -38,18 +38,34 @@ const rim=new THREE.DirectionalLight(0xfff2dd,1.3); rim.position.set(0.8,0.9,-1.
 const controls=new OrbitControls(cam,R.domElement); controls.enableDamping=true; controls.enablePan=false;
 controls.target.set(0,0.25,0);
 const marble=new THREE.MeshStandardMaterial({color:0xdcd8d1,roughness:0.47});
-const FPS=24; let mixer=null, clip=null, action=null, playing=false, T=0, DUR=1;
+const FPS=24; let mixer=null, playing=false, T=0, DUR=1;
+let shards=null, intact=null;
 const draco=new DRACOLoader(); draco.setDecoderPath('../vendor/draco/');
 const L=new GLTFLoader(); L.setDRACOLoader(draco);
 L.load('./sim.glb',(g)=>{
   let n=0,tris=0;
   g.scene.traverse(o=>{ if(o.isMesh){ o.material=marble; n++;
     tris+=(o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count)/3; }});
-  scene.add(g.scene);
-  const b=new THREE.Box3().setFromObject(g.scene), c=new THREE.Vector3(); b.getCenter(c);
+  shards=g.scene; scene.add(shards);
+  const b=new THREE.Box3().setFromObject(shards), c=new THREE.Vector3(); b.getCenter(c);
   controls.target.set(0,c.y,0); cam.lookAt(0,c.y,0);
-  if(g.animations.length){ mixer=new THREE.AnimationMixer(g.scene); clip=g.animations[0];
-    action=mixer.clipAction(clip); action.play(); action.paused=true; DUR=clip.duration; }
+  // Blender writes one animation per piece, so playing animations[0] alone
+  // froze the other 120 and read as a static crazed bust
+  if(g.animations.length){ mixer=new THREE.AnimationMixer(shards);
+    for(const cl of g.animations){ const a=mixer.clipAction(cl); a.play(); a.paused=true;
+      DUR=Math.max(DUR===1?0:DUR, cl.duration); } }
+
+  // she has to look normal until it breaks: adjacent shards always show their
+  // cut faces, so the whole bust covers them until the first frame of motion
+  L.load('../marie.glb',(gi)=>{
+    gi.scene.traverse(o=>{ if(o.isMesh) o.material=marble; });
+    const ib=new THREE.Box3().setFromObject(gi.scene), ic=new THREE.Vector3(); ib.getCenter(ic);
+    gi.scene.position.sub(ic); gi.scene.position.y+=c.y;
+    const is=(b.max.y-b.min.y)/(ib.max.y-ib.min.y);
+    gi.scene.scale.setScalar(is);
+    intact=gi.scene; scene.add(intact); sync();
+  });
+
   document.getElementById('hud').innerHTML='<b>pieces</b> '+n+'<br><b>triangles</b> '+
     Math.round(tris).toLocaleString()+'<br><b>glb</b> 1.54 MB draco + baked sim'+
     '<br><b>clip</b> '+DUR.toFixed(2)+'s<br><b>fps</b> <span id="fps">--</span>';
@@ -57,7 +73,9 @@ L.load('./sim.glb',(g)=>{
 },undefined,(e)=>{document.getElementById('hud').textContent='FAILED '+e;});
 const ui={fn:document.getElementById('fn'),sc:document.getElementById('sc'),pp:document.getElementById('pp')};
 function sync(){ const n=Math.round(T*FPS); ui.fn.textContent='FRAME '+n+' / 95'; ui.sc.value=n;
-  if(mixer){ mixer.setTime(Math.min(T,DUR)); } }
+  if(mixer){ mixer.setTime(Math.min(T,DUR)); }
+  // hard switch, never both: overlapping them shows cut faces across her surface
+  if(intact){ intact.visible = n<1; if(shards) shards.visible = !intact.visible; } }
 ui.sc.addEventListener('input',()=>{playing=false;ui.pp.textContent='play';T=+ui.sc.value/FPS;sync();});
 ui.pp.addEventListener('click',()=>{playing=!playing;ui.pp.textContent=playing?'pause':'play';if(T>=DUR)T=0;});
 document.getElementById('pv').addEventListener('click',()=>{playing=false;ui.pp.textContent='play';T=Math.max(0,T-1/FPS);sync();});
