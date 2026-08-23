@@ -82,8 +82,9 @@
   /* salon rooms: the plaque is the painting's caption, never wider than it,
      and nothing is stacked to hide a collision. long titles wrap instead. */
   .room.salon .work{z-index:5!important;transition:transform .2s cubic-bezier(.2,.8,.3,1),opacity .2s ease,filter .2s}
-  .room.salon .work .card{box-sizing:border-box;width:100%;max-width:100%;min-width:0;
-    text-align:center;line-height:1.28;overflow-wrap:anywhere}
+  .room.salon .work .card{box-sizing:border-box;width:100%!important;max-width:100%!important;
+    min-width:0;text-align:center;line-height:1.26;overflow-wrap:anywhere;margin:11px auto 0}
+  .room.salon .work .card b{-webkit-line-clamp:3;text-overflow:clip}
   .room.salon .work:hover{transform:rotate(var(--r)) scale(1.03) translateY(-3px);z-index:20!important}
   .room.salon .arw{display:none}
   @media (hover:hover){
@@ -515,6 +516,47 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
   var DEBUG_LAYOUT = /[?&]debuglayout=1/.test(location.search);
   var TIER = { hero:0.265, medium:0.196, small:0.152 };
   var SALON = {
+    professional: [                   // 4 works, asymmetric 2 over 2
+      { tier:'hero',   ax:0.02, row:0, jit:26 },
+      { tier:'medium', ax:0.62, row:0, jit:0  },
+      { tier:'medium', ax:0.20, row:1, jit:14 },
+      { tier:'small',  ax:0.92, row:1, jit:0  }
+    ],
+    research: [                       // 4 works, hero left, three supporting
+      { tier:'hero',   ax:0.00, row:0, jit:18 },
+      { tier:'medium', ax:0.58, row:0, jit:0  },
+      { tier:'small',  ax:1.00, row:0, jit:34 },
+      { tier:'medium', ax:0.44, row:1, jit:10 }
+    ],
+    uchicago: [                       // 5 works, 3 over 2
+      { tier:'medium', ax:0.00, row:0, jit:20 },
+      { tier:'medium', ax:0.46, row:0, jit:0  },
+      { tier:'small',  ax:1.00, row:0, jit:28 },
+      { tier:'hero',   ax:0.14, row:1, jit:0  },
+      { tier:'medium', ax:0.74, row:1, jit:16 }
+    ],
+    awards: [                         // 4 works, lightest touch: keep the shape
+      { tier:'medium', ax:0.00, row:0, jit:16 },
+      { tier:'medium', ax:0.40, row:0, jit:0  },
+      { tier:'small',  ax:0.86, row:0, jit:26 },
+      { tier:'medium', ax:0.60, row:1, jit:8  }
+    ],
+    leadership: [                     // 5 works, 2 - hero - 2
+      { tier:'small',  ax:0.00, row:0, jit:22 },
+      { tier:'hero',   ax:0.40, row:0, jit:0  },
+      { tier:'small',  ax:1.00, row:0, jit:30 },
+      { tier:'medium', ax:0.10, row:1, jit:10 },
+      { tier:'medium', ax:0.80, row:1, jit:0  }
+    ],
+    hobbies: [                        // 7 works, 4 over 3
+      { tier:'medium', ax:0.00, row:0, jit:24 },
+      { tier:'small',  ax:0.33, row:0, jit:0  },
+      { tier:'hero',   ax:0.66, row:0, jit:12 },
+      { tier:'small',  ax:1.00, row:0, jit:32 },
+      { tier:'medium', ax:0.06, row:1, jit:8  },
+      { tier:'small',  ax:0.50, row:1, jit:20 },
+      { tier:'medium', ax:0.96, row:1, jit:0  }
+    ],
     projects: [                       // 6 works, staggered 3 over 3
       { tier:'medium', ax:0.00, row:0, jit:22 },  // HelpMynd
       { tier:'medium', ax:0.44, row:0, jit:0  },  // Museum Portfolio
