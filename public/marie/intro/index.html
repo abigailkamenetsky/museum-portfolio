@@ -69,21 +69,27 @@ function puff(){
   const N=256, c=document.createElement('canvas'); c.width=c.height=N;
   const g=c.getContext('2d');
   const [r,g_,b]=DUST_RGB;
-  g.globalCompositeOperation='lighter';
-  for(let i=0;i<190;i++){                       // internal structure, not a gradient
-    const ang=Math.random()*6.2832, rad=Math.pow(Math.random(),0.55)*N*0.46;
+  // NOT additive: 'lighter' stacked into bright speckles inside every puff,
+  // and those hot spots are what read as snowflakes. soft low-contrast wisps
+  // merge into a mass instead.
+  for(let i=0;i<26;i++){
+    const ang=Math.random()*6.2832, rad=Math.pow(Math.random(),0.7)*N*0.30;
     const px=N/2+Math.cos(ang)*rad, py=N/2+Math.sin(ang)*rad;
-    const pr=6+Math.pow(Math.random(),1.7)*54;
-    const al=0.020+Math.random()*0.055;
+    const pr=N*(0.20+Math.random()*0.30);
     const rg=g.createRadialGradient(px,py,0,px,py,pr);
-    rg.addColorStop(0,`rgba(${r},${g_},${b},${al})`);
-    rg.addColorStop(1,`rgba(${r},${g_},${b},0)`);
+    rg.addColorStop(0,   `rgba(${r},${g_},${b},0.085)`);
+    rg.addColorStop(0.5, `rgba(${r},${g_},${b},0.040)`);
+    rg.addColorStop(1,   `rgba(${r},${g_},${b},0)`);
     g.fillStyle=rg; g.beginPath(); g.arc(px,py,pr,0,6.2832); g.fill();
   }
-  // feather the rim so no sprite shows its own edge
+  // blur it against itself so no internal edge survives
+  const tmp=document.createElement('canvas'); tmp.width=tmp.height=N;
+  const tg=tmp.getContext('2d');
+  tg.filter='blur(11px)'; tg.drawImage(c,0,0); tg.filter='none';
+  g.clearRect(0,0,N,N); g.drawImage(tmp,0,0);
   g.globalCompositeOperation='destination-in';
   const m=g.createRadialGradient(N/2,N/2,0,N/2,N/2,N/2);
-  m.addColorStop(0,'rgba(0,0,0,1)'); m.addColorStop(0.55,'rgba(0,0,0,0.85)');
+  m.addColorStop(0,'rgba(0,0,0,1)'); m.addColorStop(0.42,'rgba(0,0,0,0.72)');
   m.addColorStop(1,'rgba(0,0,0,0)');
   g.fillStyle=m; g.fillRect(0,0,N,N);
   const t=new THREE.CanvasTexture(c); t.minFilter=THREE.LinearFilter; return t;
@@ -93,7 +99,7 @@ const dustTex=puff();
 // dust is emitted continuously while the rubble keeps settling, not all at
 // once. every puff gets its own birth time, so the cloud grows instead of
 // appearing. that needs per-particle size and alpha, hence the shader.
-const DUST=850;      // far fewer, far larger: overdraw was the bottleneck
+const DUST=2200;     // enough overlap that no single puff is visible
 const dPos=new Float32Array(DUST*3), dVel=new Float32Array(DUST*3),
       dSeed=new Float32Array(DUST), aBirth=new Float32Array(DUST),
       aSize=new Float32Array(DUST), aDirt=new Float32Array(DUST),
@@ -113,8 +119,8 @@ for(let i=0;i<DUST;i++){
   // most of the cloud is thrown in the first moments, the rest keeps feeding
   aBirth[i]=Math.pow(Math.random(),2.1)*1.9;
   aLife[i]=2.2+Math.random()*2.2;
-  aSize[i]=(kind<4?1.5:kind<8?3.2:5.0)*(0.55+Math.pow(Math.random(),1.5)*1.5);
-  aDirt[i]=Math.random()<0.20 ? 0.50+Math.random()*0.22 : 0.93+Math.random()*0.07;
+  aSize[i]=(kind<4?1.1:kind<8?2.3:3.6)*(0.55+Math.pow(Math.random(),1.5)*1.4);
+  aDirt[i]=Math.random()<0.22 ? 0.72+Math.random()*0.14 : 0.94+Math.random()*0.06;
   aRot[i]=Math.random()*6.2832;
 }
 const dGeo=new THREE.BufferGeometry();
