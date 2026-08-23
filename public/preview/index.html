@@ -631,11 +631,14 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
       [].forEach.call(works, function(el,i){
         var a=spec[i%spec.length];
         el.style.setProperty('--r','0deg');
-        // fair share of the wall, then the tier redistributes emphasis
-        var n=works.length, GAP=30;
-        var share=(safe.w-(n-1)*GAP)/n;
-        var wt=TIER[a.tier]/TIER.medium;               // hero 1.35, small 0.78
-        var w=share*wt*scale;
+        // the weighted widths sum to exactly the space left after the gaps,
+        // so the row always fits and every gap is a real gap
+        var n=works.length, GAP=34;
+        var budget=safe.w-(n-1)*GAP;
+        var tw=0;
+        for(var q=0;q<n;q++) tw += TIER[spec[q%spec.length].tier]/TIER.medium;
+        var wt=TIER[a.tier]/TIER.medium;
+        var w=budget*(wt/tw)*scale;
         // the readable-measure floor must come BEFORE the height cap: applied
         // after, it re-inflated whatever the cap had just shrunk and the item
         // overran its band again.
@@ -655,7 +658,7 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
       // tallest work reaches it. take whichever comes first.
       var sumW=0, tallB=0;
       boxes.forEach(function(b){ sumW+=b.width; tallB=Math.max(tallB,b.height); });
-      var GAPN=30*(boxes.length-1);
+      var GAPN=34*(boxes.length-1);
       var growW=sumW>0 ? (safe.w-GAPN)/sumW : 1;
       var growH=tallB>0 ? (safe.h*0.94)/tallB : 1;
       var grow=Math.max(1, Math.min(growW, growH, 1.9));
