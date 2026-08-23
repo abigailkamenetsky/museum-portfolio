@@ -43,7 +43,7 @@ import { DRACOLoader } from '../vendor/loaders/DRACOLoader.js';
 
 // camera, lights, material and 1:1 playback are copied from the sim viewer so
 // the frame at impact is identical to it. the only addition is the drop.
-const R=new THREE.WebGLRenderer({antialias:true}); R.setPixelRatio(Math.min(devicePixelRatio,2));
+const R=new THREE.WebGLRenderer({antialias:true}); let DPR=Math.min(devicePixelRatio,2); R.setPixelRatio(DPR);
 R.setSize(innerWidth,innerHeight); R.setClearColor(0x000000,1);
 R.toneMapping=THREE.ACESFilmicToneMapping; document.body.appendChild(R.domElement);
 
@@ -147,7 +147,7 @@ const dMat=new THREE.ShaderMaterial({
       vA = fadeIn * fadeOut;
       vec4 mv = modelViewMatrix * vec4(position,1.0);
       float grow = 0.45 + 0.85 * pow(t, 0.5);
-      gl_PointSize = aSize * grow * uPix * 0.22 / max(0.001, -mv.z);
+      gl_PointSize = min(aSize * grow * uPix * 0.22 / max(0.001, -mv.z), 620.0);
       gl_Position = projectionMatrix * mv;
     }`,
   fragmentShader:`
@@ -163,6 +163,28 @@ const dMat=new THREE.ShaderMaterial({
     }`
 });
 const dust=new THREE.Points(dGeo,dMat); dust.frustumCulled=false; scene.add(dust);
+
+// dust is pure fill cost: every screen pixel gets blended through many layers.
+// rendering it at half resolution quarters that, and a soft low-frequency
+// cloud loses nothing to the downsample. this is the actual fix, not particle
+// count. DUST_LAYER keeps it out of the main pass.
+const DUST_LAYER=1;
+dust.layers.set(DUST_LAYER);
+const rtScale=0.5;
+const rt=new THREE.WebGLRenderTarget(
+  Math.max(2,Math.floor(innerWidth*rtScale)), Math.max(2,Math.floor(innerHeight*rtScale)),
+  {minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,depthBuffer:false});
+const compCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+const compScene=new THREE.Scene();
+compScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),
+  new THREE.MeshBasicMaterial({map:rt.texture,transparent:true,depthTest:false,
+    depthWrite:false})));
+function sizeRT(){
+  rt.setSize(Math.max(2,Math.floor(innerWidth*rtScale)),
+             Math.max(2,Math.floor(innerHeight*rtScale)));
+  dMat.uniforms.uPix.value=rt.height;   // point size is in render-target pixels
+}
+sizeRT();
 
 const T_EASE=0.34, T_FALL=0.46, T_IMPACT=T_EASE+T_FALL, DUR=5.0;
 const DROP=0.72;                    // she falls this far. the camera never moves.
@@ -266,11 +288,26 @@ let f=0,last=performance.now(); const clock=new THREE.Clock();
   const dt=Math.min(clock.getDelta(),0.05);
   if(state==='RUN'){ t+=dt; if(t>=DUR){ t=DUR; state='DONE'; } sync(); }
   if(state==='IDLE'){ if(!dragging) spin+=dt*0.12; sync(); }
+  // pass 1: dust alone, half res, transparent clear
+  cam.layers.disableAll(); cam.layers.enable(DUST_LAYER);
+  R.setRenderTarget(rt); R.setClearColor(0x000000,0); R.clear(true,false,false);
   R.render(scene,cam);
+  // pass 2: everything else at full res
+  cam.layers.disableAll(); cam.layers.enable(0);
+  R.setRenderTarget(null); R.setClearColor(0x000000,1); R.clear();
+  R.render(scene,cam);
+  // pass 3: composite the upscaled dust over it
+  R.autoClear=false; R.render(compScene,compCam); R.autoClear=true;
   f++; const p=performance.now();
-  if(p-last>1000){ const el=document.getElementById('fps');
-    if(el) el.textContent=Math.round(f*1000/(p-last)); f=0; last=p; } })();
-addEventListener('resize',()=>{ dMat.uniforms.uPix.value=innerHeight;
+  if(p-last>1000){
+    const fps=Math.round(f*1000/(p-last));
+    const el=document.getElementById('fps'); if(el) el.textContent=fps;
+    // a retina buffer is 4x the pixels; drop it before dropping the look
+    if(fps<34 && DPR>1){ DPR=Math.max(1,DPR-0.5); R.setPixelRatio(DPR); sizeRT(); }
+    else if(fps>56 && DPR<Math.min(devicePixelRatio,2)){
+      DPR=Math.min(Math.min(devicePixelRatio,2),DPR+0.5); R.setPixelRatio(DPR); sizeRT(); }
+    f=0; last=p; } })();
+addEventListener('resize',()=>{ sizeRT();
   cam.aspect=innerWidth/innerHeight;
   cam.updateProjectionMatrix(); R.setSize(innerWidth,innerHeight); });
 </script></body></html>
