@@ -645,7 +645,7 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
         w=Math.max(w, Math.min(172, safe.w*0.12, budget/n));   // never break the budget
         w=Math.min(w, safe.w*0.92);                            // never exceed the wall
         var ar=parseFloat(el.dataset.ar)||1.25;
-        var maxH=safe.h*0.92*scale;
+        var maxH=safe.h*0.74*scale;   // leaves room for the caption below
         if(w*ar>maxH) w=maxH/ar;                      // fitting wins over measure
         var bw=Math.max(8, Math.min(26, w*0.085));
         el.style.setProperty('--bw', bw.toFixed(1)+'px');
