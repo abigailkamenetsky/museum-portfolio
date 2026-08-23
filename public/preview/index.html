@@ -651,6 +651,23 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
       });
       // measure once laid out, so the plaque's wrapped height is real
       var boxes=[].map.call(works,function(el){ return el.getBoundingClientRect(); });
+      // grow to fill: width binds when the row spans the wall, height when the
+      // tallest work reaches it. take whichever comes first.
+      var sumW=0, tallB=0;
+      boxes.forEach(function(b){ sumW+=b.width; tallB=Math.max(tallB,b.height); });
+      var GAPN=30*(boxes.length-1);
+      var growW=sumW>0 ? (safe.w-GAPN)/sumW : 1;
+      var growH=tallB>0 ? (safe.h*0.94)/tallB : 1;
+      var grow=Math.max(1, Math.min(growW, growH, 1.9));
+      if(grow>1.02){
+        [].forEach.call(works, function(el){
+          var cw=parseFloat(el.style.width)||0;
+          var cb=parseFloat(el.style.getPropertyValue('--bw'))||10;
+          el.style.width=(cw*grow).toFixed(1)+'px';
+          el.style.setProperty('--bw',(cb*grow).toFixed(1)+'px');
+        });
+        boxes=[].map.call(works,function(el){ return el.getBoundingClientRect(); });
+      }
       var rowMax=safe.h;                 // two bands plus a real gap
       var rows=spec.map(function(a){return a.row;});
       var twoBand=rows.indexOf(1)>=0;
