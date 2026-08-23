@@ -64,7 +64,7 @@ function radial(stops){
 }
 // untextured points draw as hard squares. a single clean radial also reads as
 // fog, so each puff is several offset blobs: irregular edges, like real dust.
-const DUST_RGB=[200,192,177];           // #c8c0b1
+const DUST_RGB=[164,155,144];           // #a49b90 mid dust, not smoke white
 // stacked radial gradients are always a circle, however they are blurred or
 // rotated, and repeated circles read as snowballs. real smoke is fractal
 // noise with a ragged silhouette, so generate actual fBm and carve the alpha
@@ -128,21 +128,25 @@ for(let i=0;i<DUST;i++){
   const kind=i%10;
   const skew=(Math.random()<0.5?-1:1)*(0.55+Math.random()*1.15);   // asymmetric
   let sp,lift,toward;
-  if(kind<4){      sp=1.9+Math.random()*2.4; lift=0.30+Math.random()*0.55; toward=0.15; }
-  else if(kind<8){ sp=0.55+Math.random()*1.1; lift=1.5+Math.random()*1.9;  toward=0.35; }
+  if(kind<4){      sp=3.1+Math.random()*3.4; lift=0.10+Math.random()*0.22; toward=0.15; }
+  else if(kind<8){ sp=0.85+Math.random()*1.5; lift=1.1+Math.random()*1.7;  toward=0.35; }
   else {           sp=0.30+Math.random()*0.6; lift=0.7+Math.random()*1.0;  toward=3.6; }
   dVel[i*3]=Math.cos(a)*sp*(1.0+0.5*skew);
   dVel[i*3+1]=lift;
   dVel[i*3+2]=Math.sin(a)*sp*0.8+toward*(0.6+Math.random());
   dSeed[i]=Math.random()*6.283;
   // most of the cloud is thrown in the first moments, the rest keeps feeding
-  aBirth[i]= kind<4 ? 0.66+Math.random()*0.30     // as the first pieces land
-           : kind<8 ? 1.00+Math.random()*1.40     // the body, as the pile settles
-           :          1.80+Math.random()*1.20;    // rolls at the lens last
-  aLife[i]=2.2+Math.random()*2.2;
+  aBirth[i]= kind<4 ? 0.66+Math.random()*0.22     // A+B: impact powder, floor burst
+           : kind<8 ? 0.95+Math.random()*0.95     // C: mid-cloud rises, lagging
+           :          1.35+Math.random()*0.85;    // D: foreground veil, last
+  aLife[i]=1.5+Math.pow(Math.random(),0.6)*3.4;   // some vanish early, some linger
   aSize[i]=(kind<4?0.9:kind<8?2.1:5.2)*(0.55+Math.pow(Math.random(),1.5)*1.4);
   // dark translucent interior (~#877f73) through to near-white at the densest
-  aDirt[i]= Math.random()<0.34 ? 0.42+Math.random()*0.22 : 0.80+Math.random()*0.22;
+  // #7d756d dark pockets -> #c9c1b5 light -> #e6e0d7 only in tiny highlights
+  const roll=Math.random();
+  aDirt[i]= roll<0.42 ? 0.50+Math.random()*0.18      // dark density pockets
+          : roll<0.93 ? 0.78+Math.random()*0.17      // ordinary dust
+          :             1.05+Math.random()*0.10;     // rare bright specks
   aRot[i]=Math.random()*6.2832;
   aVar[i]=Math.floor(Math.random()*4);
 }
@@ -319,7 +323,16 @@ function sync(){
   } else { dMat.uniforms.uTime.value=-1; flMat.opacity=0; }
 
   const rv=document.getElementById('reveal');
-  if(rv) rv.style.opacity = impacted ? Math.max(0,Math.min(1,(ta-2.75)/0.55)).toFixed(3) : '0';
+  // hard cut behind the veil, never a crossfade, then the title emerges through haze
+  if(rv){
+    const swapped = impacted && ta>=1.62;
+    rv.style.opacity = swapped ? '1' : '0';
+    const ti=document.getElementById('rtitle'), sb=document.getElementById('rsub');
+    const k=Math.max(0,Math.min(1,(ta-1.92)/0.62));
+    const e=k<0.5 ? 4*k*k*k : 1-Math.pow(-2*k+2,3)/2;
+    if(ti) ti.style.opacity=e.toFixed(3);
+    if(sb) sb.style.opacity=e.toFixed(3);
+  }
 
   document.getElementById('tn').textContent=t.toFixed(2)+'s';
   document.getElementById('sc').value=Math.round(t/DUR*500);
