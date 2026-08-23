@@ -516,12 +516,12 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
   var TIER = { hero:0.265, medium:0.196, small:0.152 };
   var SALON = {
     projects: [                       // 6 works, staggered 3 over 3
-      { tier:'medium', ax:0.00, ay:0.10 },   // HelpMynd
-      { tier:'medium', ax:0.42, ay:0.00 },   // Museum Portfolio
-      { tier:'hero',   ax:0.04, ay:1.00 },   // Tech Showcase / Dali, landscape
-      { tier:'medium', ax:0.56, ay:0.92 },   // Handshake
-      { tier:'small',  ax:1.00, ay:0.13 },   // SporeKeeper
-      { tier:'small',  ax:1.00, ay:1.00 }    // Lyft/Via
+      { tier:'medium', ax:0.00, row:0, jit:22 },  // HelpMynd
+      { tier:'medium', ax:0.44, row:0, jit:0  },  // Museum Portfolio
+      { tier:'hero',   ax:0.04, row:1, jit:0  },  // Tech Showcase / Dali
+      { tier:'medium', ax:0.52, row:1, jit:16 },  // Handshake
+      { tier:'small',  ax:1.00, row:0, jit:30 },  // SporeKeeper
+      { tier:'small',  ax:1.00, row:1, jit:8  }   // Lyft/Via
     ]
   };
 
@@ -539,7 +539,7 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
   }
 
   function salonPlace(sec, spec0){
-    var spec = spec0.map(function(a){ return {tier:a.tier, ax:a.ax, ay:a.ay}; });
+    var spec = spec0.map(function(a){ return {tier:a.tier, ax:a.ax, row:a.row, jit:a.jit}; });
     var stage=sec.querySelector('.works'), works=sec.querySelectorAll('.work');
     var wallEl=sec.querySelector('.wall'), wall=wallEl.getBoundingClientRect();
     if(!wall.width || !works.length) return;
@@ -572,11 +572,14 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
       });
       // measure once laid out, so the plaque's wrapped height is real
       var boxes=[].map.call(works,function(el){ return el.getBoundingClientRect(); });
+      var rowMax=(safe.h-46)/2;                 // two bands plus a real gap
+      var tooTall=boxes.some(function(b){ return b.height>rowMax; });
       [].forEach.call(works, function(el,i){
         var a=spec[i%spec.length], b=boxes[i];
-        var slackX=Math.max(0, safe.w-b.width), slackY=Math.max(0, safe.h-b.height);
+        var slackX=Math.max(0, safe.w-b.width);
+        var y = a.row===0 ? a.jit : (safe.h - b.height - a.jit);
         el.style.left=((safe.x + a.ax*slackX)/wall.width*100).toFixed(3)+'%';
-        el.style.top =((safe.y + a.ay*slackY)/wall.height*100).toFixed(3)+'%';
+        el.style.top =((safe.y + Math.max(0,y))/wall.height*100).toFixed(3)+'%';
       });
       rects=[].map.call(works,function(el){ return el.getBoundingClientRect(); });
       var gap=32, bad=false;
@@ -606,11 +609,7 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
               var base=o[key+'0']!==undefined?o[key+'0']:(o[key+'0']=o[key]);
               o[key]=Math.max(0,Math.min(1,Math.max(base-0.18,Math.min(base+0.18,o[key]+d))));
             }
-            if(Math.abs(dx)>=Math.abs(dy)){
-              var sx=dx>=0?0.05:-0.05; nudge(a1,'ax',sx); nudge(b1,'ax',-sx);
-            } else {
-              var sy=dy>=0?0.06:-0.06; nudge(a1,'ay',sy); nudge(b1,'ay',-sy);
-            }
+            var sx=dx>=0?0.05:-0.05; nudge(a1,'ax',sx); nudge(b1,'ax',-sx);
             fixedAny=true;
           }
         }
