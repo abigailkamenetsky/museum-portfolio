@@ -40,7 +40,7 @@ R.setSize(innerWidth,innerHeight); R.setClearColor(0x000000,1);
 R.toneMapping=THREE.ACESFilmicToneMapping; document.body.appendChild(R.domElement);
 
 const scene=new THREE.Scene();
-const cam=new THREE.PerspectiveCamera(40,innerWidth/innerHeight,0.02,80); cam.position.set(0,0.35,3.1);
+const cam=new THREE.PerspectiveCamera(40,innerWidth/innerHeight,0.02,80); cam.position.set(0,0.72,3.95);
 scene.add(new THREE.AmbientLight(0x33343a,0.75));
 const key=new THREE.DirectionalLight(0xfff8ef,2.4); key.position.set(-1.4,1.2,1.6); scene.add(key);
 const fill=new THREE.DirectionalLight(0xd8e4ff,0.5); fill.position.set(1.6,0.2,1.0); scene.add(fill);
@@ -70,7 +70,7 @@ const dMat=new THREE.PointsMaterial({map:dustTex,transparent:true,depthWrite:fal
 const dust=new THREE.Points(dGeo,dMat); dust.frustumCulled=false; scene.add(dust);
 
 const T_EASE=0.34, T_FALL=0.46, T_IMPACT=T_EASE+T_FALL, DUR=5.0;
-const DROP=1.45;                    // she falls this far. the camera never moves.
+const DROP=1.05;                    // she falls this far. the camera never moves.
 const easeOut=x=>1-Math.pow(1-x,3), easeIn=x=>x*x;
 
 let intact=null, shards=null, mixer=null, simDur=1, baseY=0;
