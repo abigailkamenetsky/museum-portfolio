@@ -64,7 +64,7 @@ function radial(stops){
 }
 // untextured points draw as hard squares. a single clean radial also reads as
 // fog, so each puff is several offset blobs: irregular edges, like real dust.
-const DUST_RGB=[196,189,176];           // warm light grey, off pure white
+const DUST_RGB=[200,192,177];           // #c8c0b1
 // stacked radial gradients are always a circle, however they are blurred or
 // rotated, and repeated circles read as snowballs. real smoke is fractal
 // noise with a ragged silhouette, so generate actual fBm and carve the alpha
@@ -123,22 +123,26 @@ const dPos=new Float32Array(DUST*3), dVel=new Float32Array(DUST*3),
 for(let i=0;i<DUST;i++){
   const a=Math.random()*Math.PI*2, r=Math.pow(Math.random(),0.45)*0.36;
   dPos[i*3]=Math.cos(a)*r; dPos[i*3+1]=Math.random()*0.06; dPos[i*3+2]=Math.sin(a)*r;
+  // three layers: floor dust runs sideways and stays low, midground billows
+  // around the wreck, foreground travels at the lens and becomes the veil.
   const kind=i%10;
+  const skew=(Math.random()<0.5?-1:1)*(0.55+Math.random()*1.15);   // asymmetric
   let sp,lift,toward;
-  if(kind<4){      sp=1.5+Math.random()*2.2; lift=0.28+Math.random()*0.6; toward=0.2; }
-  else if(kind<8){ sp=0.6+Math.random()*1.3; lift=0.85+Math.random()*1.7; toward=0.3; }
-  else {           sp=0.45+Math.random()*0.9; lift=0.5+Math.random()*1.1; toward=2.2; }
-  dVel[i*3]=Math.cos(a)*sp;
+  if(kind<4){      sp=1.9+Math.random()*2.4; lift=0.30+Math.random()*0.55; toward=0.15; }
+  else if(kind<8){ sp=0.55+Math.random()*1.1; lift=1.5+Math.random()*1.9;  toward=0.35; }
+  else {           sp=0.30+Math.random()*0.6; lift=0.7+Math.random()*1.0;  toward=3.6; }
+  dVel[i*3]=Math.cos(a)*sp*(1.0+0.5*skew);
   dVel[i*3+1]=lift;
-  dVel[i*3+2]=Math.sin(a)*sp+toward*(0.6+Math.random());
+  dVel[i*3+2]=Math.sin(a)*sp*0.8+toward*(0.6+Math.random());
   dSeed[i]=Math.random()*6.283;
   // most of the cloud is thrown in the first moments, the rest keeps feeding
   aBirth[i]= kind<4 ? 0.66+Math.random()*0.30     // as the first pieces land
            : kind<8 ? 1.00+Math.random()*1.40     // the body, as the pile settles
            :          1.80+Math.random()*1.20;    // rolls at the lens last
   aLife[i]=2.2+Math.random()*2.2;
-  aSize[i]=(kind<4?1.1:kind<8?2.3:3.6)*(0.55+Math.pow(Math.random(),1.5)*1.4);
-  aDirt[i]=Math.random()<0.22 ? 0.72+Math.random()*0.14 : 0.94+Math.random()*0.06;
+  aSize[i]=(kind<4?0.9:kind<8?2.1:5.2)*(0.55+Math.pow(Math.random(),1.5)*1.4);
+  // dark translucent interior (~#877f73) through to near-white at the densest
+  aDirt[i]= Math.random()<0.34 ? 0.42+Math.random()*0.22 : 0.80+Math.random()*0.22;
   aRot[i]=Math.random()*6.2832;
   aVar[i]=Math.floor(Math.random()*4);
 }
@@ -156,6 +160,7 @@ const dMat=new THREE.ShaderMaterial({
   vertexShader:`
     attribute float aBirth, aSize, aDirt, aLife, aRot, aVar;
     varying float vA; varying float vD; varying float vR; varying float vV;
+    varying float vNear;
     uniform float uTime, uPix;
     void main(){
       float age = uTime - aBirth;
@@ -173,12 +178,14 @@ const dMat=new THREE.ShaderMaterial({
       vA = fadeIn * fadeOut;
       vec4 mv = modelViewMatrix * vec4(position,1.0);
       float grow = 0.45 + 0.85 * pow(t, 0.5);
-      gl_PointSize = min(aSize * grow * uPix * 0.22 / max(0.001, -mv.z), 620.0);
+      gl_PointSize = min(aSize * grow * uPix * 0.22 / max(0.001, -mv.z), 900.0);
+      vNear = 1.0 - smoothstep(0.35, 2.6, -mv.z);   // 1 = right at the lens
       gl_Position = projectionMatrix * mv;
     }`,
   fragmentShader:`
     uniform sampler2D uTex;
     varying float vA; varying float vD; varying float vR; varying float vV;
+    varying float vNear;
     void main(){
       vec2 uv = gl_PointCoord - 0.5;
       float s = sin(vR), c2 = cos(vR);
@@ -187,10 +194,26 @@ const dMat=new THREE.ShaderMaterial({
       vec2 off = vec2(mod(vV,2.0), floor(vV/2.0)) * 0.5;
       vec4 c = texture2D(uTex, uv*0.5 + off);
       if(c.a < 0.006) discard;                  // early out: this is the fill cost
-      gl_FragColor = vec4(c.rgb * vD, c.a * vA);
+      // near the lens it is a low-contrast haze, not crisp little puffs
+      float soft = mix(1.0, 0.42, vNear);
+      float a = mix(c.a, smoothstep(0.0,0.85,c.a)*0.5, vNear);
+      gl_FragColor = vec4(c.rgb * mix(vD, vD*0.85+0.15, vNear), a * vA * soft + vNear*vA*0.30);
     }`
 });
 const dust=new THREE.Points(dGeo,dMat); dust.frustumCulled=false; scene.add(dust);
+
+// flecks: the intermediate scale between the big shards and the dust. some
+// outrun the cloud upward then fall back, which is what sells the collision.
+const FL=260, flPos=new Float32Array(FL*3), flV=[];
+for(let i=0;i<FL;i++){
+  const a=Math.random()*6.2832, e=0.35+Math.random()*1.0, sp=1.6+Math.random()*4.2;
+  flV.push([Math.cos(a)*Math.cos(e)*sp, Math.sin(e)*sp*1.5, Math.sin(a)*Math.cos(e)*sp-0.5]);
+}
+const flGeo=new THREE.BufferGeometry();
+flGeo.setAttribute('position',new THREE.BufferAttribute(flPos,3));
+const flMat=new THREE.PointsMaterial({color:0xb8b0a2,size:0.030,sizeAttenuation:true,
+  transparent:true,opacity:0,depthWrite:false});
+const flecks=new THREE.Points(flGeo,flMat); flecks.frustumCulled=false; scene.add(flecks);
 
 // dust is pure fill cost: every screen pixel gets blended through many layers.
 // rendering it at half resolution quarters that, and a soft low-frequency
@@ -261,6 +284,10 @@ function sync(){
   } else lift=0;
 
   if(intact){ intact.position.y=baseY+lift; intact.rotation.y=rot; intact.visible=!impacted; }
+  // 3-6px equivalent, damped over ~180ms. not an earthquake.
+  const sh = impacted ? Math.max(0,1-ta/0.18) : 0;
+  cam.position.x = Math.sin(ta*127)*sh*0.035;
+  cam.position.y = Math.cos(ta*151)*sh*0.030;
   if(shards){ shards.visible=impacted; shards.rotation.y=rot; }
 
   // the bake plays straight, exactly as it does in the sim viewer
@@ -279,11 +306,20 @@ function sync(){
       arr[i*3+2]=dPos[i*3+2]+dVel[i*3+2]*drag*1.25+sw2*0.14*age;
     }
     dGeo.attributes.position.needsUpdate=true;
+    const fa=Math.max(0,ta-0.60);            // thrown when the debris lands
+    for(let i=0;i<FL;i++){
+      const v=flV[i];
+      flPos[i*3]  =v[0]*fa;
+      flPos[i*3+1]=Math.max(0.004, v[1]*fa-5.2*fa*fa*0.5);   // up, then back down
+      flPos[i*3+2]=v[2]*fa;
+    }
+    flGeo.attributes.position.needsUpdate=true;
+    flMat.opacity=Math.min(0.85,fa*6.0)*Math.max(0,1-fa/1.1);
     dMat.uniforms.uTime.value=ta;
-  } else dMat.uniforms.uTime.value=-1;
+  } else { dMat.uniforms.uTime.value=-1; flMat.opacity=0; }
 
   const rv=document.getElementById('reveal');
-  if(rv) rv.style.opacity = impacted ? Math.max(0,Math.min(1,(ta-3.15)/1.1)).toFixed(3) : '0';
+  if(rv) rv.style.opacity = impacted ? Math.max(0,Math.min(1,(ta-2.75)/0.55)).toFixed(3) : '0';
 
   document.getElementById('tn').textContent=t.toFixed(2)+'s';
   document.getElementById('sc').value=Math.round(t/DUR*500);
