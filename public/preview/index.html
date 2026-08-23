@@ -528,7 +528,7 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
   /** The map and cassette are permanent UI, so their union is off limits. */
   function controlsLeft(){
     var edge = Infinity;
-    ['.mapbtn','.map-btn','.cassette','.tape','.controls','.rail','.hud']
+    ['.plaque']                       // the fixed right-hand map/cassette banners
       .forEach(function(sel){
         [].forEach.call(document.querySelectorAll(sel), function(el){
           var r = el.getBoundingClientRect();
@@ -538,7 +538,8 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
     return isFinite(edge) ? edge : window.innerWidth - Math.max(190, window.innerWidth*0.13);
   }
 
-  function salonPlace(sec, spec){
+  function salonPlace(sec, spec0){
+    var spec = spec0.map(function(a){ return {tier:a.tier, ax:a.ax, ay:a.ay}; });
     var stage=sec.querySelector('.works'), works=sec.querySelectorAll('.work');
     var wallEl=sec.querySelector('.wall'), wall=wallEl.getBoundingClientRect();
     if(!wall.width || !works.length) return;
@@ -586,7 +587,30 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
                A.bottom+gap<=B.top || B.bottom+gap<=A.top)){ bad=true; break; }
         }
       }
-      if(!bad) ok=true; else if(scale<=MIN) ok=true; else scale=Math.max(MIN, scale-0.03);
+      if(!bad){ ok=true; }
+      else {
+        // push the offending pair apart along their dominant axis before
+        // shrinking: uniform shrink keeps the same relative spots, so
+        // overlapping anchors stay overlapping however small they get.
+        for(var i2=0;i2<rects.length;i2++){
+          for(var j2=i2+1;j2<rects.length;j2++){
+            var A2=rects[i2],B2=rects[j2];
+            if(A2.right+gap<=B2.left||B2.right+gap<=A2.left||
+               A2.bottom+gap<=B2.top||B2.bottom+gap<=A2.top) continue;
+            var a1=spec[i2%spec.length], b1=spec[j2%spec.length];
+            var dx=(A2.left+A2.width/2)-(B2.left+B2.width/2);
+            var dy=(A2.top+A2.height/2)-(B2.top+B2.height/2);
+            if(Math.abs(dx)>=Math.abs(dy)){
+              var sx=dx>=0?0.05:-0.05;
+              a1.ax=Math.max(0,Math.min(1,a1.ax+sx)); b1.ax=Math.max(0,Math.min(1,b1.ax-sx));
+            } else {
+              var sy=dy>=0?0.06:-0.06;
+              a1.ay=Math.max(0,Math.min(1,a1.ay+sy)); b1.ay=Math.max(0,Math.min(1,b1.ay-sy));
+            }
+          }
+        }
+        if(scale>MIN) scale=Math.max(MIN, scale-0.025);
+      }
     }
     if(DEBUG_LAYOUT) drawDebug(sec, wallEl, wall, safe, rects);
     return { scale:scale, fits:ok };
@@ -672,6 +696,11 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
     });
 
     place(sec);
+    // the first call can land before the wall has width or the plaque text has
+    // wrapped, and both change the box the solver measures
+    requestAnimationFrame(function(){ place(sec); });
+    setTimeout(function(){ place(sec); }, 350);
+    addEventListener('resize', function(){ place(sec); });
     // arrows pan the wall, since it is wider than the window
     var Lb=sec.querySelector('.arw.l'), Rb=sec.querySelector('.arw.r'), pan=0;
     var maxPan=0;
