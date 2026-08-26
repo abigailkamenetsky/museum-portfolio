@@ -65,7 +65,7 @@
     text-transform:uppercase;color:var(--gilt);font-style:normal;margin-bottom:9px}
   .room > header h2{font-weight:400;font-size:clamp(23px,3.1vw,36px);margin:0}
   .room > header p{margin:9px auto 0;max-width:56ch;font-size:14.5px;color:var(--dim)}
-  .room > header .n{font-family:var(--util);font-size:9px;letter-spacing:.2em;color:#7E7460;margin-top:8px}
+  .room > header .n{font-family:var(--util);font-size:11.5px;letter-spacing:.2em;color:#7E7460;margin-top:8px}
 
   /* the wall: a fixed-ratio stage the works are placed on */
   .wall{position:relative;margin:4px auto 0;width:100%;height:calc(100vh - 168px);min-height:440px}
@@ -97,7 +97,7 @@
  @media (max-width:900px){
     .room.salon .wall{height:auto;min-height:0;padding:8px 0 26px}
     .room.salon .works{position:static;width:auto!important;transform:none!important;
-      display:flex;flex-direction:column;align-items:center;gap:30px;padding:0 14px}
+      display:flex;flex-direction:column;align-items:center;gap:38px;padding:0 14px}
     .room.salon .work{position:static!important;left:auto!important;top:auto!important;
       width:min(70vw,330px)!important;margin:0!important}
     .room.salon .work .card{padding:10px 12px}
@@ -354,7 +354,8 @@
   .note.in{opacity:1;pointer-events:auto;transform:translateY(0) rotate(var(--rot,-1.6deg)) scale(1)}
   .note::before{content:"";position:absolute;left:15px;top:0;bottom:0;width:1px;
     background:rgba(140,53,40,.34)}
-  .note .nx{position:absolute;top:11px;right:14px;width:26px;height:26px;padding:0;cursor:pointer;
+  .note .nx{position:absolute;top:2px;right:5px;width:44px;height:44px;padding:0;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
     background:none;border:0;color:#8C3A28;font:600 17px var(--serif);line-height:1;opacity:.75}
   .note .nx:hover{opacity:1}
   .note svg{position:absolute;overflow:visible}
@@ -467,7 +468,7 @@
 <div class="tpfade" id="tpfade"></div>
 
 
-<div class="book" id="book">
+<div class="book" id="book" role="dialog" aria-modal="true" aria-labelledby="bPlate" tabindex="-1">
   <button class="shut" id="shut">Close</button>
   <div class="spread">
     <div class="pg l">
@@ -1058,8 +1059,29 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
       a.textContent=l.l; lk.appendChild(a);
     });
     book.classList.add('open');
+    shut._returnTo = document.activeElement;
+    document.body.style.overflow='hidden';          // the room must not scroll behind it
+    var first = book.querySelector('#shut') || book;
+    requestAnimationFrame(function(){ first.focus(); });
   }
-  function shut(){book.classList.remove('open');}
+  function shut(){
+    book.classList.remove('open');
+    document.body.style.overflow='';
+    // send focus back where it came from, or the keyboard user is stranded
+    var back = shut._returnTo;
+    if(back && document.contains(back)) { try{ back.focus(); }catch(e){} }
+    shut._returnTo = null;
+  }
+  // keep Tab inside the dialog while it is open
+  book.addEventListener('keydown', function(e){
+    if(e.key!=='Tab' || !book.classList.contains('open')) return;
+    var f=[].slice.call(book.querySelectorAll('button,a[href],[tabindex]:not([tabindex="-1"])'))
+      .filter(function(el){ return el.offsetParent!==null; });
+    if(!f.length) return;
+    var first=f[0], last=f[f.length-1];
+    if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+    else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+  });
   document.getElementById('shut').addEventListener('click',shut);
   book.addEventListener('click',function(e){if(e.target===book)shut();});
   addEventListener('keydown',function(e){if(e.key==='Escape')shut();});
