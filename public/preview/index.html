@@ -94,6 +94,16 @@
     .room.salon .works:hover .work{opacity:.86}
     .room.salon .works:hover .work:hover{opacity:1}
   }
+ @media (max-width:900px){
+    .room.salon .wall{height:auto;min-height:0;padding:8px 0 26px}
+    .room.salon .works{position:static;width:auto!important;transform:none!important;
+      display:flex;flex-direction:column;align-items:center;gap:30px;padding:0 14px}
+    .room.salon .work{position:static!important;left:auto!important;top:auto!important;
+      width:min(70vw,330px)!important;margin:0!important}
+    .room.salon .work .card{padding:10px 12px}
+    .room.salon .work .card b{font-size:13px}
+    .room.salon .work .card i{font-size:12px}
+  }
   .dbg-box{position:absolute;border:1px solid rgba(255,90,90,.9);pointer-events:none;z-index:60}
   .dbg-safe{position:absolute;border:1px dashed rgba(90,200,255,.9);pointer-events:none;z-index:59}
   .work:focus-visible{outline:2px solid var(--gilt);outline-offset:8px}
@@ -601,6 +611,15 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
   }
 
   function salonPlace(sec, spec0, force){
+    if(window.matchMedia('(max-width:900px)').matches){
+      // vertical flow takes over; clear anything the hang left behind
+      [].forEach.call(sec.querySelectorAll('.work'), function(el){
+        el.style.left=''; el.style.top=''; el.style.width='';
+        el.classList.remove('pre');
+      });
+      sec.dataset.salonSig='';
+      return;
+    }
     var wEl=sec.querySelector('.wall');
     if(wEl && !force){
       var wb=wEl.getBoundingClientRect();
