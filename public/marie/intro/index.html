@@ -287,9 +287,13 @@ addEventListener('pointerup',e=>{ if(!dragging) return; dragging=false;
   if(inUI(e)) return;
   const quick=performance.now()-tDown<400;
   if((dragAmt<14||quick) && shards && (state==='IDLE'||state==='DONE'||state==='SCRUB')){ start(); } });
-function start(){ state='RUN'; t=0; t0=performance.now(); swapped=false; az=0; el=0.05;
+function start(){
+  state='RUN'; t=0; t0=performance.now(); swapped=false; az=0; el=0.05;
+  if(vidReady){ try{ dv.pause(); dv.currentTime=0; }catch(_){} }
+  dv.style.opacity='0';
   document.body.classList.add('run');
-  document.getElementById('hint').classList.remove('in'); }
+  elHint.classList.remove('in');
+}
 document.getElementById('pp').addEventListener('click',()=>{ if(shards) start(); });
 document.getElementById('sc').addEventListener('input',e=>{ if(!shards) return;
   state='SCRUB'; t=+e.target.value/500*DUR;
@@ -311,7 +315,7 @@ let f=0,last=performance.now(); const clock=new THREE.Clock();
     } else {
       t = wall;
     }
-    if(t>=DUR){ t=DUR; state='DONE'; }
+    if(t>=DUR){ t=DUR; state='DONE'; if(!dv.paused) dv.pause(); }
   }
   sync();
   f++; const p=performance.now();
