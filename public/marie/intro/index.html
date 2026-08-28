@@ -30,10 +30,6 @@
  #tl.hide{display:none}
  @media (prefers-reduced-motion:reduce){#hint{transition:none}}
 </style></head><body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-  <filter id="mblur" x="-20%" y="-40%" width="140%" height="180%">
-    <feGaussianBlur id="mblurG" in="SourceGraphic" stdDeviation="0 0"/>
-  </filter></defs></svg>
 <div class="hud" id="hud">loading&hellip;</div>
 <video id="dustvid" playsinline muted preload="auto" disablepictureinpicture></video>
 <div id="reveal"><div id="rtitle">Abby&rsquo;s Museum</div>
@@ -117,15 +113,6 @@ let bustH=1, bustMinY=0, bustMidY=0, ORB=5;
 let state='IDLE', t=0, az=0, el=0.05, dragAmt=0, swapped=false, t0=0;
 const EL_MIN=-1.1, EL_MAX=1.25;
 
-const mblurG=document.getElementById('mblurG');
-let blurOn=false;
-function setMotionBlur(px){
-  const v=Math.max(0,Math.min(4.2,px));
-  if(v<0.25){ if(blurOn){ R.domElement.style.filter='none'; blurOn=false; } return; }
-  mblurG.setAttribute('stdDeviation','0 '+v.toFixed(2));
-  if(!blurOn){ R.domElement.style.filter='url(#mblur)'; blurOn=true; }
-}
-
 const draco=new DRACOLoader(); draco.setDecoderPath('../vendor/draco/');
 const L=new GLTFLoader(); L.setDRACOLoader(draco);
 const hud=document.getElementById('hud');
@@ -145,7 +132,7 @@ L.load('../sim/sim.glb',(g)=>{
   // frame height at distance R is 2*R*tan(fov/2); solve for the share we want
   ORB = bustH/(2*FILL*Math.tan(THREE.MathUtils.degToRad(FOV/2)));
 
-  L.load('../marie.glb',(gi)=>{
+  L.load('./marie_lite.glb',(gi)=>{
     const ib=new THREE.Box3().setFromObject(gi.scene), ic=new THREE.Vector3(); ib.getCenter(ic);
     gi.scene.position.sub(ic);
     intact=new THREE.Group(); intact.add(gi.scene);
@@ -173,11 +160,6 @@ function sync(){
   } else if(hit) lift = 0;
 
   const fallK = running ? Math.max(0, Math.min(1,(t-T_EASE)/T_FALL)) : 0;
-  // d/dt of H*(1-k^2) is -2Hk/T_FALL: her real speed, in units per second
-  const speed = (running && !hit) ? 2*(DROP*bustH)*fallK/T_FALL : 0;
-  const px = innerHeight/(2*ORB*Math.tan(THREE.MathUtils.degToRad(FOV/2)));  // px per unit
-  const settleBlur = hit ? Math.max(0,1-ta/0.07)*3.0 : 0;   // the frame it lands
-  setMotionBlur(Math.max(speed*px*0.0034, settleBlur));
   const TILT  = 0.085;                       // ~5 degrees by the time she lands
   const tilt  = TILT*fallK*fallK;            // grows with the fall, not linearly
   if(intact){
