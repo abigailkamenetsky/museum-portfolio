@@ -152,7 +152,7 @@ L.load('../sim/sim.glb',(g)=>{
     scene.add(intact);
     hud.innerHTML='<b>shards</b> '+n+'<br><b>bust</b> '+bustH.toFixed(2)+'u<br><b>orbit</b> '+
       ORB.toFixed(2)+'u<br><b>drop</b> '+T_IMPACT.toFixed(2)+'s<br><b>fps</b> <span id="fps">--</span>';
-    elHint.classList.add('in');
+    meshReady=true; readyCheck();
     sync();
   });
 },undefined,(e)=>{hud.textContent='FAILED '+e;});
