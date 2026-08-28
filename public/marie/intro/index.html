@@ -27,7 +27,12 @@
    padding:9px 13px;font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#c9a24e}
  #tl button{font:inherit;background:#171208;color:#c9a24e;border:1px solid #3d3524;border-radius:5px;
    padding:6px 10px;cursor:pointer;min-height:32px} #tl button:hover{border-color:#c9a24e}
- #tl input{width:min(300px,40vw);accent-color:#c9a24e} #tn{min-width:76px}
+ #tl input{width:min(300px,34vw);accent-color:#c9a24e} #tn{min-width:76px}
+ @media (max-width:520px){
+   #tl{left:8px;right:8px;transform:none;max-width:none;gap:6px;padding:8px;
+     font-size:10px;flex-wrap:wrap;justify-content:center}
+   #tl input{width:100%;order:3} #tn{min-width:56px}
+ }
  #tl.hide{display:none}
  @media (prefers-reduced-motion:reduce){#hint{transition:none}}
 </style></head><body>
@@ -68,9 +73,13 @@ const SWAP_AT   = 1.25;   // seconds after impact: peak obscuration
 const TITLE_AT  = 1.62;
 const DUR       = 3.55;
 
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const R = new THREE.WebGLRenderer({antialias:true});
 R.setPixelRatio(Math.min(devicePixelRatio,2)); R.setSize(innerWidth,innerHeight);
 R.setClearColor(0x000000,1); R.toneMapping=THREE.ACESFilmicToneMapping;
+R.domElement.tabIndex=0;
+R.domElement.setAttribute('role','button');
+R.domElement.setAttribute('aria-label','Marie Antoinette bust. Activate to shatter it and enter the museum.');
 document.body.appendChild(R.domElement);
 
 const scene=new THREE.Scene();
@@ -294,12 +303,23 @@ addEventListener('pointerup',e=>{ if(!dragging) return; dragging=false;
   const armed = shards && (vidReady || dv.error);   // no half-loaded runs
   if((dragAmt<14||quick) && armed && (state==='IDLE'||state==='DONE'||state==='SCRUB')){ start(); } });
 function start(){
+  if(REDUCED){                      // deliver the outcome without the motion
+    state='SCRUB'; t=DUR; az=0; el=0.05; dirty=true;
+    document.body.classList.add('run'); elHint.classList.remove('in');
+    if(vidReady){ try{ dv.pause(); }catch(_){} }
+    dv.style.opacity='0'; sync(); return;
+  }
   state='RUN'; t=0; t0=performance.now(); az=0; el=0.05; dirty=true;
   if(vidReady){ try{ dv.pause(); dv.currentTime=0; }catch(_){} }
   dv.style.opacity='0';
   document.body.classList.add('run');
   elHint.classList.remove('in');
 }
+R.domElement.addEventListener('keydown',e=>{
+  if(e.key!=='Enter' && e.key!==' ') return;
+  e.preventDefault();
+  if(shards && (vidReady||dv.error)) start();
+});
 document.getElementById('pp').addEventListener('click',()=>{ if(shards && (vidReady||dv.error)) start(); });
 document.getElementById('sc').addEventListener('input',e=>{ if(!shards) return;
   state='SCRUB'; t=+e.target.value/500*DUR;
