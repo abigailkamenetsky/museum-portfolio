@@ -221,10 +221,9 @@ function sync(){
         if(Math.abs(dv.currentTime-want)>0.04) dv.currentTime=want;
       } else {
         if(dv.paused && ta<0.06){ dv.currentTime=0; dv.play().catch(()=>{}); }
-        // correct drift rather than letting the two clocks separate
-        const drift=dv.currentTime-want;
-        if(Math.abs(drift)>0.12) dv.currentTime=want;
-        else dv.playbackRate=Math.max(0.75,Math.min(1.25,1-drift*1.8));
+        // the clip is the master here, so it is never reseeked backwards:
+        // that is exactly the snap the render stall used to produce
+        dv.playbackRate=1;
       }
       const tail=Math.max(0,(ta-(vidDur-0.35))/1.5);
       const onset=Math.min(1, ta/0.10);           // same event as the impact
@@ -274,7 +273,15 @@ if(qt!==null){ state='SCRUB'; t=Math.max(0,Math.min(DUR,+qt)); }
 let f=0,last=performance.now(); const clock=new THREE.Clock();
 (function tick(){ requestAnimationFrame(tick);
   if(state==='RUN'){
-    t=(performance.now()-t0)/1000;          // wall clock, so the shot is always DUR long
+    const wall=(performance.now()-t0)/1000;
+    const leading = vidReady && !dv.paused && wall>=T_IMPACT &&
+                    dv.currentTime>0 && dv.currentTime<vidDur-0.03;
+    if(leading){
+      t = T_IMPACT + dv.currentTime;        // the dust leads; the break follows it
+      t0 = performance.now() - t*1000;      // so wall clock resumes seamlessly after
+    } else {
+      t = wall;
+    }
     if(t>=DUR){ t=DUR; state='DONE'; }
   }
   sync();
