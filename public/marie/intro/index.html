@@ -120,7 +120,7 @@ const EL_MIN=-1.1, EL_MAX=1.25;
 const mblurG=document.getElementById('mblurG');
 let blurOn=false;
 function setMotionBlur(px){
-  const v=Math.max(0,Math.min(9,px));
+  const v=Math.max(0,Math.min(4.2,px));
   if(v<0.25){ if(blurOn){ R.domElement.style.filter='none'; blurOn=false; } return; }
   mblurG.setAttribute('stdDeviation','0 '+v.toFixed(2));
   if(!blurOn){ R.domElement.style.filter='url(#mblur)'; blurOn=true; }
@@ -176,8 +176,8 @@ function sync(){
   // d/dt of H*(1-k^2) is -2Hk/T_FALL: her real speed, in units per second
   const speed = (running && !hit) ? 2*(DROP*bustH)*fallK/T_FALL : 0;
   const px = innerHeight/(2*ORB*Math.tan(THREE.MathUtils.degToRad(FOV/2)));  // px per unit
-  const settleBlur = hit ? Math.max(0,1-ta/0.09)*5.5 : 0;   // the frame it lands
-  setMotionBlur(Math.max(speed*px*0.0075, settleBlur));
+  const settleBlur = hit ? Math.max(0,1-ta/0.07)*3.0 : 0;   // the frame it lands
+  setMotionBlur(Math.max(speed*px*0.0034, settleBlur));
   const TILT  = 0.085;                       // ~5 degrees by the time she lands
   const tilt  = TILT*fallK*fallK;            // grows with the fall, not linearly
   if(intact){
