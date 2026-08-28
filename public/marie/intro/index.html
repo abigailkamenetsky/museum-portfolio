@@ -65,7 +65,7 @@ const T_IMPACT  = T_EASE + T_FALL;
 const DROP      = 1.25;   // multiples of bust height
 const SWAP_AT   = 1.25;   // seconds after impact: peak obscuration
 const TITLE_AT  = 1.62;
-const DUR       = 5.4;
+const DUR       = 3.85;
 
 const R = new THREE.WebGLRenderer({antialias:true});
 R.setPixelRatio(Math.min(devicePixelRatio,2)); R.setSize(innerWidth,innerHeight);
@@ -251,7 +251,7 @@ function sync(){
         // that is exactly the snap the render stall used to produce
         dv.playbackRate=1;
       }
-      const tail=Math.max(0,(ta-(vidDur-0.35))/1.5);
+      const tail=Math.max(0,(ta-(vidDur-0.35))/1.05);
       const onset=Math.min(1, ta/0.10);           // same event as the impact
       dv.style.opacity=(Math.max(0,1-tail)*onset).toFixed(3);
     } else { dv.style.opacity='0'; if(!dv.paused) dv.pause(); }
