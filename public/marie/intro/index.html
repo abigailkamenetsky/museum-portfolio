@@ -57,8 +57,8 @@ import { DRACOLoader } from '../vendor/loaders/DRACOLoader.js';
    Every number below is derived from measured geometry or stated once here.
    Nothing is a magic pixel value.                                          */
 const FOV       = 40;
-const FILL      = 0.27;   // bust height as a share of frame height (brief: 22-30%)
-const HEADROOM  = 0.12;   // clear space above her crown (brief: 10-14%)
+const FILL      = 0.46;   // she is the whole subject here, not one work on a wall
+const HEADROOM  = 0.17;   // above her crown at rest; the rest is room to fall into
 const T_EASE    = 0.34;
 const T_FALL    = 0.58;
 const T_IMPACT  = T_EASE + T_FALL;
@@ -79,6 +79,21 @@ const key=new THREE.DirectionalLight(0xfff8ef,2.4); key.position.set(-1.4,1.2,1.
 const fill=new THREE.DirectionalLight(0xd8e4ff,0.5); fill.position.set(1.6,0.2,1.0); scene.add(fill);
 const rim=new THREE.DirectionalLight(0xfff2dd,1.3); rim.position.set(0.8,0.9,-1.7); scene.add(rim);
 const marble=new THREE.MeshStandardMaterial({color:0xdcd8d1,roughness:0.47,vertexColors:true});
+
+function radialTex(stops){
+  const c=document.createElement('canvas'); c.width=c.height=256;
+  const g=c.getContext('2d'), rg=g.createRadialGradient(128,128,0,128,128,128);
+  for(const [o,col] of stops) rg.addColorStop(o,col);
+  g.fillStyle=rg; g.fillRect(0,0,256,256); return new THREE.CanvasTexture(c);
+}
+const floorMesh=new THREE.Mesh(new THREE.PlaneGeometry(1,1),
+  new THREE.MeshBasicMaterial({map:radialTex([[0,'rgba(150,140,125,.80)'],
+    [0.42,'rgba(66,60,52,.30)'],[1,'rgba(0,0,0,0)']]),transparent:true,depthWrite:false,opacity:0}));
+floorMesh.rotation.x=-Math.PI/2; scene.add(floorMesh);
+const contact=new THREE.Mesh(new THREE.PlaneGeometry(1,1),
+  new THREE.MeshBasicMaterial({map:radialTex([[0,'rgba(0,0,0,.85)'],
+    [0.55,'rgba(0,0,0,.32)'],[1,'rgba(0,0,0,0)']]),transparent:true,depthWrite:false,opacity:0}));
+contact.rotation.x=-Math.PI/2; scene.add(contact);
 
 // two encodes because only Safari does HEVC alpha and only Chrome/Firefox VP9 alpha
 const dv=document.getElementById('dustvid');
@@ -141,6 +156,16 @@ function sync(){
 
   if(intact){ intact.position.y = bustMinY + lift; intact.visible = !hit; }
   if(shards){ shards.visible = hit; }
+
+  // the ground resolves as she nears it, so the drop has a destination
+  const near = 1 - Math.min(1, lift/(DROP*bustH||1));
+  const fs = bustH*7;
+  floorMesh.scale.set(fs,fs,fs); floorMesh.position.set(0,bustMinY-0.002,0);
+  floorMesh.material.opacity = running ? Math.min(0.5, near*near*0.6) + (hit?0.14:0) : 0;
+  const cs = bustH*(2.1-near*1.05);
+  contact.scale.set(cs,cs,cs); contact.position.set(0,bustMinY+0.004,0);
+  contact.material.opacity = running
+    ? Math.min(0.72, near*near*0.85) * (hit ? Math.max(0,1-ta*0.8) : 1) : 0;
 
   // ── the camera frames her, wherever she is ─────────────────────────────
   // solve the aim so her crown sits HEADROOM below the top edge
