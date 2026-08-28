@@ -140,7 +140,7 @@ function readyCheck(){
 
 let intact=null, shards=null, mixer=null, simDur=1;
 let bustH=1, bustMinY=0, bustMidY=0, ORB=5;
-let state='IDLE', t=0, az=0, el=0.05, dragAmt=0, t0=0, dirty=true;
+let state='IDLE', t=0, az=0, el=0.05, dragAmt=0, t0=0, dirty=true, dustOn=false;
 const EL_MIN=-1.1, EL_MAX=1.25;
 
 const draco=new DRACOLoader(); draco.setDecoderPath('../vendor/draco/');
@@ -284,7 +284,12 @@ function sync(){
       if(state==='SCRUB'){
         if(Math.abs(dv.currentTime-want)>0.04) dv.currentTime=want;
       } else {
-        if(dv.paused && ta<0.06){ dv.currentTime=0; dv.playbackRate=DUST_RATE; dv.play().catch(()=>{}); }
+        if(!dustOn){                      // latch, not a window a slow frame can skip
+          dustOn=true;
+          try{ dv.currentTime=Math.min(Math.max(0,ta*DUST_RATE), vidDur-0.01); }catch(_){}
+          dv.playbackRate=DUST_RATE;
+          dv.play().catch(()=>{});
+        }
         // the clip is the master here, so it is never reseeked backwards:
         // that is exactly the snap the render stall used to produce
         if(dv.playbackRate!==DUST_RATE) dv.playbackRate=DUST_RATE;
@@ -332,7 +337,8 @@ function start(){
     if(vidReady){ try{ dv.pause(); }catch(_){} }
     dv.style.opacity='0'; sync(); return;
   }
-  state='RUN'; t=0; t0=performance.now(); az=0; el=0.05; dirty=true;
+  state='RUN'; t=0; t0=performance.now(); az=0; el=0.05; dirty=true; dustOn=false;
+  dustOn=false;
   if(vidReady){ try{ dv.pause(); dv.currentTime=0; }catch(_){} }
   dv.style.opacity='0';
   document.body.classList.add('run');
