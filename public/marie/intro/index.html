@@ -77,6 +77,7 @@ const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const R = new THREE.WebGLRenderer({antialias:true});
 R.setPixelRatio(Math.min(devicePixelRatio,2)); R.setSize(innerWidth,innerHeight);
 R.setClearColor(0x000000,1); R.toneMapping=THREE.ACESFilmicToneMapping;
+R.shadowMap.enabled=true; R.shadowMap.type=THREE.PCFSoftShadowMap;
 R.domElement.tabIndex=0;
 R.domElement.setAttribute('role','button');
 R.domElement.setAttribute('aria-label','Marie Antoinette bust. Activate to shatter it and enter the museum.');
@@ -85,7 +86,10 @@ document.body.appendChild(R.domElement);
 const scene=new THREE.Scene();
 const cam=new THREE.PerspectiveCamera(FOV,innerWidth/innerHeight,0.02,120);
 scene.add(new THREE.AmbientLight(0x33343a,0.75));
-const key=new THREE.DirectionalLight(0xfff8ef,2.4); key.position.set(-1.4,1.2,1.6); scene.add(key);
+const key=new THREE.DirectionalLight(0xfff8ef,2.4); key.position.set(-1.4,1.2,1.6);
+key.castShadow=true; key.shadow.mapSize.set(1024,1024);
+key.shadow.radius=3; key.shadow.bias=-0.0004; key.shadow.normalBias=0.035;  // acne
+scene.add(key);
 const fill=new THREE.DirectionalLight(0xd8e4ff,0.5); fill.position.set(1.6,0.2,1.0); scene.add(fill);
 const rim=new THREE.DirectionalLight(0xfff2dd,1.3); rim.position.set(0.8,0.9,-1.7); scene.add(rim);
 // the intact mesh and the shards are different geometry, so the swap is a hard
@@ -93,7 +97,11 @@ const rim=new THREE.DirectionalLight(0xfff2dd,1.3); rim.position.set(0.8,0.9,-1.
 const flash=new THREE.PointLight(0xfff0d8,0,9); scene.add(flash);
 // bounce off the floor, rising as she closes on it
 const bounce=new THREE.PointLight(0xffeedd,0,6); scene.add(bounce);
-const marble=new THREE.MeshStandardMaterial({color:0xdcd8d1,roughness:0.47,vertexColors:true});
+const marble=new THREE.MeshPhysicalMaterial({
+  color:0xdcd8d1, roughness:0.46, metalness:0.0, vertexColors:true,
+  clearcoat:0.08, clearcoatRoughness:0.75,
+  sheen:0.24, sheenColor:new THREE.Color(0xfffaf0), sheenRoughness:0.85,
+});
 
 function radialTex(stops){
   const c=document.createElement('canvas'); c.width=c.height=256;
@@ -102,9 +110,10 @@ function radialTex(stops){
   g.fillStyle=rg; g.fillRect(0,0,256,256); return new THREE.CanvasTexture(c);
 }
 const floorMesh=new THREE.Mesh(new THREE.PlaneGeometry(1,1),
-  new THREE.MeshBasicMaterial({map:radialTex([[0,'rgba(150,140,125,.80)'],
-    [0.42,'rgba(66,60,52,.30)'],[1,'rgba(0,0,0,0)']]),transparent:true,depthWrite:false,opacity:0}));
-floorMesh.rotation.x=-Math.PI/2; scene.add(floorMesh);
+  new THREE.MeshStandardMaterial({map:radialTex([[0,'rgba(150,140,125,.80)'],
+    [0.42,'rgba(66,60,52,.30)'],[1,'rgba(0,0,0,0)']]),transparent:true,depthWrite:false,
+    opacity:0,roughness:0.9,metalness:0}));
+floorMesh.rotation.x=-Math.PI/2; floorMesh.receiveShadow=true; scene.add(floorMesh);
 const contact=new THREE.Mesh(new THREE.PlaneGeometry(1,1),
   new THREE.MeshBasicMaterial({map:radialTex([[0,'rgba(0,0,0,.85)'],
     [0.55,'rgba(0,0,0,.32)'],[1,'rgba(0,0,0,0)']]),transparent:true,depthWrite:false,opacity:0}));
@@ -139,7 +148,7 @@ const ease=(x)=>1-Math.pow(1-x,3), accel=(x)=>x*x;
 
 L.load('../sim/sim.glb',(g)=>{
   shards=g.scene; shards.visible=false; scene.add(shards);
-  let n=0; shards.traverse(o=>{ if(o.isMesh){ o.material=marble; n++; } });
+  let n=0; shards.traverse(o=>{ if(o.isMesh){ o.material=marble; o.castShadow=true; n++; } });
   mixer=new THREE.AnimationMixer(shards); simDur=0;
   for(const cl of g.animations){ const a=mixer.clipAction(cl);
     a.loop=THREE.LoopOnce; a.clampWhenFinished=true; a.play();
@@ -150,6 +159,11 @@ L.load('../sim/sim.glb',(g)=>{
   bustH=b.max.y-b.min.y; bustMinY=b.min.y; bustMidY=(b.max.y+b.min.y)/2;
   // frame height at distance R is 2*R*tan(fov/2); solve for the share we want
   ORB = bustH/(2*FILL*Math.tan(THREE.MathUtils.degToRad(FOV/2)));
+  const sc=key.shadow.camera, r=bustH*2.2;
+  sc.left=-r; sc.right=r; sc.top=r; sc.bottom=-r;
+  sc.near=0.1; sc.far=bustH*14; sc.updateProjectionMatrix();
+  key.position.set(-bustH*0.9, bustMinY+bustH*2.4, bustH*1.1);
+  key.target.position.set(0,bustMinY,0); scene.add(key.target);
 
   L.load('./marie_lite.glb',(gi)=>{
     const ib=new THREE.Box3().setFromObject(gi.scene), ic=new THREE.Vector3(); ib.getCenter(ic);
@@ -157,7 +171,7 @@ L.load('../sim/sim.glb',(g)=>{
     intact=new THREE.Group(); intact.add(gi.scene);
     intact.scale.setScalar(bustH/(ib.max.y-ib.min.y));
     gi.scene.position.y += (ic.y-ib.min.y);        // feet at the group origin
-    intact.traverse(o=>{ if(o.isMesh) o.material=marble; });
+    intact.traverse(o=>{ if(o.isMesh){ o.material=marble; o.castShadow=true; } });
     scene.add(intact);
     hud.innerHTML='<b>shards</b> '+n+'<br><b>bust</b> '+bustH.toFixed(2)+'u<br><b>orbit</b> '+
       ORB.toFixed(2)+'u<br><b>drop</b> '+T_IMPACT.toFixed(2)+'s<br><b>fps</b> <span id="fps">--</span>';
@@ -205,7 +219,7 @@ function sync(){
   const cs = bustH*(2.1-near*1.05) * (hit ? 1+Math.min(0.5,ta*0.35) : 1);  // spreads with the debris
   contact.scale.set(cs,cs,cs); contact.position.set(0,bustMinY+0.004,0);
   contact.material.opacity = running
-    ? Math.min(0.72, near*near*0.85) * (hit ? Math.max(0.34,1-ta*0.5) : 1) : 0;
+    ? Math.min(0.34, near*near*0.42) * (hit ? Math.max(0.30,1-ta*0.5) : 1) : 0;
 
   // ── the camera frames her, wherever she is ─────────────────────────────
   // solve the aim so her crown sits HEADROOM below the top edge
