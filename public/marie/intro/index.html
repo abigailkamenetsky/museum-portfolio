@@ -108,7 +108,7 @@ dv.addEventListener('error',()=>{ vidReady=false; });
 
 let intact=null, shards=null, mixer=null, simDur=1;
 let bustH=1, bustMinY=0, bustMidY=0, ORB=5;
-let state='IDLE', t=0, az=0, el=0.05, dragAmt=0, swapped=false;
+let state='IDLE', t=0, az=0, el=0.05, dragAmt=0, swapped=false, t0=0;
 const EL_MIN=-1.1, EL_MAX=1.25;
 
 const draco=new DRACOLoader(); draco.setDecoderPath('../vendor/draco/');
@@ -259,7 +259,7 @@ addEventListener('pointerup',e=>{ if(!dragging) return; dragging=false;
   if(e.target.closest('#tl')) return;
   const quick=performance.now()-tDown<400;
   if((dragAmt<14||quick) && state==='IDLE' && shards){ start(); } });
-function start(){ state='RUN'; t=0; swapped=false; az=0; el=0.05;
+function start(){ state='RUN'; t=0; t0=performance.now(); swapped=false; az=0; el=0.05;
   document.body.classList.add('run');
   document.getElementById('hint').classList.remove('in'); }
 document.getElementById('pp').addEventListener('click',()=>{ if(shards) start(); });
@@ -273,8 +273,10 @@ if(qt!==null){ state='SCRUB'; t=Math.max(0,Math.min(DUR,+qt)); }
 
 let f=0,last=performance.now(); const clock=new THREE.Clock();
 (function tick(){ requestAnimationFrame(tick);
-  const dt=Math.min(clock.getDelta(),0.05);
-  if(state==='RUN'){ t+=dt; if(t>=DUR){ t=DUR; state='DONE'; } }
+  if(state==='RUN'){
+    t=(performance.now()-t0)/1000;          // wall clock, so the shot is always DUR long
+    if(t>=DUR){ t=DUR; state='DONE'; }
+  }
   sync();
   f++; const p=performance.now();
   if(p-last>1000){ const el2=document.getElementById('fps');
