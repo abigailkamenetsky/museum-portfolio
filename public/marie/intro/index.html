@@ -62,7 +62,7 @@ const HEADROOM  = 0.12;   // clear space above her crown (brief: 10-14%)
 const T_EASE    = 0.34;
 const T_FALL    = 0.58;
 const T_IMPACT  = T_EASE + T_FALL;
-const DROP      = 0.55;   // multiples of bust height
+const DROP      = 1.25;   // multiples of bust height
 const SWAP_AT   = 1.25;   // seconds after impact: peak obscuration
 const TITLE_AT  = 1.62;
 const DUR       = 5.4;
@@ -146,7 +146,7 @@ function sync(){
   // solve the aim so her crown sits HEADROOM below the top edge
   const frameH = 2*ORB*Math.tan(THREE.MathUtils.degToRad(FOV/2));
   const crown  = bustMinY + lift + bustH;
-  const lag    = hit ? 1 : (running && t>=T_EASE ? 0.72 : 1);   // she sinks while falling
+  const lag    = hit ? 1 : (running && t>=T_EASE ? 0.45 : 1);   // she sinks while falling
   const aimY   = (crown - frameH*(0.5-HEADROOM))*lag + (bustMidY)*(1-lag);
   cam.position.set(
     ORB*Math.cos(el)*Math.sin(az),
