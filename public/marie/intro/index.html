@@ -40,7 +40,7 @@
 <video id="dustvid" playsinline muted preload="auto" disablepictureinpicture></video>
 <div id="reveal"><div id="rtitle">Abby&rsquo;s Museum</div>
 <div id="rsub">est. 2026 &middot; Chicago</div></div>
-<div id="hint">drag to look &middot; tap to shatter</div>
+<div id="hint" class="in">loading&hellip;</div>
 <div id="tl"><button id="pp">replay</button><span id="tn">0.00s</span>
 <input type="range" id="sc" min="0" max="500" step="1" value="0" aria-label="Scrub the intro">
 <button id="hd">hide</button></div>
@@ -124,12 +124,17 @@ const dv=document.getElementById('dustvid');
 let vidReady=false, vidDur=1.83;
 dv.src = dv.canPlayType('video/mp4; codecs="hvc1"')!=='' ? './dust_hevc.mp4' : './dust_vp9.webm';
 dv.addEventListener('loadedmetadata',()=>{ if(dv.duration) vidDur=dv.duration; });
-dv.addEventListener('canplaythrough',()=>{ vidReady=true; readyCheck(); },{once:true});
+dv.addEventListener('canplay',()=>{ vidReady=true; readyCheck(); },{once:true});
+// belt and braces: if the browser is coy about canplay, accept enough buffer
+setInterval(()=>{ if(!vidReady && dv.readyState>=3){ vidReady=true; readyCheck(); } },400);
 dv.addEventListener('error',()=>{ vidReady=false; readyCheck(); });
 let meshReady=false;
 function readyCheck(){
   // the shot needs the dust; without it the break has no consequence
-  if(meshReady && (vidReady || dv.error)) elHint.classList.add('in');
+  if(meshReady && (vidReady || dv.error)){
+    elHint.textContent='drag to look \u00b7 tap to shatter';
+    elHint.classList.add('in');
+  }
 }
 
 let intact=null, shards=null, mixer=null, simDur=1;
