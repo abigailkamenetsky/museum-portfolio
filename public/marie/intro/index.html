@@ -66,7 +66,7 @@ const T_IMPACT  = T_EASE + T_FALL;
 const DROP      = 1.25;   // multiples of bust height
 const SWAP_AT   = 1.25;   // seconds after impact: peak obscuration
 const TITLE_AT  = 1.62;
-const DUR       = 3.85;
+const DUR       = 3.55;
 
 const R = new THREE.WebGLRenderer({antialias:true});
 R.setPixelRatio(Math.min(devicePixelRatio,2)); R.setSize(innerWidth,innerHeight);
@@ -286,7 +286,7 @@ addEventListener('pointermove',e=>{ if(!dragging) return;
 addEventListener('pointerup',e=>{ if(!dragging) return; dragging=false;
   if(inUI(e)) return;
   const quick=performance.now()-tDown<400;
-  if((dragAmt<14||quick) && state==='IDLE' && shards){ start(); } });
+  if((dragAmt<14||quick) && shards && (state==='IDLE'||state==='DONE'||state==='SCRUB')){ start(); } });
 function start(){ state='RUN'; t=0; t0=performance.now(); swapped=false; az=0; el=0.05;
   document.body.classList.add('run');
   document.getElementById('hint').classList.remove('in'); }
