@@ -116,7 +116,7 @@ function readyCheck(){
 
 let intact=null, shards=null, mixer=null, simDur=1;
 let bustH=1, bustMinY=0, bustMidY=0, ORB=5;
-let state='IDLE', t=0, az=0, el=0.05, dragAmt=0, swapped=false, t0=0;
+let state='IDLE', t=0, az=0, el=0.05, dragAmt=0, t0=0, dirty=true;
 const EL_MIN=-1.1, EL_MAX=1.25;
 
 const draco=new DRACOLoader(); draco.setDecoderPath('../vendor/draco/');
@@ -153,7 +153,7 @@ L.load('../sim/sim.glb',(g)=>{
     hud.innerHTML='<b>shards</b> '+n+'<br><b>bust</b> '+bustH.toFixed(2)+'u<br><b>orbit</b> '+
       ORB.toFixed(2)+'u<br><b>drop</b> '+T_IMPACT.toFixed(2)+'s<br><b>fps</b> <span id="fps">--</span>';
     meshReady=true; readyCheck();
-    sync();
+    dirty=true;
   });
 },undefined,(e)=>{hud.textContent='FAILED '+e;});
 
@@ -287,14 +287,14 @@ addEventListener('pointerdown',e=>{ if(inUI(e)) return;
 addEventListener('pointermove',e=>{ if(!dragging) return;
   const dx=e.clientX-lx, dy=e.clientY-ly; lx=e.clientX; ly=e.clientY;
   dragAmt+=Math.abs(dx)+Math.abs(dy);
-  if(state==='IDLE'){ az-=dx*0.0062; el=Math.max(EL_MIN,Math.min(EL_MAX,el+dy*0.005)); sync(); } });
+  if(state==='IDLE'){ az-=dx*0.0062; el=Math.max(EL_MIN,Math.min(EL_MAX,el+dy*0.005)); dirty=true; } });
 addEventListener('pointerup',e=>{ if(!dragging) return; dragging=false;
   if(inUI(e)) return;
   const quick=performance.now()-tDown<400;
   const armed = shards && (vidReady || dv.error);   // no half-loaded runs
   if((dragAmt<14||quick) && armed && (state==='IDLE'||state==='DONE'||state==='SCRUB')){ start(); } });
 function start(){
-  state='RUN'; t=0; t0=performance.now(); swapped=false; az=0; el=0.05;
+  state='RUN'; t=0; t0=performance.now(); az=0; el=0.05; dirty=true;
   if(vidReady){ try{ dv.pause(); dv.currentTime=0; }catch(_){} }
   dv.style.opacity='0';
   document.body.classList.add('run');
@@ -309,7 +309,7 @@ document.getElementById('hd').addEventListener('click',()=>{
 const qt=new URLSearchParams(location.search).get('t');
 if(qt!==null){ state='SCRUB'; t=Math.max(0,Math.min(DUR,+qt)); }
 
-let f=0,last=performance.now(); const clock=new THREE.Clock();
+let f=0,last=performance.now();
 (function tick(){ requestAnimationFrame(tick);
   if(state==='RUN'){
     const wall=(performance.now()-t0)/1000;
@@ -322,11 +322,12 @@ let f=0,last=performance.now(); const clock=new THREE.Clock();
       t = wall;
     }
     if(t>=DUR){ t=DUR; state='DONE'; if(!dv.paused) dv.pause(); }
+    dirty=true;
   }
-  sync();
+  if(dirty){ sync(); if(state!=='RUN') dirty=false; }
   f++; const p=performance.now();
   if(p-last>1000){ const el2=document.getElementById('fps');
     if(el2) el2.textContent=Math.round(f*1000/(p-last)); f=0; last=p; } })();
 addEventListener('resize',()=>{ cam.aspect=innerWidth/innerHeight;
-  cam.updateProjectionMatrix(); R.setSize(innerWidth,innerHeight); });
+  cam.updateProjectionMatrix(); R.setSize(innerWidth,innerHeight); vidGeom=''; dirty=true; });
 </script></body></html>
