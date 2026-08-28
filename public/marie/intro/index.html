@@ -217,8 +217,15 @@ function sync(){
     dv.style.transform='translateX(-50%)';
     if(hit){
       const want=Math.min(ta, vidDur-0.01);
-      if(state==='SCRUB'){ if(Math.abs(dv.currentTime-want)>0.05) dv.currentTime=want; }
-      else if(dv.paused && ta<0.06){ dv.currentTime=0; dv.play().catch(()=>{}); }
+      if(state==='SCRUB'){
+        if(Math.abs(dv.currentTime-want)>0.04) dv.currentTime=want;
+      } else {
+        if(dv.paused && ta<0.06){ dv.currentTime=0; dv.play().catch(()=>{}); }
+        // correct drift rather than letting the two clocks separate
+        const drift=dv.currentTime-want;
+        if(Math.abs(drift)>0.12) dv.currentTime=want;
+        else dv.playbackRate=Math.max(0.75,Math.min(1.25,1-drift*1.8));
+      }
       const tail=Math.max(0,(ta-(vidDur-0.35))/1.5);
       const onset=Math.min(1, ta/0.10);           // same event as the impact
       dv.style.opacity=(Math.max(0,1-tail)*onset).toFixed(3);
@@ -228,8 +235,8 @@ function sync(){
   // ── the swap, hidden inside the cloud, then the title through the haze ─
   const rv=document.getElementById('reveal');
   const ti=document.getElementById('rtitle'), sb=document.getElementById('rsub');
-  const showing = hit && ta>=SWAP_AT;
-  rv.style.opacity = showing ? '1' : '0';
+  const sw=hit ? Math.max(0,Math.min(1,(ta-SWAP_AT)/0.22)) : 0;
+  rv.style.opacity = (sw*sw*(3-2*sw)).toFixed(3);
   const k=Math.max(0,Math.min(1,(ta-TITLE_AT)/0.8));
   const e=k<0.5 ? 4*k*k*k : 1-Math.pow(-2*k+2,3)/2;
   ti.style.opacity=e.toFixed(3); sb.style.opacity=e.toFixed(3);
