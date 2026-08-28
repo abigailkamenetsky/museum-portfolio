@@ -153,8 +153,8 @@ function sync(){
   // ── where she is ───────────────────────────────────────────────────────
   let lift = DROP*bustH;
   if(running && !hit){
-    if(t<T_EASE) lift = DROP*bustH + ease(t/T_EASE)*0.06*bustH;   // settles back
-    else lift = (DROP*bustH+0.06*bustH) * (1-accel((t-T_EASE)/T_FALL));
+    if(t<T_EASE) lift = DROP*bustH - ease(t/T_EASE)*0.012*bustH;  // sags, never rises
+    else lift = (DROP*bustH-0.012*bustH) * (1-accel((t-T_EASE)/T_FALL));
   } else if(hit) lift = 0;
 
   if(intact){ intact.position.y = bustMinY + lift; intact.visible = !hit; }
@@ -165,10 +165,10 @@ function sync(){
   const fs = bustH*7;
   floorMesh.scale.set(fs,fs,fs); floorMesh.position.set(0,bustMinY-0.002,0);
   floorMesh.material.opacity = running ? Math.min(0.5, near*near*0.6) + (hit?0.14:0) : 0;
-  const cs = bustH*(2.1-near*1.05);
+  const cs = bustH*(2.1-near*1.05) * (hit ? 1+Math.min(0.5,ta*0.35) : 1);  // spreads with the debris
   contact.scale.set(cs,cs,cs); contact.position.set(0,bustMinY+0.004,0);
   contact.material.opacity = running
-    ? Math.min(0.72, near*near*0.85) * (hit ? Math.max(0,1-ta*0.8) : 1) : 0;
+    ? Math.min(0.72, near*near*0.85) * (hit ? Math.max(0.34,1-ta*0.5) : 1) : 0;
 
   // ── the camera frames her, wherever she is ─────────────────────────────
   // solve the aim so her crown sits HEADROOM below the top edge
@@ -177,12 +177,11 @@ function sync(){
   // motion the shot exists to show: she dropped 2.5 units and the frame moved
   // with her, so she appeared to hang still and then simply break. It holds the
   // idle composition while she falls through it, then settles to the wreck.
-  const restCrown = bustMinY + DROP*bustH + 0.06*bustH + bustH;
+  const restCrown = bustMinY + DROP*bustH + bustH;
   const aimHigh   = restCrown - frameH*(0.5-HEADROOM);
   const aimGround = bustMinY + bustH*0.62;
-  const drop0     = T_EASE + T_FALL*0.52;    // locked until here: the fall reads
-  const settleT   = hit ? 1 + ta/0.40
-                  : (running && t>drop0 ? (t-drop0)/(T_FALL*0.48) : 0);
+  // locked through the whole fall: the camera cannot anticipate the landing
+  const settleT   = hit ? ta/0.34 : 0;
   const settle    = Math.min(1, settleT);
   const aimY      = aimHigh + (aimGround-aimHigh)*(settle*settle*(3-2*settle));
   cam.position.set(
@@ -191,14 +190,14 @@ function sync(){
     ORB*Math.cos(el)*Math.cos(az));
   let shake=0;
   if(hit && ta<0.18){ const k=1-ta/0.18; shake=k*k*0.03*bustH; }   // felt, not seen
-  cam.position.x += Math.sin(ta*127)*shake;
-  cam.position.y += Math.cos(ta*151)*shake;
+  cam.position.x += Math.sin(ta*118)*shake*0.28;   // the impulse is vertical
+  cam.position.y += Math.cos(ta*104)*shake;
   cam.lookAt(0,aimY,0);
 
   // ── the break ──────────────────────────────────────────────────────────
-  if(mixer && hit) mixer.setTime(Math.min(ta,simDur));
+  if(mixer && hit) mixer.setTime(Math.min(ta+0.05,simDur));   // enter already moving
   flash.position.set(0,bustMinY+bustH*0.25,bustH*0.3);
-  flash.intensity = hit ? Math.max(0,1-ta/0.13)*7 : 0;
+  flash.intensity = hit ? Math.max(0,1-ta/0.10)*1.6 : 0;   // floor bounce, not a spark
 
   // ── the dust ───────────────────────────────────────────────────────────
   // the clip is shorter than the shot, so it must fade out rather than hold
