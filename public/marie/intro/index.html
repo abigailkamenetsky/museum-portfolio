@@ -1,6 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="robots" content="noindex,nofollow"><title>Marie &mdash; intro</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="data:,"><title>Marie &mdash; intro</title>
 <style>
  *{box-sizing:border-box} html,body{margin:0;height:100%;background:#000;overflow:hidden}
  body{font-family:"Iowan Old Style",Palatino,Georgia,serif;touch-action:none;cursor:grab}
@@ -274,7 +275,8 @@ function sync(){
 
 // ── input: she is fixed, the camera orbits, and only on a real tap ────────
 let dragging=false,lx=0,ly=0,tDown=0;
-addEventListener('pointerdown',e=>{ if(e.target.closest('#tl')) return;
+const inUI=(e)=>!!(e.target && e.target.closest && e.target.closest('#tl'));
+addEventListener('pointerdown',e=>{ if(inUI(e)) return;
   dragging=true; lx=e.clientX; ly=e.clientY; dragAmt=0; tDown=performance.now();
   try{R.domElement.setPointerCapture(e.pointerId);}catch(_){} });
 addEventListener('pointermove',e=>{ if(!dragging) return;
@@ -282,7 +284,7 @@ addEventListener('pointermove',e=>{ if(!dragging) return;
   dragAmt+=Math.abs(dx)+Math.abs(dy);
   if(state==='IDLE'){ az-=dx*0.0062; el=Math.max(EL_MIN,Math.min(EL_MAX,el+dy*0.005)); sync(); } });
 addEventListener('pointerup',e=>{ if(!dragging) return; dragging=false;
-  if(e.target.closest('#tl')) return;
+  if(inUI(e)) return;
   const quick=performance.now()-tDown<400;
   if((dragAmt<14||quick) && state==='IDLE' && shards){ start(); } });
 function start(){ state='RUN'; t=0; t0=performance.now(); swapped=false; az=0; el=0.05;
