@@ -97,9 +97,10 @@
  @media (max-width:900px){
     .room.salon .wall{height:auto;min-height:0;padding:8px 0 26px}
     .room.salon .works{position:static;width:auto!important;transform:none!important;
-      display:flex;flex-direction:column;align-items:center;gap:38px;padding:0 14px}
+      display:flex;flex-direction:column;align-items:center;gap:38px;
+      padding:0 max(14px, 26vw) 0 14px}          /* clear the fixed banner rail */
     .room.salon .work{position:static!important;left:auto!important;top:auto!important;
-      width:min(70vw,330px)!important;margin:0!important}
+      width:100%!important;max-width:330px!important;margin:0!important}
     .room.salon .work .card{padding:10px 12px}
     .room.salon .work .card b{font-size:13px}
     .room.salon .work .card i{font-size:12px}
@@ -410,8 +411,20 @@
 
   /* magnetic chrome */
   .gbtn,.arw{transition:transform .18s ease, background .2s, border-color .2s}
-  @media (max-width:820px){.spread{grid-template-columns:1fr}.pg.l{display:none}
-    .wall{aspect-ratio:3/4}}
+  @media (max-width:820px){
+    .spread{grid-template-columns:1fr}
+    /* the painting is the point of the exhibit: show it above the story */
+    .pg.l{display:block;padding-bottom:0}
+    .pg.l img{width:100%;height:auto;max-height:44vh;object-fit:contain}
+    .wall{aspect-ratio:3/4}
+    .room.salon .wall{aspect-ratio:auto}   /* the vertical flow sets its own height */
+  }
+  /* a hint note must never sit on top of the dialog or its close button */
+  .book.open ~ .note, body:has(.book.open) .note{opacity:0!important;pointer-events:none!important}
+  @media (max-width:900px){
+    .note{width:min(300px,80vw);font-size:17px;padding:20px 18px 22px}
+    .note .nx{top:0;right:0}
+  }
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
@@ -1060,6 +1073,9 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
     });
     book.classList.add('open');
     shut._returnTo = document.activeElement;
+    [].forEach.call(document.querySelectorAll('.note.in'), function(n){
+      n.dataset.wasIn='1'; n.classList.remove('in');     // no hints over the dialog
+    });
     document.body.style.overflow='hidden';          // the room must not scroll behind it
     var first = book.querySelector('#shut') || book;
     requestAnimationFrame(function(){ first.focus(); });
@@ -1067,6 +1083,9 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
   function shut(){
     book.classList.remove('open');
     document.body.style.overflow='';
+    [].forEach.call(document.querySelectorAll('.note[data-was-in]'), function(n){
+      n.classList.add('in'); delete n.dataset.wasIn;
+    });
     // send focus back where it came from, or the keyboard user is stranded
     var back = shut._returnTo;
     if(back && document.contains(back)) { try{ back.focus(); }catch(e){} }
