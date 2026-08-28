@@ -106,8 +106,13 @@ const dv=document.getElementById('dustvid');
 let vidReady=false, vidDur=1.83;
 dv.src = dv.canPlayType('video/mp4; codecs="hvc1"')!=='' ? './dust_hevc.mp4' : './dust_vp9.webm';
 dv.addEventListener('loadedmetadata',()=>{ if(dv.duration) vidDur=dv.duration; });
-dv.addEventListener('canplaythrough',()=>{ vidReady=true; },{once:true});
-dv.addEventListener('error',()=>{ vidReady=false; });
+dv.addEventListener('canplaythrough',()=>{ vidReady=true; readyCheck(); },{once:true});
+dv.addEventListener('error',()=>{ vidReady=false; readyCheck(); });
+let meshReady=false;
+function readyCheck(){
+  // the shot needs the dust; without it the break has no consequence
+  if(meshReady && (vidReady || dv.error)) elHint.classList.add('in');
+}
 
 let intact=null, shards=null, mixer=null, simDur=1;
 let bustH=1, bustMinY=0, bustMidY=0, ORB=5;
@@ -286,7 +291,8 @@ addEventListener('pointermove',e=>{ if(!dragging) return;
 addEventListener('pointerup',e=>{ if(!dragging) return; dragging=false;
   if(inUI(e)) return;
   const quick=performance.now()-tDown<400;
-  if((dragAmt<14||quick) && shards && (state==='IDLE'||state==='DONE'||state==='SCRUB')){ start(); } });
+  const armed = shards && (vidReady || dv.error);   // no half-loaded runs
+  if((dragAmt<14||quick) && armed && (state==='IDLE'||state==='DONE'||state==='SCRUB')){ start(); } });
 function start(){
   state='RUN'; t=0; t0=performance.now(); swapped=false; az=0; el=0.05;
   if(vidReady){ try{ dv.pause(); dv.currentTime=0; }catch(_){} }
@@ -294,7 +300,7 @@ function start(){
   document.body.classList.add('run');
   elHint.classList.remove('in');
 }
-document.getElementById('pp').addEventListener('click',()=>{ if(shards) start(); });
+document.getElementById('pp').addEventListener('click',()=>{ if(shards && (vidReady||dv.error)) start(); });
 document.getElementById('sc').addEventListener('input',e=>{ if(!shards) return;
   state='SCRUB'; t=+e.target.value/500*DUR;
   document.getElementById('hint').classList.remove('in'); sync(); });
