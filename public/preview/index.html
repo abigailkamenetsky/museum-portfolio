@@ -422,8 +422,13 @@
   /* a hint note must never sit on top of the dialog or its close button */
   .book.open ~ .note, body:has(.book.open) .note{opacity:0!important;pointer-events:none!important}
   @media (max-width:900px){
-    .note{width:min(300px,80vw);font-size:17px;padding:20px 18px 22px}
-    .note .nx{top:0;right:0}
+    .note{position:fixed!important;left:50%!important;right:auto!important;
+      top:auto!important;bottom:calc(16px + env(safe-area-inset-bottom))!important;
+      width:min(340px,92vw);font-size:16px;line-height:1.45;padding:16px 46px 18px 18px;
+      transform:translateX(-50%) translateY(10px) rotate(-0.6deg) scale(.98)!important}
+    .note.in{transform:translateX(-50%) translateY(0) rotate(-0.6deg) scale(1)!important}
+    .note .nx{top:2px;right:2px}
+    .note svg{display:none}
   }
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
