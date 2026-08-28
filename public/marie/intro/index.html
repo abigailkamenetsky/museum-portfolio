@@ -170,9 +170,15 @@ function sync(){
   // ── the camera frames her, wherever she is ─────────────────────────────
   // solve the aim so her crown sits HEADROOM below the top edge
   const frameH = 2*ORB*Math.tan(THREE.MathUtils.degToRad(FOV/2));
-  const crown  = bustMinY + lift + bustH;
-  const lag    = hit ? 1 : (running && t>=T_EASE ? 0.45 : 1);   // she sinks while falling
-  const aimY   = (crown - frameH*(0.5-HEADROOM))*lag + (bustMidY)*(1-lag);
+  // The camera is LOCKED OFF for the fall. Tracking her cancelled the very
+  // motion the shot exists to show: she dropped 2.5 units and the frame moved
+  // with her, so she appeared to hang still and then simply break. It holds the
+  // idle composition while she falls through it, then settles to the wreck.
+  const restCrown = bustMinY + DROP*bustH + 0.06*bustH + bustH;
+  const aimHigh   = restCrown - frameH*(0.5-HEADROOM);
+  const aimGround = bustMinY + bustH*0.62;
+  const settle    = hit ? Math.min(1, ta/0.45) : 0;
+  const aimY      = aimHigh + (aimGround-aimHigh)*(settle*settle*(3-2*settle));
   cam.position.set(
     ORB*Math.cos(el)*Math.sin(az),
     aimY + ORB*Math.sin(el),
