@@ -4,38 +4,40 @@
 <style>
  *{box-sizing:border-box} html,body{margin:0;height:100%;background:#000;overflow:hidden}
  body{font-family:"Iowan Old Style",Palatino,Georgia,serif;touch-action:none;cursor:grab}
- body.tapped{cursor:default}
- canvas{display:block;position:fixed;inset:0}
- #hint{position:fixed;left:0;right:0;bottom:13vh;text-align:center;z-index:4;color:#9a9188;
-  font-size:clamp(13px,1.7vw,18px);letter-spacing:.2em;opacity:0;transition:opacity 1.2s ease;
-  pointer-events:none;text-transform:uppercase}
- #hint.in{opacity:.8}
- .hud{position:fixed;left:14px;top:12px;z-index:3;color:#544d42;font-size:11px;line-height:1.75;
-  font-family:ui-monospace,Menlo,monospace} .hud b{color:#8d7f5c;font-weight:400}
- #tl{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:9;display:flex;gap:9px;
-  align-items:center;background:rgba(9,8,5,.9);border:1px solid #2b2419;border-radius:9px;
-  padding:9px 13px;font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#c9a24e}
- #tl button{font:inherit;background:#171208;color:#c9a24e;border:1px solid #3d3524;border-radius:5px;
-  padding:5px 9px;cursor:pointer} #tl button:hover{border-color:#c9a24e}
- #tl input{width:min(320px,42vw);accent-color:#c9a24e} #tn{min-width:78px}
- #tl.hide{display:none}
+ body.run{cursor:default}
+ canvas{display:block;position:fixed;inset:0;z-index:1}
  #dustvid{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:3;
-  opacity:0;pointer-events:none;mix-blend-mode:normal}
+   opacity:0;pointer-events:none}
  #reveal{position:fixed;inset:0;z-index:2;opacity:0;pointer-events:none;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  background:radial-gradient(ellipse 72% 62% at 50% 56%,#3d2c18 0%,#1e1409 46%,#080503 79%,#000 100%)}
- #rtitle{font-size:clamp(30px,6.4vw,74px);color:#f2e4c6;letter-spacing:.015em;
-  text-shadow:0 0 46px rgba(201,162,78,.42)}
- #rsub{margin-top:.7em;font-family:ui-monospace,Menlo,monospace;font-size:11px;
-  letter-spacing:.34em;color:#9d8657;text-transform:uppercase}
+   display:flex;flex-direction:column;align-items:center;justify-content:center;
+   background:radial-gradient(ellipse 72% 62% at 50% 56%,#3d2c18 0%,#1e1409 46%,#080503 79%,#000 100%)}
+ #rtitle{font-size:clamp(30px,6.2vw,72px);color:#f2e4c6;letter-spacing:.015em;opacity:0;
+   text-shadow:0 0 46px rgba(201,162,78,.42)}
+ #rsub{margin-top:.75em;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;opacity:0;
+   letter-spacing:.3em;color:#9d8657;text-transform:uppercase}
+ #hint{position:fixed;left:0;right:0;bottom:12vh;text-align:center;z-index:4;color:#9a9188;
+   font-size:clamp(12px,1.6vw,17px);letter-spacing:.2em;opacity:0;transition:opacity 1s ease;
+   pointer-events:none;text-transform:uppercase}
+ #hint.in{opacity:.8}
+ .hud{position:fixed;left:14px;top:12px;z-index:5;color:#544d42;font-size:11px;line-height:1.75;
+   font-family:ui-monospace,Menlo,monospace} .hud b{color:#8d7f5c;font-weight:400}
+ #tl{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:9;display:flex;gap:9px;
+   align-items:center;background:rgba(9,8,5,.9);border:1px solid #2b2419;border-radius:9px;
+   padding:9px 13px;font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#c9a24e}
+ #tl button{font:inherit;background:#171208;color:#c9a24e;border:1px solid #3d3524;border-radius:5px;
+   padding:6px 10px;cursor:pointer;min-height:32px} #tl button:hover{border-color:#c9a24e}
+ #tl input{width:min(300px,40vw);accent-color:#c9a24e} #tn{min-width:76px}
+ #tl.hide{display:none}
  @media (prefers-reduced-motion:reduce){#hint{transition:none}}
 </style></head><body>
 <div class="hud" id="hud">loading&hellip;</div>
-<div id="reveal"><div id="rtitle">Abby&rsquo;s Museum</div><div id="rsub">est. 2026 &middot; Chicago</div></div>
 <video id="dustvid" playsinline muted preload="auto" disablepictureinpicture></video>
+<div id="reveal"><div id="rtitle">Abby&rsquo;s Museum</div>
+<div id="rsub">est. 2026 &middot; Chicago</div></div>
 <div id="hint">drag to look &middot; tap to shatter</div>
 <div id="tl"><button id="pp">replay</button><span id="tn">0.00s</span>
-<input type="range" id="sc" min="0" max="500" step="1" value="0"><button id="hd">hide</button></div>
+<input type="range" id="sc" min="0" max="500" step="1" value="0" aria-label="Scrub the intro">
+<button id="hd">hide</button></div>
 <script type="importmap">
 {"imports":{"three":"../vendor/three.module.js","three/addons/":"../vendor/"}}
 </script>
@@ -44,348 +46,149 @@ import * as THREE from 'three';
 import { GLTFLoader } from '../vendor/loaders/GLTFLoader.js';
 import { DRACOLoader } from '../vendor/loaders/DRACOLoader.js';
 
-// camera, lights, material and 1:1 playback are copied from the sim viewer so
-// the frame at impact is identical to it. the only addition is the drop.
-const R=new THREE.WebGLRenderer({antialias:true}); let DPR=Math.min(devicePixelRatio,2); R.setPixelRatio(DPR);
-R.setSize(innerWidth,innerHeight); R.setClearColor(0x000000,1);
-R.toneMapping=THREE.ACESFilmicToneMapping; document.body.appendChild(R.domElement);
+/* ── the shot ──────────────────────────────────────────────────────────────
+   A  0.00-tap   stable, fully framed bust. drag orbits the camera; she never moves.
+   B  0.00-0.34  anticipation: she settles back before letting go
+   C  0.34-0.92  the fall, accelerating under gravity
+   D  0.92       impact
+   E-G 0.92+     the Blender bake breaks; the Mantaflow dust plays over it
+   H  swap behind the dust, then the title through the clearing haze
+
+   Every number below is derived from measured geometry or stated once here.
+   Nothing is a magic pixel value.                                          */
+const FOV       = 40;
+const FILL      = 0.27;   // bust height as a share of frame height (brief: 22-30%)
+const HEADROOM  = 0.12;   // clear space above her crown (brief: 10-14%)
+const T_EASE    = 0.34;
+const T_FALL    = 0.58;
+const T_IMPACT  = T_EASE + T_FALL;
+const DROP      = 0.55;   // multiples of bust height
+const SWAP_AT   = 1.25;   // seconds after impact: peak obscuration
+const TITLE_AT  = 1.62;
+const DUR       = 5.4;
+
+const R = new THREE.WebGLRenderer({antialias:true});
+R.setPixelRatio(Math.min(devicePixelRatio,2)); R.setSize(innerWidth,innerHeight);
+R.setClearColor(0x000000,1); R.toneMapping=THREE.ACESFilmicToneMapping;
+document.body.appendChild(R.domElement);
 
 const scene=new THREE.Scene();
-const cam=new THREE.PerspectiveCamera(40,innerWidth/innerHeight,0.02,80); cam.position.set(0,0.95,4.75);
+const cam=new THREE.PerspectiveCamera(FOV,innerWidth/innerHeight,0.02,120);
 scene.add(new THREE.AmbientLight(0x33343a,0.75));
 const key=new THREE.DirectionalLight(0xfff8ef,2.4); key.position.set(-1.4,1.2,1.6); scene.add(key);
 const fill=new THREE.DirectionalLight(0xd8e4ff,0.5); fill.position.set(1.6,0.2,1.0); scene.add(fill);
 const rim=new THREE.DirectionalLight(0xfff2dd,1.3); rim.position.set(0.8,0.9,-1.7); scene.add(rim);
-const marble=new THREE.MeshStandardMaterial({color:0xdcd8d1,roughness:0.47,
-  vertexColors:true});   // baked AO + dust buildup ride in the mesh
+const marble=new THREE.MeshStandardMaterial({color:0xdcd8d1,roughness:0.47,vertexColors:true});
 
-function radial(stops){
-  const c=document.createElement('canvas'); c.width=c.height=256;
-  const g=c.getContext('2d'), rg=g.createRadialGradient(128,128,0,128,128,128);
-  for(const [o,col] of stops) rg.addColorStop(o,col);
-  g.fillStyle=rg; g.fillRect(0,0,256,256); return new THREE.CanvasTexture(c);
-}
-// untextured points draw as hard squares. a single clean radial also reads as
-// fog, so each puff is several offset blobs: irregular edges, like real dust.
-const DUST_RGB=[164,155,144];           // #a49b90 mid dust, not smoke white
-// stacked radial gradients are always a circle, however they are blurred or
-// rotated, and repeated circles read as snowballs. real smoke is fractal
-// noise with a ragged silhouette, so generate actual fBm and carve the alpha
-// out of it. 2x2 atlas of independent seeds, picked per particle.
-function fbmAtlas(){
-  const N=256, H=N>>1;
-  const c=document.createElement('canvas'); c.width=c.height=N;
-  const g=c.getContext('2d'), img=g.createImageData(N,N), d=img.data;
-  const [R,G,B]=DUST_RGB;
-  const hash=(x,y,s)=>{ let n=(x|0)*374761393+(y|0)*668265263+(s|0)*1442695040;
-    n=Math.imul(n^(n>>>13),1274126177); return ((n^(n>>>16))>>>0)/4294967295; };
-  function vn(x,y,s){
-    const xi=Math.floor(x), yi=Math.floor(y), xf=x-xi, yf=y-yi;
-    const u=xf*xf*(3-2*xf), v=yf*yf*(3-2*yf);
-    return hash(xi,yi,s)*(1-u)*(1-v) + hash(xi+1,yi,s)*u*(1-v)
-         + hash(xi,yi+1,s)*(1-u)*v   + hash(xi+1,yi+1,s)*u*v;
-  }
-  function fbm(x,y,s){
-    let v=0,a=0.5,f=1;
-    for(let o=0;o<5;o++){ v+=a*vn(x*f,y*f,s+o*17); f*=2.07; a*=0.5; }
-    return v;
-  }
-  for(let q=0;q<4;q++){
-    const ox=(q&1)*H, oy=(q>>1)*H, seed=q*911+7;
-    for(let y=0;y<H;y++) for(let x=0;x<H;x++){
-      const nx=x/H, ny=y/H;
-      // warp the lookup so the shape is ragged, never a disc
-      const wx=nx*4.0 + fbm(nx*3.1,ny*3.1,seed+51)*1.4;
-      const wy=ny*4.0 + fbm(nx*3.1+5.2,ny*3.1+1.3,seed+77)*1.4;
-      let v=fbm(wx,wy,seed);
-      v=Math.min(1,Math.max(0,(v-0.34)*2.35));     // stretch: filaments, not haze
-      const dx=nx-0.5, dy=ny-0.5;
-      const rad=Math.sqrt(dx*dx+dy*dy)*2;
-      const edge=1-Math.min(1,Math.max(0,(rad-0.30)/0.70));
-      const a=v*edge*edge;
-      const i=((oy+y)*N+(ox+x))*4;
-      d[i]=R; d[i+1]=G; d[i+2]=B; d[i+3]=Math.min(255,a*225);
-    }
-  }
-  g.putImageData(img,0,0);
-  const t=new THREE.CanvasTexture(c);
-  t.minFilter=THREE.LinearFilter; t.magFilter=THREE.LinearFilter;
-  return t;
-}
-const dustTex=fbmAtlas();
-
-// dust is emitted continuously while the rubble keeps settling, not all at
-// once. every puff gets its own birth time, so the cloud grows instead of
-// appearing. that needs per-particle size and alpha, hence the shader.
-const DUST=2200;     // enough overlap that no single puff is visible
-const dPos=new Float32Array(DUST*3), dVel=new Float32Array(DUST*3),
-      dSeed=new Float32Array(DUST), aBirth=new Float32Array(DUST),
-      aSize=new Float32Array(DUST), aDirt=new Float32Array(DUST),
-      aLife=new Float32Array(DUST), aRot=new Float32Array(DUST),
-      aVar=new Float32Array(DUST);
-for(let i=0;i<DUST;i++){
-  const a=Math.random()*Math.PI*2, r=Math.pow(Math.random(),0.45)*0.36;
-  dPos[i*3]=Math.cos(a)*r; dPos[i*3+1]=Math.random()*0.06; dPos[i*3+2]=Math.sin(a)*r;
-  // three layers: floor dust runs sideways and stays low, midground billows
-  // around the wreck, foreground travels at the lens and becomes the veil.
-  const kind=i%10;
-  const skew=(Math.random()<0.5?-1:1)*(0.55+Math.random()*1.15);   // asymmetric
-  let sp,lift,toward;
-  if(kind<4){      sp=3.1+Math.random()*3.4; lift=0.10+Math.random()*0.22; toward=0.15; }
-  else if(kind<8){ sp=0.85+Math.random()*1.5; lift=1.1+Math.random()*1.7;  toward=0.35; }
-  else {           sp=0.30+Math.random()*0.6; lift=0.7+Math.random()*1.0;  toward=3.6; }
-  dVel[i*3]=Math.cos(a)*sp*(1.0+0.5*skew);
-  dVel[i*3+1]=lift;
-  dVel[i*3+2]=Math.sin(a)*sp*0.8+toward*(0.6+Math.random());
-  dSeed[i]=Math.random()*6.283;
-  // most of the cloud is thrown in the first moments, the rest keeps feeding
-  aBirth[i]= kind<4 ? 0.66+Math.random()*0.22     // A+B: impact powder, floor burst
-           : kind<8 ? 0.95+Math.random()*0.95     // C: mid-cloud rises, lagging
-           :          1.35+Math.random()*0.85;    // D: foreground veil, last
-  aLife[i]=1.5+Math.pow(Math.random(),0.6)*3.4;   // some vanish early, some linger
-  aSize[i]=(kind<4?0.9:kind<8?2.1:5.2)*(0.55+Math.pow(Math.random(),1.5)*1.4);
-  // dark translucent interior (~#877f73) through to near-white at the densest
-  // #7d756d dark pockets -> #c9c1b5 light -> #e6e0d7 only in tiny highlights
-  const roll=Math.random();
-  aDirt[i]= roll<0.42 ? 0.50+Math.random()*0.18      // dark density pockets
-          : roll<0.93 ? 0.78+Math.random()*0.17      // ordinary dust
-          :             1.05+Math.random()*0.10;     // rare bright specks
-  aRot[i]=Math.random()*6.2832;
-  aVar[i]=Math.floor(Math.random()*4);
-}
-const dGeo=new THREE.BufferGeometry();
-dGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(DUST*3),3));
-dGeo.setAttribute('aBirth',new THREE.BufferAttribute(aBirth,1));
-dGeo.setAttribute('aSize', new THREE.BufferAttribute(aSize,1));
-dGeo.setAttribute('aDirt', new THREE.BufferAttribute(aDirt,1));
-dGeo.setAttribute('aLife', new THREE.BufferAttribute(aLife,1));
-dGeo.setAttribute('aRot',  new THREE.BufferAttribute(aRot,1));
-dGeo.setAttribute('aVar',  new THREE.BufferAttribute(aVar,1));
-const dMat=new THREE.ShaderMaterial({
-  transparent:true, depthWrite:false, depthTest:true,
-  uniforms:{ uTime:{value:0}, uTex:{value:dustTex}, uPix:{value:innerHeight} },
-  vertexShader:`
-    attribute float aBirth, aSize, aDirt, aLife, aRot, aVar;
-    varying float vA; varying float vD; varying float vR; varying float vV;
-    varying float vNear;
-    uniform float uTime, uPix;
-    void main(){
-      float age = uTime - aBirth;
-      vV = aVar;
-      vR = aRot + age * 0.22;              // each puff sits at its own angle and drifts
-      vec3 Ldir = normalize(vec3(-1.4, 1.2, 1.6));      // the scene's key light
-      vec3 rel  = normalize(position - vec3(0.0, 0.45, 0.0));
-      float lam = dot(rel, Ldir) * 0.5 + 0.5;           // lit side vs far side
-      float deep = smoothstep(-0.1, 1.9, position.y);   // low in the cloud is buried
-      vD = aDirt * mix(0.26, 1.06, lam) * mix(0.48, 1.0, deep);
-      if(age < 0.0){ vA = 0.0; gl_Position = vec4(2.0,2.0,2.0,1.0); gl_PointSize = 0.0; return; }
-      float t = age / aLife;
-      float fadeIn  = smoothstep(0.0, 0.18, t);
-      float fadeOut = 1.0 - smoothstep(0.55, 1.0, t);
-      vA = fadeIn * fadeOut;
-      vec4 mv = modelViewMatrix * vec4(position,1.0);
-      float grow = 0.45 + 0.85 * pow(t, 0.5);
-      gl_PointSize = min(aSize * grow * uPix * 0.22 / max(0.001, -mv.z), 900.0);
-      vNear = 1.0 - smoothstep(0.35, 2.6, -mv.z);   // 1 = right at the lens
-      gl_Position = projectionMatrix * mv;
-    }`,
-  fragmentShader:`
-    uniform sampler2D uTex;
-    varying float vA; varying float vD; varying float vR; varying float vV;
-    varying float vNear;
-    void main(){
-      vec2 uv = gl_PointCoord - 0.5;
-      float s = sin(vR), c2 = cos(vR);
-      uv = mat2(c2, -s, s, c2) * uv + 0.5;      // rotate so repeats never line up
-      if(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0) discard;   // no bleed across tiles
-      vec2 off = vec2(mod(vV,2.0), floor(vV/2.0)) * 0.5;
-      vec4 c = texture2D(uTex, uv*0.5 + off);
-      if(c.a < 0.006) discard;                  // early out: this is the fill cost
-      // near the lens it is a low-contrast haze, not crisp little puffs
-      float soft = mix(1.0, 0.42, vNear);
-      float a = mix(c.a, smoothstep(0.0,0.85,c.a)*0.5, vNear);
-      gl_FragColor = vec4(c.rgb * mix(vD, vD*0.85+0.15, vNear), a * vA * soft + vNear*vA*0.30);
-    }`
-});
-const dust=new THREE.Points(dGeo,dMat); dust.frustumCulled=false; scene.add(dust);
-
-// flecks: the intermediate scale between the big shards and the dust. some
-// outrun the cloud upward then fall back, which is what sells the collision.
-const FL=260, flPos=new Float32Array(FL*3), flV=[];
-for(let i=0;i<FL;i++){
-  const a=Math.random()*6.2832, e=0.35+Math.random()*1.0, sp=1.6+Math.random()*4.2;
-  flV.push([Math.cos(a)*Math.cos(e)*sp, Math.sin(e)*sp*1.5, Math.sin(a)*Math.cos(e)*sp-0.5]);
-}
-const flGeo=new THREE.BufferGeometry();
-flGeo.setAttribute('position',new THREE.BufferAttribute(flPos,3));
-const flMat=new THREE.PointsMaterial({color:0xb8b0a2,size:0.030,sizeAttenuation:true,
-  transparent:true,opacity:0,depthWrite:false});
-const flecks=new THREE.Points(flGeo,flMat); flecks.frustumCulled=false; scene.add(flecks);
-
-// dust is pure fill cost: every screen pixel gets blended through many layers.
-// rendering it at half resolution quarters that, and a soft low-frequency
-// cloud loses nothing to the downsample. this is the actual fix, not particle
-// count. DUST_LAYER keeps it out of the main pass.
-const DUST_LAYER=1;
-dust.layers.set(DUST_LAYER);
-const rtScale=0.5;
-const rt=new THREE.WebGLRenderTarget(
-  Math.max(2,Math.floor(innerWidth*rtScale)), Math.max(2,Math.floor(innerHeight*rtScale)),
-  {minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,depthBuffer:false});
-const compCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
-const compScene=new THREE.Scene();
-compScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),
-  new THREE.MeshBasicMaterial({map:rt.texture,transparent:true,depthTest:false,
-    depthWrite:false})));
-function sizeRT(){
-  rt.setSize(Math.max(2,Math.floor(innerWidth*rtScale)),
-             Math.max(2,Math.floor(innerHeight*rtScale)));
-  dMat.uniforms.uPix.value=rt.height;   // point size is in render-target pixels
-}
-sizeRT();
-
-const T_EASE=0.34, T_FALL=0.46, T_IMPACT=T_EASE+T_FALL, DUR=6.2;
-const DROP=0.62;                    // she falls this far. the camera never moves.
-const easeOut=x=>1-Math.pow(1-x,3), easeIn=x=>x*x;
-
-let intact=null, shards=null, mixer=null, simDur=1, baseY=0, camAimY=1.0;
-let state='IDLE', t=0, dragAmt=0, spin=0;
-let az=0, el=0.06;                    // full orbit while idle
-let R_ORB=5.35; const EL_MIN=-1.15, EL_MAX=1.30;   // under the chin to over the crown
-
-// baked Mantaflow dust. two encodes because only safari does HEVC alpha and
-// only chrome/firefox do VP9 alpha; whichever loads first wins.
+// two encodes because only Safari does HEVC alpha and only Chrome/Firefox VP9 alpha
 const dv=document.getElementById('dustvid');
-let vidReady=false;
-(function(){
-  const canHevc = dv.canPlayType('video/mp4; codecs="hvc1"') !== '';
-  const src = canHevc ? './dust_hevc.mp4' : './dust_vp9.webm';
-  dv.src = src;
-  dv.addEventListener('canplaythrough', ()=>{ vidReady=true; }, {once:true});
-  dv.addEventListener('error', ()=>{ vidReady=false; });
-})();
+let vidReady=false, vidDur=1.83;
+dv.src = dv.canPlayType('video/mp4; codecs="hvc1"')!=='' ? './dust_hevc.mp4' : './dust_vp9.webm';
+dv.addEventListener('loadedmetadata',()=>{ if(dv.duration) vidDur=dv.duration; });
+dv.addEventListener('canplaythrough',()=>{ vidReady=true; },{once:true});
+dv.addEventListener('error',()=>{ vidReady=false; });
+
+let intact=null, shards=null, mixer=null, simDur=1;
+let bustH=1, bustMinY=0, bustMidY=0, ORB=5;
+let state='IDLE', t=0, az=0, el=0.05, dragAmt=0, swapped=false;
+const EL_MIN=-1.1, EL_MAX=1.25;
 
 const draco=new DRACOLoader(); draco.setDecoderPath('../vendor/draco/');
 const L=new GLTFLoader(); L.setDRACOLoader(draco);
 const hud=document.getElementById('hud');
+const ease=(x)=>1-Math.pow(1-x,3), accel=(x)=>x*x;
 
-L.load('../sim/sim.glb',(s_)=>{
-  shards=s_.scene; shards.visible=false; scene.add(shards);
+L.load('../sim/sim.glb',(g)=>{
+  shards=g.scene; shards.visible=false; scene.add(shards);
   let n=0; shards.traverse(o=>{ if(o.isMesh){ o.material=marble; n++; } });
-  const mixer0=new THREE.AnimationMixer(shards); simDur=0;
-  for(const cl of s_.animations){ const a=mixer0.clipAction(cl);
-    a.loop=THREE.LoopOnce; a.clampWhenFinished=true; a.play(); a.paused=false;
+  mixer=new THREE.AnimationMixer(shards); simDur=0;
+  for(const cl of g.animations){ const a=mixer.clipAction(cl);
+    a.loop=THREE.LoopOnce; a.clampWhenFinished=true; a.play();
     simDur=Math.max(simDur,cl.duration); }
-  mixer=mixer0;
-  mixer0.setTime(0); shards.updateMatrixWorld(true);
-  const sb=new THREE.Box3().setFromObject(shards), c=new THREE.Vector3(); sb.getCenter(c);
-  baseY=sb.min.y; camAimY=c.y-sb.min.y; dust.position.y=baseY;
-  const bustH=sb.max.y-sb.min.y;
-  const halfFov=THREE.MathUtils.degToRad(cam.fov*0.5);
-  // bust occupies ~62% of frame height, leaving real headroom above and below
-  // she occupies 26% of frame height (brief says 22-30). frame height at
-  // distance R is 2*R*tan(halfFov), so R = bustH / (2 * frac * tan).
-  R_ORB=bustH/(2*0.26*Math.tan(halfFov));
-  console.log('bustH',bustH.toFixed(3),'R_ORB',R_ORB.toFixed(2));
+  // measure at frame 0, when the pieces are assembled, not at the load pose
+  mixer.setTime(0); shards.updateMatrixWorld(true);
+  const b=new THREE.Box3().setFromObject(shards);
+  bustH=b.max.y-b.min.y; bustMinY=b.min.y; bustMidY=(b.max.y+b.min.y)/2;
+  // frame height at distance R is 2*R*tan(fov/2); solve for the share we want
+  ORB = bustH/(2*FILL*Math.tan(THREE.MathUtils.degToRad(FOV/2)));
 
-  L.load('../marie.glb',(g)=>{
-    const b=new THREE.Box3().setFromObject(g.scene), ic=new THREE.Vector3(); b.getCenter(ic);
-    g.scene.position.sub(ic);
-    intact=new THREE.Group(); intact.add(g.scene);
-    intact.scale.setScalar((sb.max.y-sb.min.y)/(b.max.y-b.min.y));
-    g.scene.position.y+=(ic.y-b.min.y);
+  L.load('../marie.glb',(gi)=>{
+    const ib=new THREE.Box3().setFromObject(gi.scene), ic=new THREE.Vector3(); ib.getCenter(ic);
+    gi.scene.position.sub(ic);
+    intact=new THREE.Group(); intact.add(gi.scene);
+    intact.scale.setScalar(bustH/(ib.max.y-ib.min.y));
+    gi.scene.position.y += (ic.y-ib.min.y);        // feet at the group origin
     intact.traverse(o=>{ if(o.isMesh) o.material=marble; });
     scene.add(intact);
-    hud.innerHTML='<b>shards</b> '+n+'<br><b>dust</b> '+DUST+'<br><b>drop</b> '+
-      T_IMPACT.toFixed(2)+'s<br><b>fps</b> <span id="fps">--</span>';
+    hud.innerHTML='<b>shards</b> '+n+'<br><b>bust</b> '+bustH.toFixed(2)+'u<br><b>orbit</b> '+
+      ORB.toFixed(2)+'u<br><b>drop</b> '+T_IMPACT.toFixed(2)+'s<br><b>fps</b> <span id="fps">--</span>';
     document.getElementById('hint').classList.add('in');
     sync();
   });
 },undefined,(e)=>{hud.textContent='FAILED '+e;});
 
 function sync(){
-  const impacted = state!=='IDLE' && t>=T_IMPACT;
-  const ta = Math.max(0,t-T_IMPACT);
+  const running = state!=='IDLE';
+  const hit = running && t>=T_IMPACT;
+  const ta = Math.max(0, t-T_IMPACT);
 
-  let lift=DROP, rot=spin;
-  if(state==='IDLE') lift=DROP;
-  else if(!impacted){
-    if(t<T_EASE){ const k=easeOut(t/T_EASE); lift=DROP+k*0.10; rot=spin+k*0.04; }
-    else { const k=easeIn((t-T_EASE)/T_FALL); lift=(DROP+0.10)*(1-k); rot=spin+0.04+k*0.10; }
-  } else lift=0;
+  // ── where she is ───────────────────────────────────────────────────────
+  let lift = DROP*bustH;
+  if(running && !hit){
+    if(t<T_EASE) lift = DROP*bustH + ease(t/T_EASE)*0.06*bustH;   // settles back
+    else lift = (DROP*bustH+0.06*bustH) * (1-accel((t-T_EASE)/T_FALL));
+  } else if(hit) lift = 0;
 
-  if(state!=='IDLE'){                       // ease home before she drops
-    const k=Math.min(1,t/T_EASE);
-    az*=(1-k); el=el*(1-k)+0.06*k;
-  }
-  const follow=(state==='IDLE'||t<T_EASE)?1.0:0.72;   // lag only during the fall
-  const frameH=2*R_ORB*Math.tan(THREE.MathUtils.degToRad(cam.fov*0.5));
-  const ty=baseY+(camAimY||1.0)+lift*follow+frameH*0.09;
+  if(intact){ intact.position.y = bustMinY + lift; intact.visible = !hit; }
+  if(shards){ shards.visible = hit; }
+
+  // ── the camera frames her, wherever she is ─────────────────────────────
+  // solve the aim so her crown sits HEADROOM below the top edge
+  const frameH = 2*ORB*Math.tan(THREE.MathUtils.degToRad(FOV/2));
+  const crown  = bustMinY + lift + bustH;
+  const lag    = hit ? 1 : (running && t>=T_EASE ? 0.72 : 1);   // she sinks while falling
+  const aimY   = (crown - frameH*(0.5-HEADROOM))*lag + (bustMidY)*(1-lag);
   cam.position.set(
-    R_ORB*Math.cos(el)*Math.sin(az),
-    ty + R_ORB*Math.sin(el),
-    R_ORB*Math.cos(el)*Math.cos(az));
-  cam.lookAt(0,ty,0);
+    ORB*Math.cos(el)*Math.sin(az),
+    aimY + ORB*Math.sin(el),
+    ORB*Math.cos(el)*Math.cos(az));
+  let shake=0;
+  if(hit && ta<0.18){ const k=1-ta/0.18; shake=k*k*0.03*bustH; }   // felt, not seen
+  cam.position.x += Math.sin(ta*127)*shake;
+  cam.position.y += Math.cos(ta*151)*shake;
+  cam.lookAt(0,aimY,0);
 
-  if(intact){ intact.position.y=baseY+lift; intact.rotation.y=rot; intact.visible=!impacted; }
-  // 3-6px equivalent, damped over ~180ms. not an earthquake.
-  const sh = impacted ? Math.max(0,1-ta/0.18) : 0;
-  cam.position.x = Math.sin(ta*127)*sh*0.035;
-  cam.position.y = Math.cos(ta*151)*sh*0.030;
-  if(shards){ shards.visible=impacted; shards.rotation.y=rot; }
+  // ── the break ──────────────────────────────────────────────────────────
+  if(mixer && hit) mixer.setTime(Math.min(ta,simDur));
 
-  // the bake plays straight, exactly as it does in the sim viewer
-  if(mixer && impacted) mixer.setTime(Math.min(ta,simDur));
-
+  // ── the dust ───────────────────────────────────────────────────────────
+  // the clip is shorter than the shot, so it must fade out rather than hold
+  // its final fully-covered frame on screen for the rest of the sequence
   if(vidReady){
-    dv.style.opacity = impacted ? '1' : '0';
-    if(impacted){
-      const want=Math.min(dv.duration||1.83, ta);
-      if(state==='SCRUB'){ if(Math.abs(dv.currentTime-want)>0.04) dv.currentTime=want; }
-      else if(dv.paused && ta<0.05){ dv.currentTime=0; dv.play().catch(()=>{}); }
-    } else if(!dv.paused) dv.pause();
+    if(hit){
+      const want=Math.min(ta, vidDur-0.01);
+      if(state==='SCRUB'){ if(Math.abs(dv.currentTime-want)>0.05) dv.currentTime=want; }
+      else if(dv.paused && ta<0.06){ dv.currentTime=0; dv.play().catch(()=>{}); }
+      const tail=Math.max(0,(ta-(vidDur-0.35))/1.5);
+      dv.style.opacity=Math.max(0,1-tail).toFixed(3);
+    } else { dv.style.opacity='0'; if(!dv.paused) dv.pause(); }
   }
-  if(impacted && !vidReady){
-    const arr=dGeo.attributes.position.array;
-    for(let i=0;i<DUST;i++){
-      const age=ta-aBirth[i];
-      if(age<0){ arr[i*3]=0; arr[i*3+1]=-999; arr[i*3+2]=0; continue; }
-      const drag=1-Math.exp(-age*0.85);          // billows, then stalls and hangs
-      const sw=Math.sin(dSeed[i]+age*1.15), sw2=Math.cos(dSeed[i]*1.7+age*0.85);
-      arr[i*3]  =dPos[i*3]  +dVel[i*3]  *drag*1.25+sw*0.16*age;
-      arr[i*3+1]=Math.max(0.004,dPos[i*3+1]+dVel[i*3+1]*drag*0.95
-                 -0.05*age*age+sw2*0.13*age);
-      arr[i*3+2]=dPos[i*3+2]+dVel[i*3+2]*drag*1.25+sw2*0.14*age;
-    }
-    dGeo.attributes.position.needsUpdate=true;
-    const fa=Math.max(0,ta-0.60);            // thrown when the debris lands
-    for(let i=0;i<FL;i++){
-      const v=flV[i];
-      flPos[i*3]  =v[0]*fa;
-      flPos[i*3+1]=Math.max(0.004, v[1]*fa-5.2*fa*fa*0.5);   // up, then back down
-      flPos[i*3+2]=v[2]*fa;
-    }
-    flGeo.attributes.position.needsUpdate=true;
-    flMat.opacity=Math.min(0.85,fa*6.0)*Math.max(0,1-fa/1.1);
-    dMat.uniforms.uTime.value=ta;
-  } else { dMat.uniforms.uTime.value=-1; if(!vidReady) flMat.opacity=0; }
 
+  // ── the swap, hidden inside the cloud, then the title through the haze ─
   const rv=document.getElementById('reveal');
-  // hard cut behind the veil, never a crossfade, then the title emerges through haze
-  if(rv){
-    const swapped = impacted && ta>=2.62;
-    rv.style.opacity = swapped ? '1' : '0';
-    const ti=document.getElementById('rtitle'), sb=document.getElementById('rsub');
-    const k=Math.max(0,Math.min(1,(ta-2.95)/0.70));
-    const e=k<0.5 ? 4*k*k*k : 1-Math.pow(-2*k+2,3)/2;
-    if(ti) ti.style.opacity=e.toFixed(3);
-    if(sb) sb.style.opacity=e.toFixed(3);
-  }
+  const ti=document.getElementById('rtitle'), sb=document.getElementById('rsub');
+  const showing = hit && ta>=SWAP_AT;
+  rv.style.opacity = showing ? '1' : '0';
+  const k=Math.max(0,Math.min(1,(ta-TITLE_AT)/0.8));
+  const e=k<0.5 ? 4*k*k*k : 1-Math.pow(-2*k+2,3)/2;
+  ti.style.opacity=e.toFixed(3); sb.style.opacity=e.toFixed(3);
 
   document.getElementById('tn').textContent=t.toFixed(2)+'s';
   document.getElementById('sc').value=Math.round(t/DUR*500);
+  R.render(scene,cam);
 }
 
+// ── input: she is fixed, the camera orbits, and only on a real tap ────────
 let dragging=false,lx=0,ly=0,tDown=0;
 addEventListener('pointerdown',e=>{ if(e.target.closest('#tl')) return;
   dragging=true; lx=e.clientX; ly=e.clientY; dragAmt=0; tDown=performance.now();
@@ -393,17 +196,15 @@ addEventListener('pointerdown',e=>{ if(e.target.closest('#tl')) return;
 addEventListener('pointermove',e=>{ if(!dragging) return;
   const dx=e.clientX-lx, dy=e.clientY-ly; lx=e.clientX; ly=e.clientY;
   dragAmt+=Math.abs(dx)+Math.abs(dy);
-  if(state==='IDLE'){
-    az-=dx*0.0062;
-    el=Math.max(EL_MIN,Math.min(EL_MAX, el+dy*0.0052));
-  } });
+  if(state==='IDLE'){ az-=dx*0.0062; el=Math.max(EL_MIN,Math.min(EL_MAX,el+dy*0.005)); sync(); } });
 addEventListener('pointerup',e=>{ if(!dragging) return; dragging=false;
   if(e.target.closest('#tl')) return;
   const quick=performance.now()-tDown<400;
-  if((dragAmt<14||quick) && state==='IDLE' && shards){ state='RUN'; t=0;
-    document.body.classList.add('tapped');
-    document.getElementById('hint').classList.remove('in'); } });
-document.getElementById('pp').addEventListener('click',()=>{ if(shards){state='RUN'; t=0;} });
+  if((dragAmt<14||quick) && state==='IDLE' && shards){ start(); } });
+function start(){ state='RUN'; t=0; swapped=false; az=0; el=0.05;
+  document.body.classList.add('run');
+  document.getElementById('hint').classList.remove('in'); }
+document.getElementById('pp').addEventListener('click',()=>{ if(shards) start(); });
 document.getElementById('sc').addEventListener('input',e=>{ if(!shards) return;
   state='SCRUB'; t=+e.target.value/500*DUR;
   document.getElementById('hint').classList.remove('in'); sync(); });
@@ -415,28 +216,11 @@ if(qt!==null){ state='SCRUB'; t=Math.max(0,Math.min(DUR,+qt)); }
 let f=0,last=performance.now(); const clock=new THREE.Clock();
 (function tick(){ requestAnimationFrame(tick);
   const dt=Math.min(clock.getDelta(),0.05);
-  if(state==='RUN'){ t+=dt; if(t>=DUR){ t=DUR; state='DONE'; } sync(); }
-  if(state==='IDLE') sync();
-  // pass 1: dust alone, half res, transparent clear
-  cam.layers.disableAll(); cam.layers.enable(DUST_LAYER);
-  R.setRenderTarget(rt); R.setClearColor(0x000000,0); R.clear(true,false,false);
-  R.render(scene,cam);
-  // pass 2: everything else at full res
-  cam.layers.disableAll(); cam.layers.enable(0);
-  R.setRenderTarget(null); R.setClearColor(0x000000,1); R.clear();
-  R.render(scene,cam);
-  // pass 3: composite the upscaled dust over it
-  R.autoClear=false; R.render(compScene,compCam); R.autoClear=true;
+  if(state==='RUN'){ t+=dt; if(t>=DUR){ t=DUR; state='DONE'; } }
+  sync();
   f++; const p=performance.now();
-  if(p-last>1000){
-    const fps=Math.round(f*1000/(p-last));
-    const el=document.getElementById('fps'); if(el) el.textContent=fps;
-    // a retina buffer is 4x the pixels; drop it before dropping the look
-    if(fps<34 && DPR>1){ DPR=Math.max(1,DPR-0.5); R.setPixelRatio(DPR); sizeRT(); }
-    else if(fps>56 && DPR<Math.min(devicePixelRatio,2)){
-      DPR=Math.min(Math.min(devicePixelRatio,2),DPR+0.5); R.setPixelRatio(DPR); sizeRT(); }
-    f=0; last=p; } })();
-addEventListener('resize',()=>{ sizeRT();
-  cam.aspect=innerWidth/innerHeight;
+  if(p-last>1000){ const el2=document.getElementById('fps');
+    if(el2) el2.textContent=Math.round(f*1000/(p-last)); f=0; last=p; } })();
+addEventListener('resize',()=>{ cam.aspect=innerWidth/innerHeight;
   cam.updateProjectionMatrix(); R.setSize(innerWidth,innerHeight); });
 </script></body></html>
