@@ -116,6 +116,10 @@ const EL_MIN=-1.1, EL_MAX=1.25;
 const draco=new DRACOLoader(); draco.setDecoderPath('../vendor/draco/');
 const L=new GLTFLoader(); L.setDRACOLoader(draco);
 const hud=document.getElementById('hud');
+const elHint=document.getElementById('hint'), elRev=document.getElementById('reveal');
+const elTitle=document.getElementById('rtitle'), elSub=document.getElementById('rsub');
+const elTn=document.getElementById('tn'), elSc=document.getElementById('sc');
+let lastTn='', lastSc=-1, vidGeom='';
 const ease=(x)=>1-Math.pow(1-x,3), accel=(x)=>x*x;
 
 L.load('../sim/sim.glb',(g)=>{
@@ -142,7 +146,7 @@ L.load('../sim/sim.glb',(g)=>{
     scene.add(intact);
     hud.innerHTML='<b>shards</b> '+n+'<br><b>bust</b> '+bustH.toFixed(2)+'u<br><b>orbit</b> '+
       ORB.toFixed(2)+'u<br><b>drop</b> '+T_IMPACT.toFixed(2)+'s<br><b>fps</b> <span id="fps">--</span>';
-    document.getElementById('hint').classList.add('in');
+    elHint.classList.add('in');
     sync();
   });
 },undefined,(e)=>{hud.textContent='FAILED '+e;});
@@ -230,10 +234,13 @@ function sync(){
     const top=new THREE.Vector3(0,bustMinY+bustH,0).project(cam);
     const bustPx=Math.abs((1-top.y)/2*innerHeight - py);
     const vw=Math.max(innerWidth*1.15, bustPx*7.2);
-    dv.style.width=vw+'px';
-    dv.style.height=(vw*0.5625)+'px';
-    dv.style.top=(py - vw*0.5625*0.62)+'px';
-    dv.style.transform='translateX(-50%)';
+    const vh=vw*0.5625, ty=py - vh*0.62;
+    const geom=vw.toFixed(0)+'x'+vh.toFixed(0);
+    if(geom!==vidGeom){                       // layout only when it truly changes
+      dv.style.width=vw+'px'; dv.style.height=vh+'px'; dv.style.top='0px';
+      vidGeom=geom;
+    }
+    dv.style.transform='translate(-50%,'+ty.toFixed(1)+'px)';   // compositor only
     if(hit){
       const want=Math.min(ta, vidDur-0.01);
       if(state==='SCRUB'){
@@ -251,16 +258,17 @@ function sync(){
   }
 
   // ── the swap, hidden inside the cloud, then the title through the haze ─
-  const rv=document.getElementById('reveal');
-  const ti=document.getElementById('rtitle'), sb=document.getElementById('rsub');
+  const rv=elRev, ti=elTitle, sb=elSub;
   const sw=hit ? Math.max(0,Math.min(1,(ta-SWAP_AT)/0.22)) : 0;
   rv.style.opacity = (sw*sw*(3-2*sw)).toFixed(3);
   const k=Math.max(0,Math.min(1,(ta-TITLE_AT)/0.8));
   const e=k<0.5 ? 4*k*k*k : 1-Math.pow(-2*k+2,3)/2;
   ti.style.opacity=e.toFixed(3); sb.style.opacity=e.toFixed(3);
 
-  document.getElementById('tn').textContent=t.toFixed(2)+'s';
-  document.getElementById('sc').value=Math.round(t/DUR*500);
+  const tn=t.toFixed(2)+'s';
+  if(tn!==lastTn){ elTn.textContent=tn; lastTn=tn; }
+  const sv=Math.round(t/DUR*500);
+  if(sv!==lastSc){ elSc.value=sv; lastSc=sv; }
   R.render(scene,cam);
 }
 
