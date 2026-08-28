@@ -65,7 +65,7 @@ import { DRACOLoader } from '../vendor/loaders/DRACOLoader.js';
 const FOV       = 40;
 const FILL      = 0.46;   // she is the whole subject here, not one work on a wall
 const HEADROOM  = 0.17;   // above her crown at rest; the rest is room to fall into
-const T_EASE    = 0.34;
+const T_EASE    = 0.16;
 const T_FALL    = 0.58;
 const T_IMPACT  = T_EASE + T_FALL;
 const DROP      = 1.25;   // multiples of bust height
@@ -193,13 +193,16 @@ function sync(){
   // ── where she is ───────────────────────────────────────────────────────
   let lift = DROP*bustH;
   if(running && !hit){
-    if(t<T_EASE) lift = DROP*bustH - ease(t/T_EASE)*0.012*bustH;  // sags, never rises
-    else lift = (DROP*bustH-0.012*bustH) * (1-accel((t-T_EASE)/T_FALL));
+    if(t<T_EASE) lift = DROP*bustH - ease(t/T_EASE)*0.02*bustH;   // sags, never rises
+    else lift = (DROP*bustH-0.02*bustH) * (1-accel((t-T_EASE)/T_FALL));
   } else if(hit) lift = 0;
 
   const fallK = running ? Math.max(0, Math.min(1,(t-T_EASE)/T_FALL)) : 0;
+  const tipK  = running ? Math.max(0, Math.min(1, t/T_EASE)) : 0;
   const TILT  = 0.085;                       // ~5 degrees by the time she lands
-  const tilt  = TILT*fallK*fallK;            // grows with the fall, not linearly
+  // she goes over because she tips past her balance point: the lean starts in
+  // the beat before the drop, so that beat is anticipation rather than a pause
+  const tilt  = TILT*(0.22*tipK*tipK + 0.78*fallK*fallK);
   if(intact){
     intact.position.y = bustMinY + lift;
     intact.rotation.z = tilt;
