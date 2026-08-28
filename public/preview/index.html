@@ -548,6 +548,9 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
   var DEBUG_LAYOUT = /[?&]debuglayout=1/.test(location.search);
   var TIER = { hero:0.265, medium:0.196, small:0.152 };   // used as ratios
   var SALON = {
+    licenses: [
+      { tier:'hero',   ax:0.50, row:0, jit:0  }
+    ],
     about: [
       { tier:'hero',   ax:0.06, row:0, jit:18 },
       { tier:'medium', ax:0.78, row:0, jit:0  }
