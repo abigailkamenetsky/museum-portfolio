@@ -78,7 +78,7 @@ const DROP      = 1.25;   // multiples of bust height
 const DUST_RATE = 1.38;   // play the dust at the same tightened pace
 const SWAP_AT   = 0.92;   // seconds after impact: peak obscuration
 const TITLE_AT  = 1.16;
-const DUR       = 2.65;
+const DUR       = 3.20;
 
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const R = new THREE.WebGLRenderer({antialias:true});
@@ -312,7 +312,8 @@ function sync(){
         // that is exactly the snap the render stall used to produce
         if(dv.playbackRate!==DUST_RATE) dv.playbackRate=DUST_RATE;
       }
-      const tail=Math.max(0,(ta-(vidDur-0.35))/1.05);
+      const clipEnds=vidDur/DUST_RATE;            // in shot time, not clip time
+      const tail=Math.max(0,(ta-(clipEnds-0.28))/0.95);
       const onset=Math.min(1, ta/0.10);           // same event as the impact
       dv.style.opacity=(Math.max(0,1-tail)*onset).toFixed(3);
     } else { dv.style.opacity='0'; if(!dv.paused) dv.pause(); }
