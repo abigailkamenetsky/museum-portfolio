@@ -8,7 +8,9 @@
  body.run{cursor:default}
  canvas{display:block;position:fixed;inset:0;z-index:1}
  #dustvid{position:fixed;left:50%;z-index:3;opacity:0;pointer-events:none;
-   transform-origin:50% 62%;will-change:transform,opacity}
+   transform-origin:50% 77.5%;will-change:transform,opacity;
+   -webkit-mask-image:radial-gradient(ellipse 62% 58% at 50% 72%,#000 42%,rgba(0,0,0,.55) 72%,transparent 100%);
+   mask-image:radial-gradient(ellipse 62% 58% at 50% 72%,#000 42%,rgba(0,0,0,.55) 72%,transparent 100%)}
  #reveal{position:fixed;inset:0;z-index:2;opacity:0;pointer-events:none;
    display:flex;flex-direction:column;align-items:center;justify-content:center;
    background:radial-gradient(ellipse 72% 62% at 50% 56%,#3d2c18 0%,#1e1409 46%,#080503 79%,#000 100%)}
@@ -275,8 +277,10 @@ function sync(){
     // camera sat 4.75 units back and 0.95 above the floor at 40 degrees, so a
     // 2-unit bust occupies 58% of the clip's height and the floor line sits
     // 77.5% down it. Sizing it any other way makes the cloud a separate object.
-    const vw=bustPx*3.074, vh=bustPx*1.729;
-    const ty=py - vh*0.775;                    // put the clip's floor on hers
+    // it starts at true scale, then grows the way an expanding cloud does
+    const grow = hit ? 1 + Math.min(1.35, ta*0.95) : 1;
+    const vw=bustPx*3.074*grow, vh=bustPx*1.729*grow;
+    const ty=py - vh*0.775;                    // keep the clip's floor on hers as it grows
     const geom=vw.toFixed(0)+'x'+vh.toFixed(0);
     if(geom!==vidGeom){
       dv.style.width=vw+'px'; dv.style.height=vh+'px'; dv.style.top='0px';
