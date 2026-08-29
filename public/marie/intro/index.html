@@ -271,14 +271,18 @@ function sync(){
     const py=(1-ip.y)/2*innerHeight;
     const top=new THREE.Vector3(0,bustMinY+bustH,0).project(cam);
     const bustPx=Math.abs((1-top.y)/2*innerHeight - py);
-    const vw=Math.max(innerWidth*1.15, bustPx*7.2);
-    const vh=vw*0.5625, ty=py - vh*0.62;
+    // Derived from the render camera in dustsim.py rather than guessed: that
+    // camera sat 4.75 units back and 0.95 above the floor at 40 degrees, so a
+    // 2-unit bust occupies 58% of the clip's height and the floor line sits
+    // 77.5% down it. Sizing it any other way makes the cloud a separate object.
+    const vw=bustPx*3.074, vh=bustPx*1.729;
+    const ty=py - vh*0.775;                    // put the clip's floor on hers
     const geom=vw.toFixed(0)+'x'+vh.toFixed(0);
-    if(geom!==vidGeom){                       // layout only when it truly changes
+    if(geom!==vidGeom){
       dv.style.width=vw+'px'; dv.style.height=vh+'px'; dv.style.top='0px';
       vidGeom=geom;
     }
-    dv.style.transform='translate(-50%,'+ty.toFixed(1)+'px)';   // compositor only
+    dv.style.transform='translate(-50%,'+ty.toFixed(1)+'px)';
     if(hit){
       const want=Math.min(ta*DUST_RATE, vidDur-0.01);
       if(state==='SCRUB'){
