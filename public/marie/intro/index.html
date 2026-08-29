@@ -11,9 +11,13 @@
    transform-origin:50% 77.5%;will-change:transform,opacity;
    -webkit-mask-image:radial-gradient(ellipse 62% 58% at 50% 72%,#000 42%,rgba(0,0,0,.55) 72%,transparent 100%);
    mask-image:radial-gradient(ellipse 62% 58% at 50% 72%,#000 42%,rgba(0,0,0,.55) 72%,transparent 100%)}
- #reveal{position:fixed;inset:0;z-index:2;opacity:0;pointer-events:none;
-   display:flex;flex-direction:column;align-items:center;justify-content:center;
-   background:radial-gradient(ellipse 72% 62% at 50% 56%,#3d2c18 0%,#1e1409 46%,#080503 79%,#000 100%)}
+ #reveal{position:fixed;inset:0;z-index:2;opacity:0;pointer-events:none;overflow:hidden;
+   display:flex;flex-direction:column;align-items:center;justify-content:center}
+ #hall{position:absolute;inset:0;background:#07050a center/cover no-repeat url('./hall.jpg');
+   transform:scale(1.08);will-change:transform}
+ #hallveil{position:absolute;inset:0;
+   background:radial-gradient(ellipse 78% 70% at 50% 52%,rgba(6,4,2,.10) 0%,rgba(6,4,2,.55) 62%,rgba(4,3,2,.88) 100%)}
+ #rtitle,#rsub{position:relative;z-index:2}
  #rtitle{font-size:clamp(30px,6.2vw,72px);color:#f2e4c6;letter-spacing:.015em;opacity:0;
    text-shadow:0 0 46px rgba(201,162,78,.42)}
  #rsub{margin-top:.75em;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;opacity:0;
@@ -40,7 +44,7 @@
 </style></head><body>
 <div class="hud" id="hud">loading&hellip;</div>
 <video id="dustvid" playsinline muted preload="auto" disablepictureinpicture></video>
-<div id="reveal"><div id="rtitle">Abby&rsquo;s Museum</div>
+<div id="reveal"><div id="hall"></div><div id="hallveil"></div><div id="rtitle">Abby&rsquo;s Museum</div>
 <div id="rsub">est. 2026 &middot; Chicago</div></div>
 <div id="hint" class="in">loading&hellip;</div>
 <div id="tl"><button id="pp">replay</button><span id="tn">0.00s</span>
@@ -151,6 +155,7 @@ const hud=document.getElementById('hud');
 const elHint=document.getElementById('hint'), elRev=document.getElementById('reveal');
 const elTitle=document.getElementById('rtitle'), elSub=document.getElementById('rsub');
 const elTn=document.getElementById('tn'), elSc=document.getElementById('sc');
+const elHall=document.getElementById('hall');
 let lastTn='', lastSc=-1, vidGeom='';
 const ease=(x)=>1-Math.pow(1-x,3), accel=(x)=>x*x;
 
@@ -317,6 +322,9 @@ function sync(){
   const rv=elRev, ti=elTitle, sb=elSub;
   const sw=hit ? Math.max(0,Math.min(1,(ta-SWAP_AT)/0.22)) : 0;
   rv.style.opacity = (sw*sw*(3-2*sw)).toFixed(3);
+  // ease out of the push-in as the haze thins, so you settle into the room
+  const settleIn = hit ? Math.max(0,Math.min(1,(ta-SWAP_AT)/1.05)) : 0;
+  elHall.style.transform = 'scale('+(1.08-0.08*(settleIn*settleIn*(3-2*settleIn))).toFixed(4)+')';
   const k=Math.max(0,Math.min(1,(ta-TITLE_AT)/0.8));
   const e=k<0.5 ? 4*k*k*k : 1-Math.pow(-2*k+2,3)/2;
   ti.style.opacity=e.toFixed(3); sb.style.opacity=e.toFixed(3);
