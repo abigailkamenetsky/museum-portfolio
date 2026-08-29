@@ -277,16 +277,21 @@ function sync(){
     // camera sat 4.75 units back and 0.95 above the floor at 40 degrees, so a
     // 2-unit bust occupies 58% of the clip's height and the floor line sits
     // 77.5% down it. Sizing it any other way makes the cloud a separate object.
-    // it starts at true scale, then grows the way an expanding cloud does
-    const grow = hit ? 1 + Math.min(1.35, ta*0.95) : 1;
-    const vw=bustPx*3.074*grow, vh=bustPx*1.729*grow;
-    const ty=py - vh*0.775;                    // keep the clip's floor on hers as it grows
+    // The element keeps a FIXED size and grows via transform. Animating width
+    // and height meant writing layout properties on every single frame, which
+    // forces a reflow of a large video element sixty times a second - the same
+    // trap as before, reintroduced by making the size animate.
+    const vw=bustPx*3.074, vh=bustPx*1.729;
+    const ty=py - vh*0.775;                    // the clip's floor sits on hers
     const geom=vw.toFixed(0)+'x'+vh.toFixed(0);
-    if(geom!==vidGeom){
+    if(geom!==vidGeom){                        // only when the bust itself resizes
       dv.style.width=vw+'px'; dv.style.height=vh+'px'; dv.style.top='0px';
       vidGeom=geom;
     }
-    dv.style.transform='translate(-50%,'+ty.toFixed(1)+'px)';
+    // transform-origin is the floor line, so scaling grows the cloud upward and
+    // outward from her base and leaves that contact point pinned
+    const grow = hit ? 1 + Math.min(1.35, ta*0.95) : 1;
+    dv.style.transform='translate(-50%,'+ty.toFixed(1)+'px) scale('+grow.toFixed(3)+')';
     if(hit){
       const want=Math.min(ta*DUST_RATE, vidDur-0.01);
       if(state==='SCRUB'){
