@@ -188,6 +188,15 @@ L.load('../sim/sim.glb',(g)=>{
     scene.add(intact);
     hud.innerHTML='<b>shards</b> '+n+'<br><b>bust</b> '+bustH.toFixed(2)+'u<br><b>orbit</b> '+
       ORB.toFixed(2)+'u<br><b>drop</b> '+T_IMPACT.toFixed(2)+'s<br><b>fps</b> <span id="fps">--</span>';
+    // warm the pipeline while she is just standing there: compile materials
+    // and build the shadow map for all 117 casters before they are needed
+    try{
+      shards.visible=true; intact.visible=true;
+      R.compile(scene, cam);
+      R.shadowMap.needsUpdate=true;
+      R.render(scene, cam);
+      shards.visible=false;
+    }catch(_){}
     meshReady=true; readyCheck();
     dirty=true;
   });
@@ -386,12 +395,13 @@ let f=0,last=performance.now();
     const wall=(performance.now()-t0)/1000;
     const leading = vidReady && !dv.paused && wall>=T_IMPACT &&
                     dv.currentTime>0 && dv.currentTime<vidDur-0.03;
-    if(leading){
-      t = T_IMPACT + dv.currentTime/DUST_RATE;   // the dust leads; the break follows
-      t0 = performance.now() - t*1000;      // so wall clock resumes seamlessly after
-    } else {
-      t = wall;
-    }
+    let want = leading ? T_IMPACT + dv.currentTime/DUST_RATE : wall;
+    // cap how far the shot can advance in a single frame. a dropped frame
+    // should cost a little sync with the clip, not teleport the animation.
+    const MAXSTEP = 0.14;
+    if(want - t > MAXSTEP) want = t + MAXSTEP;
+    t = want;
+    t0 = performance.now() - t*1000;
     if(t>=DUR){ t=DUR; state='DONE'; if(!dv.paused) dv.pause(); }
     dirty=true;
   }
