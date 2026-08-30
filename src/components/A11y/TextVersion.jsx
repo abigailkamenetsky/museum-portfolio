@@ -86,37 +86,39 @@ export default function TextVersion() {
         className={open ? 'tv-panel tv-open' : 'tv-panel tv-hidden'}
         aria-label="Text version of Abby Kamenetsky's portfolio"
       >
-        {open && (
-          <button className="tv-close" onClick={() => { setOpen(false); opener.current?.focus() }}>
-            Close and return to the gallery
-          </button>
-        )}
+        <div className="tv-inner">
+          {open && (
+            <button className="tv-close" onClick={() => { setOpen(false); opener.current?.focus() }}>
+              Close and return to the gallery
+            </button>
+          )}
 
-        <h1>Abigail Kamenetsky</h1>
-        <p className="tv-lede">
-          Economics and Computer Science at the University of Chicago. This is the
-          text version of an interactive museum portfolio. Every wing below is a
-          room in the gallery, and every entry is a painting you can walk up to.
-        </p>
+          <h1>Abigail Kamenetsky</h1>
+          <p className="tv-lede">
+            Economics and Computer Science at the University of Chicago. This is the
+            text version of an interactive museum portfolio. Every wing below is a
+            room in the gallery, and every entry is a painting you can walk up to.
+          </p>
 
-        {WINGS.map((wing) => {
-          const e = wing.exhibit || {}
-          return (
-            <section key={wing.id} className="tv-wing">
-              <h2>{wing.title}</h2>
-              <Blurb value={e.blurb} keyPrefix={wing.id} />
-              {e.items?.length > 0 && (
-                <ul>{e.items.map((it, i) => <li key={i}>{clean(it)}</li>)}</ul>
-              )}
-              {e.artwork && (
-                <p className="tv-art"><strong>Represented by:</strong> {e.artwork}</p>
-              )}
-              {e.why && <p className="tv-why">{clean(e.why)}</p>}
-              <Links links={e.links} />
-              {e.pieces?.map((p) => <Piece key={p.title} piece={p} />)}
-            </section>
-          )
-        })}
+          {WINGS.map((wing) => {
+            const e = wing.exhibit || {}
+            return (
+              <section key={wing.id} className="tv-wing">
+                <h2>{wing.title}</h2>
+                <Blurb value={e.blurb} keyPrefix={wing.id} />
+                {e.items?.length > 0 && (
+                  <ul>{e.items.map((it, i) => <li key={i}>{clean(it)}</li>)}</ul>
+                )}
+                {e.artwork && (
+                  <p className="tv-art"><strong>Represented by:</strong> {e.artwork}</p>
+                )}
+                {e.why && <p className="tv-why">{clean(e.why)}</p>}
+                <Links links={e.links} />
+                {e.pieces?.map((p) => <Piece key={p.title} piece={p} />)}
+              </section>
+            )
+          })}
+        </div>
       </main>
     </>
   )

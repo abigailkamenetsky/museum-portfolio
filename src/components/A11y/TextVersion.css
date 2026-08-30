@@ -47,24 +47,28 @@
   -webkit-overflow-scrolling: touch;
 }
 
-.tv-open > * {
+/* One column wrapper. Centring each child individually does not work: the
+   margin shorthands below reset margin-inline and only some children stay put. */
+.tv-inner {
   max-width: 68ch;
   margin-inline: auto;
 }
 
+/* Floating rather than in flow: a sticky button inside the reading column
+   lets body text scroll past on either side of it. */
 .tv-close {
-  display: block;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  font: 500 15px/1 inherit;
+  position: fixed;
+  right: clamp(12px, 3vw, 24px);
+  bottom: clamp(12px, 3vw, 24px);
+  z-index: 2;
+  font: 500 15px/1 "Iowan Old Style", Palatino, Georgia, serif;
   color: #100e0a;
   background: #c9a24e;
   border: 0;
-  border-radius: 6px;
-  padding: 13px 20px;
+  border-radius: 8px;
+  padding: 14px 20px;
   min-height: 44px;
-  margin-bottom: 30px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55);
   cursor: pointer;
 }
 
