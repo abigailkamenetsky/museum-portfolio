@@ -2126,7 +2126,14 @@ export default function Scene() {
       gl={MUSEUM_ENVIRONMENT === 'marble'
         ? { toneMapping: NoToneMapping, antialias: false, powerPreference: 'high-performance' }
         : { toneMapping: ACESFilmicToneMapping, toneMappingExposure: 0.98, antialias: true, powerPreference: 'high-performance' }}
-      onCreated={() => console.log('[Scene] Canvas created, renderer ready')}
+      /* R3F spreads unknown props onto its wrapper div, so the label has to be
+         set on the real canvas element or screen readers announce nothing. */
+      onCreated={({ gl }) => {
+        gl.domElement.setAttribute('aria-label',
+          'Interactive 3D museum gallery. A text version of everything on the walls is available from the link at the top of the page.')
+        gl.domElement.setAttribute('role', 'application')
+        console.log('[Scene] Canvas created, renderer ready')
+      }}
       style={{ width: '100vw', height: '100dvh', display: 'block', touchAction: 'none', WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}
     >
       <color attach="background" args={['#090806']} />

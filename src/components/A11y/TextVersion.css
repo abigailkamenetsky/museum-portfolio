@@ -1,0 +1,143 @@
+/* Hidden state is clipped, never display:none, so assistive tech still reads it. */
+.tv-panel.tv-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  border: 0;
+}
+
+.tv-skip {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -120%);
+  z-index: 10000;
+  font: 500 15px/1 "Iowan Old Style", Palatino, Georgia, serif;
+  color: #f3ead6;
+  background: #1b1710;
+  border: 1px solid #c9a24e;
+  border-radius: 0 0 8px 8px;
+  padding: 14px 22px;
+  min-height: 44px;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+}
+
+.tv-skip:focus-visible {
+  transform: translate(-50%, 0);
+  outline: 2px solid #c9a24e;
+  outline-offset: 3px;
+}
+
+.tv-panel.tv-open {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: #100e0a;
+  color: #e8e0cf;
+  font: 17px/1.72 "Iowan Old Style", Palatino, Georgia, serif;
+  padding: 28px clamp(20px, 6vw, 48px) 96px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tv-open > * {
+  max-width: 68ch;
+  margin-inline: auto;
+}
+
+.tv-close {
+  display: block;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  font: 500 15px/1 inherit;
+  color: #100e0a;
+  background: #c9a24e;
+  border: 0;
+  border-radius: 6px;
+  padding: 13px 20px;
+  min-height: 44px;
+  margin-bottom: 30px;
+  cursor: pointer;
+}
+
+.tv-close:hover { background: #dbb877; }
+.tv-close:focus-visible { outline: 2px solid #f3ead6; outline-offset: 3px; }
+
+.tv-open h1 {
+  font-size: clamp(30px, 5vw, 42px);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  text-wrap: balance;
+  color: #f6efdd;
+  margin: 6px 0 14px;
+}
+
+.tv-lede {
+  color: #b9ae97;
+  font-size: 18px;
+  margin-bottom: 40px;
+}
+
+.tv-wing {
+  border-top: 1px solid #2b2419;
+  padding-top: 32px;
+  margin-top: 40px;
+}
+
+.tv-open h2 {
+  font-size: clamp(23px, 3.4vw, 29px);
+  font-weight: 400;
+  color: #c9a24e;
+  text-wrap: balance;
+  margin: 0 0 16px;
+}
+
+.tv-open h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #f6efdd;
+  text-wrap: balance;
+  margin: 0 0 10px;
+}
+
+.tv-piece {
+  border-left: 2px solid #2b2419;
+  padding-left: clamp(14px, 3vw, 22px);
+  margin: 30px 0;
+}
+
+.tv-open p { margin: 0 0 14px; }
+.tv-open ul { margin: 0 0 16px; padding-left: 1.35em; }
+.tv-open li { margin-bottom: 6px; }
+
+.tv-meta, .tv-art { color: #a99e88; font-size: 15.5px; }
+.tv-why {
+  color: #b9ae97;
+  font-style: italic;
+  border-left: 2px solid #3a3122;
+  padding-left: 14px;
+}
+
+.tv-open a { color: #d9bd77; }
+
+.tv-links { list-style: none; padding-left: 0; display: flex; flex-wrap: wrap; gap: 10px 18px; }
+.tv-links a {
+  display: inline-block;
+  color: #c9a24e;
+  padding: 11px 0;
+  min-height: 44px;
+  line-height: 22px;
+}
+.tv-links a:focus-visible { outline: 2px solid #c9a24e; outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tv-skip { transition: none; }
+}
