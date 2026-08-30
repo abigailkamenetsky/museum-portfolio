@@ -249,17 +249,21 @@ function sync(){
   // ── the camera frames her, wherever she is ─────────────────────────────
   // solve the aim so her crown sits HEADROOM below the top edge
   const frameH = 2*ORB*Math.tan(THREE.MathUtils.degToRad(FOV/2));
-  // The camera is LOCKED OFF for the fall. Tracking her cancelled the very
-  // motion the shot exists to show: she dropped 2.5 units and the frame moved
-  // with her, so she appeared to hang still and then simply break. It holds the
-  // idle composition while she falls through it, then settles to the wreck.
-  const restCrown = bustMinY + DROP*bustH + bustH;
-  const aimHigh   = restCrown - frameH*(0.5-HEADROOM);
+  // A fully locked camera could not hold her: she falls 57% of the frame from
+  // 17% of headroom, so she left the bottom edge and the post-impact settle
+  // then hauled her back up and larger - which is what read as glitching.
+  // The camera follows part of the descent instead, so the fall still shows as
+  // relative motion but she stays in shot and the settle is small.
+  const crown   = bustMinY + lift + bustH;
+  const aimRest = (bustMinY + DROP*bustH + bustH) - frameH*(0.5-HEADROOM);
+  const aimTrack= crown - frameH*(0.5-HEADROOM);
+  const FOLLOW  = 0.62;                       // it lags, so the drop still reads
+  const settle  = hit ? Math.min(1, ta/0.30) : 0;
+  const f       = FOLLOW + (1-FOLLOW)*(settle*settle*(3-2*settle));
   const aimGround = bustMinY + bustH*0.62;
-  // locked through the whole fall: the camera cannot anticipate the landing
-  const settleT   = hit ? ta/0.34 : 0;
-  const settle    = Math.min(1, settleT);
-  const aimY      = aimHigh + (aimGround-aimHigh)*(settle*settle*(3-2*settle));
+  const aimY    = hit
+    ? aimRest + (aimGround-aimRest)*(settle*settle*(3-2*settle))
+    : aimRest + (aimTrack-aimRest)*FOLLOW;
   cam.position.set(
     ORB*Math.cos(el)*Math.sin(az),
     aimY + ORB*Math.sin(el),
