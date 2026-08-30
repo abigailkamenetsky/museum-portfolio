@@ -147,6 +147,8 @@ function readyCheck(){
 let intact=null, shards=null, mixer=null, simDur=1;
 let bustH=1, bustMinY=0, ORB=5;
 let state='IDLE', t=0, az=0, el=0.05, dragAmt=0, t0=0, dirty=true, dustOn=false;
+let az0=0, el0=0.05;                 // where the orbit was when it started
+const HOME=0.34;                     // seconds to bring the view home
 const EL_MIN=-1.1, EL_MAX=1.25;
 
 const draco=new DRACOLoader(); draco.setDecoderPath('../vendor/draco/');
@@ -248,6 +250,11 @@ function sync(){
 
   // ── the camera frames her, wherever she is ─────────────────────────────
   // solve the aim so her crown sits HEADROOM below the top edge
+  if(running){                          // travel back to the front, do not cut
+    const hk=Math.min(1, t/HOME), he=hk*hk*(3-2*hk);
+    az = az0*(1-he);
+    el = el0 + (0.05-el0)*he;
+  }
   const frameH = 2*ORB*Math.tan(THREE.MathUtils.degToRad(FOV/2));
   // A fully locked camera could not hold her: she falls 57% of the frame from
   // 17% of headroom, so she left the bottom edge and the post-impact settle
@@ -371,7 +378,7 @@ function start(){
     if(vidReady){ try{ dv.pause(); }catch(_){} }
     dv.style.opacity='0'; sync(); return;
   }
-  state='RUN'; t=0; t0=performance.now(); az=0; el=0.05; dirty=true; dustOn=false;
+  state='RUN'; t=0; t0=performance.now(); az0=az; el0=el; dirty=true; dustOn=false;
   dustOn=false;
   if(vidReady){ try{ dv.pause(); dv.currentTime=0; }catch(_){} }
   dv.style.opacity='0';
