@@ -392,16 +392,13 @@ if(qt!==null){ state='SCRUB'; t=Math.max(0,Math.min(DUR,+qt)); }
 let f=0,last=performance.now();
 (function tick(){ requestAnimationFrame(tick);
   if(state==='RUN'){
-    const wall=(performance.now()-t0)/1000;
-    const leading = vidReady && !dv.paused && wall>=T_IMPACT &&
-                    dv.currentTime>0 && dv.currentTime<vidDur-0.03;
-    let want = leading ? T_IMPACT + dv.currentTime/DUST_RATE : wall;
-    // cap how far the shot can advance in a single frame. a dropped frame
-    // should cost a little sync with the clip, not teleport the animation.
-    const MAXSTEP = 0.14;
-    if(want - t > MAXSTEP) want = t + MAXSTEP;
-    t = want;
-    t0 = performance.now() - t*1000;
+    // Wall clock is authoritative, always. Letting the clip drive the shot
+    // meant a dropped frame teleported the animation forward by however far the
+    // video had run; capping that instead made the whole shot crawl at low
+    // framerates. The 3D now simply runs in real time and the dust, which
+    // decodes on its own thread, is allowed to sit a little out of step - which
+    // is invisible in a cloud, where a jump in the geometry is not.
+    t = (performance.now()-t0)/1000;
     if(t>=DUR){ t=DUR; state='DONE'; if(!dv.paused) dv.pause(); }
     dirty=true;
   }
