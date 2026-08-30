@@ -261,8 +261,13 @@ function sync(){
   const settle  = hit ? Math.min(1, ta/0.30) : 0;
   const f       = FOLLOW + (1-FOLLOW)*(settle*settle*(3-2*settle));
   const aimGround = bustMinY + bustH*0.62;
+  // the settle must begin from where the fall actually left the camera, not
+  // from the rest framing: restarting at aimRest snapped the view upward on
+  // the single frame that hit became true
+  const aimLanded = aimRest + ((bustMinY + bustH) - frameH*(0.5-HEADROOM) - aimRest)*FOLLOW;
+  const sm = settle*settle*(3-2*settle);
   const aimY    = hit
-    ? aimRest + (aimGround-aimRest)*(settle*settle*(3-2*settle))
+    ? aimLanded + (aimGround-aimLanded)*sm
     : aimRest + (aimTrack-aimRest)*FOLLOW;
   cam.position.set(
     ORB*Math.cos(el)*Math.sin(az),
