@@ -1,2 +1,9 @@
 User-agent: *
-Disallow: /preview/
+Allow: /
+
+# The work pages (/preview/, /marie/) carry noindex meta tags, which is what
+# keeps them out of search. They are deliberately NOT disallowed here: a
+# blocked page is never fetched, so its noindex is never read, and the bare
+# URL can still be listed.
+
+Sitemap: https://portfolio.abbykamenetsky.com/sitemap.xml

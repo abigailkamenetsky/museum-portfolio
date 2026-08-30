@@ -127,6 +127,7 @@ export default function Guide() {
   const [piece, setPiece] = useState(null)   // selected piece within an exhibit card
   const [emailOpen, setEmailOpen] = useState(false)   // contact: reveal the two email options
   const [copied, setCopied] = useState(null)          // which email address was just copied
+  const cardRef = useRef(null)
   const [isMobile] = useState(() => typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches)
   const advance = () => {
     const m = museum.get()
@@ -169,6 +170,10 @@ export default function Guide() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
+
+  // Without this a screen reader stays parked behind the overlay and never
+  // announces the exhibit that just opened.
+  useEffect(() => { if (s.card) cardRef.current?.focus() }, [s.card, piece])
 
   const cat = s.menu && s.menu !== 'home' ? wingById(s.menu) : null
   const cardWing = s.card ? wingById(s.card) : null
@@ -256,6 +261,9 @@ export default function Guide() {
                 <div style={{ font: `400 20px ${serif}`, margin: '14px 0 6px', opacity: 0.85 }}>Visit this exhibit:</div>
                 <button style={pill(hover === 'gm')} onMouseEnter={() => setHover('gm')} onMouseLeave={() => setHover(null)} onClick={() => guideMe(cat)}>Guide Me</button>
                 <button style={pill(hover === 'tp')} onMouseEnter={() => setHover('tp')} onMouseLeave={() => setHover(null)} onClick={() => teleport(cat)}>Teleport</button>
+                {/* Paintings only open on a raycast click, so without this there is
+                    no way into an exhibit without a mouse and a steady hand. */}
+                <button style={pill(hover === 'rd')} onMouseEnter={() => setHover('rd')} onMouseLeave={() => setHover(null)} onClick={() => museum.set({ menu: null, visitCat: null, card: cat.id, cardPiece: null })}>Read Exhibit</button>
               </>
             )}
           </Device>
@@ -353,9 +361,9 @@ export default function Guide() {
         )
         return (
           <div style={dim} onClick={e => { if (e.target === e.currentTarget) museum.set({ card: null }) }}>
-            <div style={{ width: inList ? 'min(860px,94vw)' : 'min(1240px,96vw)', maxHeight: '90dvh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', background: INK, border: `1px solid ${GOLD}55`, borderRadius: 18, padding: 'clamp(20px,4.5vw,44px) clamp(16px,4.5vw,52px)', color: '#efe7d6', fontFamily: serif, fontSize: 'clamp(15px,3.8vw,22px)', boxShadow: '0 24px 70px rgba(0,0,0,0.6)' }}>
+            <div ref={cardRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="card-title" style={{ width: inList ? 'min(860px,94vw)' : 'min(1240px,96vw)', maxHeight: '90dvh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', background: INK, border: `1px solid ${GOLD}55`, borderRadius: 18, padding: 'clamp(20px,4.5vw,44px) clamp(16px,4.5vw,52px)', color: '#efe7d6', fontFamily: serif, fontSize: 'clamp(15px,3.8vw,22px)', boxShadow: '0 24px 70px rgba(0,0,0,0.6)', outline: 'none' }}>
               <div style={{ color: GOLD, font: `600 19px ${serif}`, letterSpacing: 4, textTransform: 'uppercase', opacity: 0.8 }}>{cardWing.wing}</div>
-              <div style={{ font: `400 clamp(28px,6.5vw,48px) ${serif}`, margin: '6px 0 18px', lineHeight: 1.15, overflowWrap: 'break-word' }}>{piece != null ? pcs[piece].title : cardWing.title}</div>
+              <h2 id="card-title" style={{ font: `400 clamp(28px,6.5vw,48px) ${serif}`, margin: '6px 0 18px', lineHeight: 1.15, overflowWrap: 'break-word', fontWeight: 400 }}>{piece != null ? pcs[piece].title : cardWing.title}</h2>
               {inList ? (
                 <>
                   <div style={{ opacity: 0.9, lineHeight: 1.55, marginBottom: 24 }}>{ex.blurb}</div>

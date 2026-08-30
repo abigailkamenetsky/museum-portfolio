@@ -6,6 +6,7 @@ import './TextVersion.css'
 // resume is invisible to screen readers, keyboard users and crawlers.
 // Same data as the 3D wings, never a second copy of the content.
 
+const ASSET = import.meta.env.BASE_URL + 'assets/'
 const SOCIALS = 'the Socials and Contact wing'
 const clean = (s) => String(s).replace(/\{\{SOCIALS\}\}/g, SOCIALS)
 
@@ -23,13 +24,33 @@ function Blurb({ value, keyPrefix }) {
   )
 }
 
+// The data carries four link shapes. Resolving only url and pdf rendered the
+// contact addresses as anchors with no href, which are not links at all.
+function resolve(links) {
+  const out = []
+  for (const l of links) {
+    if (l.emails) {
+      for (const em of l.emails) out.push({ label: `${em.label}: ${em.addr}`, href: `mailto:${em.addr}` })
+    } else if (l.pdf) {
+      out.push({ label: l.label, href: ASSET + l.pdf, external: true })
+    } else if (l.url) {
+      out.push({ label: l.label, href: l.url, external: true })
+    }
+  }
+  return out
+}
+
 function Links({ links }) {
-  if (!links?.length) return null
+  const resolved = links?.length ? resolve(links) : []
+  if (!resolved.length) return null
   return (
     <ul className="tv-links">
-      {links.map((l, i) => (
+      {resolved.map((l, i) => (
         <li key={i}>
-          <a href={l.url || l.pdf} target="_blank" rel="noopener noreferrer">{l.label}</a>
+          <a
+            href={l.href}
+            {...(l.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+          >{l.label}</a>
         </li>
       ))}
     </ul>
