@@ -145,7 +145,7 @@ function readyCheck(){
 }
 
 let intact=null, shards=null, mixer=null, simDur=1;
-let bustH=1, bustMinY=0, bustMidY=0, ORB=5;
+let bustH=1, bustMinY=0, ORB=5;
 let state='IDLE', t=0, az=0, el=0.05, dragAmt=0, t0=0, dirty=true, dustOn=false;
 const EL_MIN=-1.1, EL_MAX=1.25;
 
@@ -169,7 +169,7 @@ L.load('../sim/sim.glb',(g)=>{
   // measure at frame 0, when the pieces are assembled, not at the load pose
   mixer.setTime(0); shards.updateMatrixWorld(true);
   const b=new THREE.Box3().setFromObject(shards);
-  bustH=b.max.y-b.min.y; bustMinY=b.min.y; bustMidY=(b.max.y+b.min.y)/2;
+  bustH=b.max.y-b.min.y; bustMinY=b.min.y;
   // frame height at distance R is 2*R*tan(fov/2); solve for the share we want
   ORB = bustH/(2*FILL*Math.tan(THREE.MathUtils.degToRad(FOV/2)));
   const sc=key.shadow.camera, r=bustH*2.2;
@@ -258,8 +258,6 @@ function sync(){
   const aimRest = (bustMinY + DROP*bustH + bustH) - frameH*(0.5-HEADROOM);
   const aimTrack= crown - frameH*(0.5-HEADROOM);
   const FOLLOW  = 0.62;                       // it lags, so the drop still reads
-  const settle  = hit ? Math.min(1, ta/0.30) : 0;
-  const f       = FOLLOW + (1-FOLLOW)*(settle*settle*(3-2*settle));
   // The camera simply stops where the fall left it. Any post-impact move
   // drifts the wreck back up the frame, and after a descent that reads as a
   // bounce - which is the thing that kept looking like a glitch.
