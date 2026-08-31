@@ -31,15 +31,18 @@
   /* Arriving from the shatter intro: the page opens still inside the cloud and
      the dust settles off it, so the home screen is what emerges. */
   #dustin{position:fixed;inset:0;z-index:300;pointer-events:none;opacity:1;
-    background:
-      radial-gradient(ellipse 95% 72% at 50% 80%,rgba(216,209,198,.99) 0%,rgba(201,192,180,.95) 38%,rgba(158,148,136,.62) 70%,rgba(96,89,80,0) 100%),
-      radial-gradient(ellipse 125% 100% at 50% 52%,#d0c8bb 0%,#c0b7ab 48%,#8f877c 100%);
+    /* Matched by measurement to the last frame the intro hands over on: a dim
+       warm haze, dark at the top, levelling off near the floor. A bright even
+       cream here flashed by +111 luminance at the cut. */
+    background:linear-gradient(180deg,#2a251d 0%,#453f36 25%,#575148 42%,
+      #5d574e 58%,#5e584f 75%,#5c564d 100%);
     will-change:opacity,transform,filter}
   /* Driven by CSS, not by a JS timer. Scheduling this off DOMContentLoaded
      left the arrival stuck under opaque dust whenever the page loaded cold,
      because the main thread was still busy. The entrance is static markup and
      paints early, so a fixed timeline is both safe and unblockable. */
   #dustin{animation:dustclear 2.5s cubic-bezier(.3,.04,.4,1) .40s forwards}
+  #dustin.dark{background:#080705}
   @keyframes dustclear{
     to{opacity:0;transform:scale(1.20) translateY(-3.5%);filter:blur(15px)}
   }
@@ -456,11 +459,14 @@
 <div class="veil" id="veil"></div>
 <script>
 (function(){
-  if(!/[?&]enter=dust/.test(location.search)) return;
+  var flag=null;
+  try{ flag = sessionStorage.getItem('marieDust');
+       if(flag) sessionStorage.removeItem('marieDust'); }catch(e){}
+  if(flag!=='1' && flag!=='2') return;
   var d=document.createElement('div'); d.id='dustin';
+  // '2' means the shot handed over without its cloud, so open out of the dark
+  if(flag==='2') d.className='dark';
   (document.body||document.documentElement).appendChild(d);
-  // tidy the URL so a reload does not replay the arrival
-  try{ history.replaceState(null,'',location.pathname); }catch(e){}
   d.addEventListener('animationend',function(){ d.remove(); });
   // belt and braces: never leave the room buried if the animation never fires
   setTimeout(function(){ if(d.parentNode) d.remove(); },6000);

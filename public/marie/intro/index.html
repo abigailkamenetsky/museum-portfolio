@@ -93,14 +93,21 @@ const DUR       = 3.20;
 // The shot used to end on a still of the hall and a title card. It now hands
 // over inside the cloud, at peak obscuration, so the museum's own home screen
 // is what emerges from the dust: map, cassette, copy and all.
-const NEXT      = '../../preview/?enter=dust';
-const NAV_AT    = T_IMPACT + SWAP_AT + 0.06;   // fully covered here
+const NEXT      = '../../preview/';   // must match the prefetch exactly
+// Measured off the clip itself: the cloud is 99.7% opaque at 1.32s and a full
+// 100% from 1.35s of its 1.80s. Cutting on the wall clock instead flashed,
+// because a buffering video left the screen dark at the moment of the cut
+// while the next page opened bright.
+const PEAK_VT   = 1.40;
+const NAV_FLOOR = T_IMPACT + 0.50;   // never cut before the break reads
+const NAV_LIMIT = 2.55;              // < DUR, or the shot ends first and never hands over
 
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const DEV = new URLSearchParams(location.search).has('dev')
   || new URLSearchParams(location.search).has('t');
 const AUTONAV = !DEV && !REDUCED;
-let handedOver = false;
+if(AUTONAV){ try{ fetch('../../preview/',{credentials:'same-origin'}); }catch(_){} }
+let handedOver = false, holdT = 0;
 const R = new THREE.WebGLRenderer({antialias:true});
 R.setPixelRatio(Math.min(devicePixelRatio,2)); R.setSize(innerWidth,innerHeight);
 R.setClearColor(0x000000,1); R.toneMapping=THREE.ACESFilmicToneMapping;
@@ -437,7 +444,20 @@ let f=0,last=performance.now();
     // decodes on its own thread, is allowed to sit a little out of step - which
     // is invisible in a cloud, where a jump in the geometry is not.
     t = (performance.now()-t0)/1000;
-    if(AUTONAV && !handedOver && t>=NAV_AT){ handedOver=true; location.href=NEXT; return; }
+    if(AUTONAV && !handedOver && t>=NAV_FLOOR){
+      const covered = dv.ended || (vidReady && !dv.error && dv.currentTime>=PEAK_VT);
+      if(covered || t>=NAV_LIMIT){
+        handedOver=true; holdT=t;
+        // tell the next page what it is opening out of, so it never brightens
+        // into view over a screen that was still dark
+        try{ sessionStorage.setItem('marieDust', covered?'1':'2'); }catch(_){}
+        location.href=NEXT;
+      }
+    }
+    if(handedOver){
+      // hold this frame for however long the load takes
+      t=holdT; if(!dv.paused) dv.pause();
+    }
     if(t>=DUR){ t=DUR; state='DONE'; if(!dv.paused) dv.pause(); }
     dirty=true;
   }
