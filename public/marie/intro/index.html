@@ -57,7 +57,7 @@
 <div id="reveal"><div id="hall"></div><div id="hallveil"></div><div id="rtitle">Abby&rsquo;s Museum</div>
 <div id="rsub">est. 2026 &middot; Chicago</div>
 <a id="renter" href="../../preview/">Enter the collection</a></div>
-<div id="hint" class="in">loading&hellip;</div>
+<div id="hint" class="in">preparing the gallery&hellip;</div>
 <div id="tl"><button id="pp">replay</button><span id="tn">0.00s</span>
 <input type="range" id="sc" min="0" max="500" step="1" value="0" aria-label="Scrub the intro">
 <button id="hd">hide</button></div>
@@ -163,6 +163,26 @@ dv.addEventListener('canplay',()=>{ vidReady=true; readyCheck(); },{once:true});
 setInterval(()=>{ if(!vidReady && dv.readyState>=3){ vidReady=true; readyCheck(); } },400);
 dv.addEventListener('error',()=>{ vidReady=false; readyCheck(); });
 let meshReady=false;
+
+// A bare "loading" for twenty seconds on a slow line is indistinguishable from
+// a broken page. Report real bytes instead.
+const WEIGHT = { sim:1676464, bust:676892,
+                 dust: /hevc/.test(dv.src) ? 2614673 : 1265722 };
+const TOTAL = WEIGHT.sim + WEIGHT.bust + WEIGHT.dust;
+const got = { sim:0, bust:0, dust:0 };
+let progTimer = setInterval(showProgress, 180);
+function showProgress(){
+  if(meshReady && (vidReady || dv.error)){ clearInterval(progTimer); return; }
+  try{
+    if(dv.buffered.length){
+      const frac = dv.buffered.end(dv.buffered.length-1) / (dv.duration || vidDur);
+      got.dust = Math.min(WEIGHT.dust, WEIGHT.dust * frac);
+    }
+  }catch(_){}
+  const pct = Math.min(99, Math.round(100*(got.sim+got.bust+got.dust)/TOTAL));
+  elHint.textContent = 'preparing the gallery \u00b7 ' + pct + '%';
+}
+
 function readyCheck(){
   // the shot needs the dust; without it the break has no consequence
   if(meshReady && (vidReady || dv.error)){
@@ -229,8 +249,8 @@ L.load('../sim/sim.glb',(g)=>{
     }catch(_){}
     meshReady=true; readyCheck();
     dirty=true;
-  });
-},undefined,(e)=>{hud.textContent='FAILED '+e;});
+  },(e)=>{ got.bust=e.loaded||0; });
+},(e)=>{ got.sim=e.loaded||0; },(e)=>{hud.textContent='FAILED '+e;});
 
 function sync(){
   const running = state!=='IDLE';
