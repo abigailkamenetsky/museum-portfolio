@@ -1483,7 +1483,10 @@ document.getElementById('bg').src = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA
       text:'And the museum map. It always knows which room you are standing in.'});
     queue.push({key:'art', sel:'.room .work', side:'below', arrow:'left', rot:-2.4, seed:53,
       text:'Every painting opens. Tap one to read what it stands for.'});
-    setTimeout(next, 450);
+    // The first hint used to fire 450ms after load, landing on top of the
+    // title while the entrance still fills the screen. The scroll listener
+    // below already starts the queue once the visitor is actually inside.
+    if (scrollY > innerHeight * 0.4) setTimeout(next, 450);
     addEventListener('scroll', function once(){ removeEventListener('scroll', once); setTimeout(next,600); }, {passive:true});
   })();
 

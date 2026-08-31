@@ -384,7 +384,9 @@ export const WINGS = [
         { label: 'Instagram', url: 'https://www.instagram.com/abigailkamenetsky/' },
         { label: 'StoryGraph', url: 'https://app.thestorygraph.com/profile/abbykamenetsky' },
         { label: 'Beli', url: 'https://beliapp.co/app/abbykamenetsky' },
-        { label: 'Resume', pdf: 'Abby_Kamenetsky_Resume.pdf' },
+        // To offer the resume again: restore this line and drop the file at
+        // public/assets/Abby_Kamenetsky_Resume.pdf. Nothing else to change.
+        // { label: 'Resume', pdf: 'Abby_Kamenetsky_Resume.pdf' },
         { label: 'Email', emails: [
           { label: 'School', addr: 'abbykamenetsky@uchicago.edu' },
           { label: 'Home', addr: 'abigailk725@gmail.com' },
