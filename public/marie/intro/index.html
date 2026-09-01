@@ -109,9 +109,15 @@ const AUTONAV = !DEV && !REDUCED;
 if(AUTONAV){ try{ fetch('../../preview/',{credentials:'same-origin'}); }catch(_){} }
 let handedOver = false, holdT = 0;
 const R = new THREE.WebGLRenderer({antialias:true});
-R.setPixelRatio(Math.min(devicePixelRatio,2)); R.setSize(innerWidth,innerHeight);
+// 1.5 rather than 2: on a Retina panel the full ratio quadruples the pixels
+// under 117 shadow-casting shards for a difference you cannot see on a dark
+// marble bust. This is the single biggest frame cost here.
+R.setPixelRatio(Math.min(devicePixelRatio,1.5)); R.setSize(innerWidth,innerHeight);
 R.setClearColor(0x000000,1); R.toneMapping=THREE.ACESFilmicToneMapping;
 R.shadowMap.enabled=true; R.shadowMap.type=THREE.PCFSoftShadowMap;
+// Nothing moves until the tap, so re-rendering the shadow map every frame
+// while the visitor is just orbiting is pure waste.
+R.shadowMap.autoUpdate=false;
 R.domElement.tabIndex=0;
 R.domElement.setAttribute('role','button');
 R.domElement.setAttribute('aria-label','Marie Antoinette bust. Activate to shatter it and enter the museum.');
@@ -158,7 +164,16 @@ const dv=document.getElementById('dustvid');
 let vidReady=false, vidDur=1.83;
 dv.src = dv.canPlayType('video/mp4; codecs="hvc1"')!=='' ? './dust_hevc.mp4' : './dust_vp9.webm';
 dv.addEventListener('loadedmetadata',()=>{ if(dv.duration) vidDur=dv.duration; });
-dv.addEventListener('canplay',()=>{ vidReady=true; readyCheck(); },{once:true});
+dv.addEventListener('canplay',()=>{
+  vidReady=true; readyCheck();
+  // spin the decoder up while she is still standing there. Cold-starting it at
+  // the moment of impact is what put a hitch right on the break.
+  try{
+    dv.play().then(()=>{
+      setTimeout(()=>{ if(state==='IDLE'){ dv.pause(); dv.currentTime=0; } }, 260);
+    }).catch(()=>{});
+  }catch(_){}
+},{once:true});
 // belt and braces: if the browser is coy about canplay, accept enough buffer
 setInterval(()=>{ if(!vidReady && dv.readyState>=3){ vidReady=true; readyCheck(); } },400);
 dv.addEventListener('error',()=>{ vidReady=false; readyCheck(); });
@@ -209,6 +224,35 @@ const elHall=document.getElementById('hall');
 let lastTn='', lastSc=-1, vidGeom='';
 const ease=(x)=>1-Math.pow(1-x,3), accel=(x)=>x*x;
 
+// The two models used to load one inside the other, so the 677KB bust did not
+// start downloading until the 1.68MB sim had finished. They are independent
+// fetches; only the assembly below needs both.
+let simReady=false, bustGltf=null, shardCount=0;
+function assemble(){
+  if(!simReady || !bustGltf) return;
+  const gi = bustGltf;
+    const ib=new THREE.Box3().setFromObject(gi.scene), ic=new THREE.Vector3(); ib.getCenter(ic);
+    gi.scene.position.sub(ic);
+    intact=new THREE.Group(); intact.add(gi.scene);
+    intact.scale.setScalar(bustH/(ib.max.y-ib.min.y));
+    gi.scene.position.y += (ic.y-ib.min.y);        // feet at the group origin
+    intact.traverse(o=>{ if(o.isMesh){ o.material=marble; o.castShadow=true; } });
+    scene.add(intact);
+    hud.innerHTML='<b>shards</b> '+shardCount+'<br><b>bust</b> '+bustH.toFixed(2)+'u<br><b>orbit</b> '+
+      ORB.toFixed(2)+'u<br><b>drop</b> '+T_IMPACT.toFixed(2)+'s<br><b>fps</b> <span id="fps">--</span>';
+    // warm the pipeline while she is just standing there: compile materials
+    // and build the shadow map for all 117 casters before they are needed
+    try{
+      shards.visible=true; intact.visible=true;
+      R.compile(scene, cam);
+      R.shadowMap.needsUpdate=true;
+      R.render(scene, cam);
+      shards.visible=false;
+    }catch(_){}
+    meshReady=true; readyCheck();
+    dirty=true;
+}
+
 L.load('../sim/sim.glb',(g)=>{
   shards=g.scene; shards.visible=false; scene.add(shards);
   let n=0; shards.traverse(o=>{ if(o.isMesh){ o.material=marble; o.castShadow=true; n++; } });
@@ -228,29 +272,11 @@ L.load('../sim/sim.glb',(g)=>{
   key.position.set(-bustH*0.9, bustMinY+bustH*2.4, bustH*1.1);
   key.target.position.set(0,bustMinY,0); scene.add(key.target);
 
-  L.load('./marie_lite.glb',(gi)=>{
-    const ib=new THREE.Box3().setFromObject(gi.scene), ic=new THREE.Vector3(); ib.getCenter(ic);
-    gi.scene.position.sub(ic);
-    intact=new THREE.Group(); intact.add(gi.scene);
-    intact.scale.setScalar(bustH/(ib.max.y-ib.min.y));
-    gi.scene.position.y += (ic.y-ib.min.y);        // feet at the group origin
-    intact.traverse(o=>{ if(o.isMesh){ o.material=marble; o.castShadow=true; } });
-    scene.add(intact);
-    hud.innerHTML='<b>shards</b> '+n+'<br><b>bust</b> '+bustH.toFixed(2)+'u<br><b>orbit</b> '+
-      ORB.toFixed(2)+'u<br><b>drop</b> '+T_IMPACT.toFixed(2)+'s<br><b>fps</b> <span id="fps">--</span>';
-    // warm the pipeline while she is just standing there: compile materials
-    // and build the shadow map for all 117 casters before they are needed
-    try{
-      shards.visible=true; intact.visible=true;
-      R.compile(scene, cam);
-      R.shadowMap.needsUpdate=true;
-      R.render(scene, cam);
-      shards.visible=false;
-    }catch(_){}
-    meshReady=true; readyCheck();
-    dirty=true;
-  },(e)=>{ got.bust=e.loaded||0; });
+  shardCount=n; simReady=true; assemble();
 },(e)=>{ got.sim=e.loaded||0; },(e)=>{hud.textContent='FAILED '+e;});
+
+L.load('./marie_lite.glb',(gi)=>{ bustGltf=gi; assemble(); },
+  (e)=>{ got.bust=e.loaded||0; },(e)=>{hud.textContent='FAILED '+e;});
 
 function sync(){
   const running = state!=='IDLE';
@@ -481,6 +507,7 @@ let f=0,last=performance.now();
     if(t>=DUR){ t=DUR; state='DONE'; if(!dv.paused) dv.pause(); }
     dirty=true;
   }
+  R.shadowMap.needsUpdate = (state==='RUN');
   if(dirty){ sync(); if(state!=='RUN') dirty=false; }
   f++; const p=performance.now();
   if(p-last>1000){ const el2=document.getElementById('fps');
