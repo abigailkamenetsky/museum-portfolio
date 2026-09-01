@@ -33,6 +33,13 @@
  #renter.on{pointer-events:auto}
  #renter:hover{border-color:#c9a24e;background:rgba(40,32,12,.72)}
  #renter:focus-visible{outline:2px solid #c9a24e;outline-offset:3px}
+ /* The museum loads here, behind the shot, while she is looking at the bust.
+    Navigating away instead meant the next page could only START loading once
+    this one was discarded, which is why the cloud froze for over a second. */
+ #museum{position:fixed;inset:0;width:100%;height:100%;border:0;z-index:0;
+   opacity:0;pointer-events:none;background:#0b0a08}
+ #museum.up{z-index:2;opacity:1}
+ #museum.live{pointer-events:auto}
  #hint{position:fixed;left:0;right:0;bottom:12vh;text-align:center;z-index:4;color:#9a9188;
    font-size:clamp(12px,1.6vw,17px);letter-spacing:.2em;opacity:0;transition:opacity 1s ease;
    pointer-events:none;text-transform:uppercase}
@@ -58,6 +65,7 @@
 <div id="reveal"><div id="hall"></div><div id="hallveil"></div><div id="rtitle">Abby&rsquo;s Museum</div>
 <div id="rsub">est. 2026 &middot; Chicago</div>
 <a id="renter" href="../../preview/">Enter the collection</a></div>
+<iframe id="museum" title="Abby’s Museum" tabindex="-1"></iframe>
 <div id="hint" class="in">preparing the gallery&hellip;</div>
 <div id="tl"><button id="pp">replay</button><span id="tn">0.00s</span>
 <input type="range" id="sc" min="0" max="500" step="1" value="0" aria-label="Scrub the intro">
@@ -108,7 +116,7 @@ const DEV = new URLSearchParams(location.search).has('dev')
   || new URLSearchParams(location.search).has('t');
 const AUTONAV = !DEV && !REDUCED;
 if(AUTONAV){ try{ fetch('../../preview/',{credentials:'same-origin'}); }catch(_){} }
-let handedOver = false, holdT = 0;
+let handedOver = false, museumStarted = false;
 const R = new THREE.WebGLRenderer({antialias:true});
 // 1.5 rather than 2: on a Retina panel the full ratio quadruples the pixels
 // under 117 shadow-casting shards for a difference you cannot see on a dark
@@ -204,6 +212,8 @@ function readyCheck(){
   if(meshReady && (vidReady || dv.error)){
     elHint.textContent='drag to look \u00b7 tap to shatter';
     elHint.classList.add('in');
+    // she is about to look at the bust for a few seconds: use them
+    if(AUTONAV && !museumStarted){ museumStarted=true; elMus.src=NEXT; }
   }
 }
 
@@ -219,6 +229,7 @@ const L=new GLTFLoader(); L.setDRACOLoader(draco);
 const hud=document.getElementById('hud');
 const elHint=document.getElementById('hint'), elRev=document.getElementById('reveal');
 const elEnter=document.getElementById('renter');
+const elMus=document.getElementById('museum');
 const elTitle=document.getElementById('rtitle'), elSub=document.getElementById('rsub');
 const elTn=document.getElementById('tn'), elSc=document.getElementById('sc');
 const elHall=document.getElementById('hall');
@@ -455,7 +466,25 @@ addEventListener('pointerup',e=>{ if(!dragging) return; dragging=false;
   if(inUI(e)) return;
   const quick=performance.now()-tDown<400;
   const armed = shards && (vidReady || dv.error);   // no half-loaded runs
+  if(handedOver) return;
   if((dragAmt<14||quick) && armed && (state==='IDLE'||state==='DONE'||state==='SCRUB')){ start(); } });
+// Swap what is underneath the cloud. The dust keeps playing and thins out on
+// its own, so the museum is simply revealed by it rather than cut to.
+function uncoverMuseum(){
+  if(handedOver) return;
+  handedOver=true;
+  elMus.classList.add('up');
+  R.domElement.style.opacity='0';
+  elHint.classList.remove('in');
+  document.getElementById('hud').style.display='none';
+  document.getElementById('tl').classList.add('hide');
+  // let the cloud finish thinning before the museum starts taking taps
+  setTimeout(()=>{
+    elMus.classList.add('live');
+    try{ history.replaceState(null,'','../../preview/'); }catch(_){}
+  }, 1100);
+}
+
 function start(){
   if(REDUCED){                      // deliver the outcome without the motion
     if(!DEV){ location.href='../../preview/'; return; }
@@ -498,17 +527,7 @@ let f=0,last=performance.now();
     t = (performance.now()-t0)/1000;
     if(AUTONAV && !handedOver && t>=NAV_FLOOR){
       const covered = dv.ended || (vidReady && !dv.error && dv.currentTime>=PEAK_VT);
-      if(covered || t>=NAV_LIMIT){
-        handedOver=true; holdT=t;
-        // tell the next page what it is opening out of, so it never brightens
-        // into view over a screen that was still dark
-        try{ sessionStorage.setItem('marieDust', covered?'1':'2'); }catch(_){}
-        location.href=NEXT;
-      }
-    }
-    if(handedOver){
-      // hold this frame for however long the load takes
-      t=holdT; if(!dv.paused) dv.pause();
+      if(covered || t>=NAV_LIMIT) uncoverMuseum();
     }
     if(t>=DUR){ t=DUR; state='DONE'; if(!dv.paused) dv.pause(); }
     dirty=true;
