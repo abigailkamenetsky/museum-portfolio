@@ -505,6 +505,10 @@ function uncoverMuseum(){
   // let the cloud finish thinning before the museum starts taking taps
   setTimeout(()=>{
     elMus.classList.add('live');
+    // it was held out of the tab order while it sat hidden behind the shot.
+    // Leaving it there meant a keyboard visitor could never reach the museum.
+    elMus.removeAttribute('tabindex');
+    try{ elMus.focus({preventScroll:true}); }catch(_){}
     try{ history.replaceState(null,'','../../preview/'); }catch(_){}
   }, 1100);
 }

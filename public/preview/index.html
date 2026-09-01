@@ -28,27 +28,6 @@
     animation:arrive 2.4s cubic-bezier(.2,.7,.25,1) both}
   @keyframes arrive{from{transform:translate(-50%,-50%) scale(1.22);filter:blur(12px) brightness(.35)}}
   .veil{position:fixed;inset:0;z-index:1;pointer-events:none;background:#050604;opacity:0}
-  /* Arriving from the shatter intro: the page opens still inside the cloud and
-     the dust settles off it, so the home screen is what emerges. */
-  #dustin{position:fixed;inset:0;z-index:300;pointer-events:none;opacity:1;
-    /* Matched by measurement to the last frame the intro hands over on: a dim
-       warm haze, dark at the top, levelling off near the floor. A bright even
-       cream here flashed by +111 luminance at the cut. */
-    background:linear-gradient(180deg,#2a251d 0%,#453f36 25%,#575148 42%,
-      #5d574e 58%,#5e584f 75%,#5c564d 100%);
-    will-change:opacity,transform,filter}
-  /* Driven by CSS, not by a JS timer. Scheduling this off DOMContentLoaded
-     left the arrival stuck under opaque dust whenever the page loaded cold,
-     because the main thread was still busy. The entrance is static markup and
-     paints early, so a fixed timeline is both safe and unblockable. */
-  #dustin{animation:dustclear 2.5s cubic-bezier(.3,.04,.4,1) .40s forwards}
-  #dustin.dark{background:#080705}
-  @keyframes dustclear{
-    to{opacity:0;transform:scale(1.20) translateY(-3.5%);filter:blur(15px)}
-  }
-  @media (prefers-reduced-motion:reduce){
-    #dustin{display:none}
-  }
   .bg::after{content:"";position:absolute;inset:0;
     background:radial-gradient(88% 76% at 50% 46%,transparent 42%,rgba(0,0,0,.5) 84%,rgba(0,0,0,.8) 100%)}
   #dust{position:fixed;inset:0;z-index:1;pointer-events:none}
@@ -458,21 +437,6 @@
 <link rel="preload" as="image" href="./img/dc332b79ef75.jpg">
 <div class="bg"><img id="bg" src="" alt="The gallery hall"></div>
 <div class="veil" id="veil"></div>
-<script>
-(function(){
-  var flag=null;
-  try{ flag = sessionStorage.getItem('marieDust');
-       if(flag) sessionStorage.removeItem('marieDust'); }catch(e){}
-  if(flag!=='1' && flag!=='2') return;
-  var d=document.createElement('div'); d.id='dustin';
-  // '2' means the shot handed over without its cloud, so open out of the dark
-  if(flag==='2') d.className='dark';
-  (document.body||document.documentElement).appendChild(d);
-  d.addEventListener('animationend',function(){ d.remove(); });
-  // belt and braces: never leave the room buried if the animation never fires
-  setTimeout(function(){ if(d.parentNode) d.remove(); },6000);
-})();
-</script>
 <canvas id="dust"></canvas>
 
 
