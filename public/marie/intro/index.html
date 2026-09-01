@@ -2,8 +2,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" href="data:,">
-<link rel="prefetch" href="../../preview/" as="document">
-<link rel="prefetch" href="../../preview/img/dc332b79ef75.jpg" as="image"><title>Marie &mdash; intro</title>
+<title>Marie &mdash; intro</title>
 <style>
  *{box-sizing:border-box} html,body{margin:0;height:100%;background:#000;overflow:hidden}
  body{font-family:"Iowan Old Style",Palatino,Georgia,serif;touch-action:none;cursor:grab}
@@ -15,7 +14,7 @@
    mask-image:radial-gradient(ellipse 62% 58% at 50% 72%,#000 42%,rgba(0,0,0,.55) 72%,transparent 100%)}
  #reveal{position:fixed;inset:0;z-index:2;opacity:0;pointer-events:none;overflow:hidden;
    display:flex;flex-direction:column;align-items:center;justify-content:center}
- #hall{position:absolute;inset:0;background:#07050a center/cover no-repeat url('./hall.jpg');
+ #hall{position:absolute;inset:0;background:#07050a center/cover no-repeat;
    transform:scale(1.08);will-change:transform}
  #hallveil{position:absolute;inset:0;
    background:radial-gradient(ellipse 78% 70% at 50% 52%,rgba(6,4,2,.10) 0%,rgba(6,4,2,.55) 62%,rgba(4,3,2,.88) 100%)}
@@ -115,7 +114,7 @@ const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const DEV = new URLSearchParams(location.search).has('dev')
   || new URLSearchParams(location.search).has('t');
 const AUTONAV = !DEV && !REDUCED;
-if(AUTONAV){ try{ fetch('../../preview/',{credentials:'same-origin'}); }catch(_){} }
+
 let handedOver = false, museumStarted = false;
 const R = new THREE.WebGLRenderer({antialias:true});
 // 1.5 rather than 2: on a Retina panel the full ratio quadruples the pixels
@@ -171,7 +170,7 @@ contact.rotation.x=-Math.PI/2; scene.add(contact);
 // two encodes because only Safari does HEVC alpha and only Chrome/Firefox VP9 alpha
 const dv=document.getElementById('dustvid');
 let vidReady=false, vidDur=1.83;
-dv.src = dv.canPlayType('video/mp4; codecs="hvc1"')!=='' ? './dust_hevc.mp4' : './dust_vp9.webm';
+const DUST_SRC = dv.canPlayType('video/mp4; codecs="hvc1"')!=='' ? './dust_hevc.mp4' : './dust_vp9.webm';
 dv.addEventListener('loadedmetadata',()=>{ if(dv.duration) vidDur=dv.duration; });
 dv.addEventListener('canplay',()=>{
   vidReady=true; readyCheck();
@@ -186,17 +185,16 @@ dv.addEventListener('canplay',()=>{
 // belt and braces: if the browser is coy about canplay, accept enough buffer
 setInterval(()=>{ if(!vidReady && dv.readyState>=3){ vidReady=true; readyCheck(); } },400);
 dv.addEventListener('error',()=>{ vidReady=false; readyCheck(); });
-let meshReady=false;
 
 // A bare "loading" for twenty seconds on a slow line is indistinguishable from
 // a broken page. Report real bytes instead.
-const WEIGHT = { sim:1676464, bust:676892,
-                 dust: /hevc/.test(dv.src) ? 2614673 : 1265722 };
+const WEIGHT = { sim:1410000, bust:676892,
+                 dust: /hevc/.test(DUST_SRC) ? 2614673 : 1265722 };
 const TOTAL = WEIGHT.sim + WEIGHT.bust + WEIGHT.dust;
 const got = { sim:0, bust:0, dust:0 };
 let progTimer = setInterval(showProgress, 180);
 function showProgress(){
-  if(meshReady && (vidReady || dv.error)){ clearInterval(progTimer); return; }
+  if(bustReady && simReady && (vidReady || dv.error)){ clearInterval(progTimer); return; }
   try{
     if(dv.buffered.length){
       const frac = dv.buffered.end(dv.buffered.length-1) / (dv.duration || vidDur);
@@ -209,7 +207,7 @@ function showProgress(){
 
 function readyCheck(){
   // the shot needs the dust; without it the break has no consequence
-  if(meshReady && (vidReady || dv.error)){
+  if(bustReady && simReady && (vidReady || dv.error)){
     elHint.textContent='drag to look \u00b7 tap to shatter';
     elHint.classList.add('in');
     // she is about to look at the bust for a few seconds: use them
@@ -233,62 +231,88 @@ const elMus=document.getElementById('museum');
 const elTitle=document.getElementById('rtitle'), elSub=document.getElementById('rsub');
 const elTn=document.getElementById('tn'), elSc=document.getElementById('sc');
 const elHall=document.getElementById('hall');
+// 137KB that only the dev ending ever shows, but which used to compete with
+// the bust for bandwidth on every single visit.
+if(DEV) elHall.style.backgroundImage="url('./hall.jpg')";
 let lastTn='', lastSc=-1, vidGeom='';
 const ease=(x)=>1-Math.pow(1-x,3), accel=(x)=>x*x;
 
 // The two models used to load one inside the other, so the 677KB bust did not
 // start downloading until the 1.68MB sim had finished. They are independent
 // fetches; only the assembly below needs both.
-let simReady=false, bustGltf=null, shardCount=0;
-function assemble(){
-  if(!simReady || !bustGltf) return;
-  const gi = bustGltf;
-    const ib=new THREE.Box3().setFromObject(gi.scene), ic=new THREE.Vector3(); ib.getCenter(ic);
-    gi.scene.position.sub(ic);
-    intact=new THREE.Group(); intact.add(gi.scene);
-    intact.scale.setScalar(bustH/(ib.max.y-ib.min.y));
-    gi.scene.position.y += (ic.y-ib.min.y);        // feet at the group origin
-    intact.traverse(o=>{ if(o.isMesh){ o.material=marble; o.castShadow=true; } });
-    scene.add(intact);
-    hud.innerHTML='<b>shards</b> '+shardCount+'<br><b>bust</b> '+bustH.toFixed(2)+'u<br><b>orbit</b> '+
-      ORB.toFixed(2)+'u<br><b>drop</b> '+T_IMPACT.toFixed(2)+'s<br><b>fps</b> <span id="fps">--</span>';
-    // warm the pipeline while she is just standing there: compile materials
-    // and build the shadow map for all 117 casters before they are needed
-    try{
-      shards.visible=true; intact.visible=true;
-      R.compile(scene, cam);
-      R.shadowMap.needsUpdate=true;
-      R.render(scene, cam);
-      shards.visible=false;
-    }catch(_){}
-    meshReady=true; readyCheck();
-    dirty=true;
-}
+// The bust used to wait for the 1.4MB shatter file before it could be drawn,
+// so the screen stayed black for seven seconds behind a progress number.
+// Framing is taken from whichever model lands first and the other is scaled
+// to match, so the bust appears the moment its own 646KB arrives.
+let simReady=false, bustReady=false, shardCount=0, framed=false;
 
-L.load('../sim/sim.glb',(g)=>{
-  shards=g.scene; shards.visible=false; scene.add(shards);
-  let n=0; shards.traverse(o=>{ if(o.isMesh){ o.material=marble; o.castShadow=true; n++; } });
-  mixer=new THREE.AnimationMixer(shards); simDur=0;
-  for(const cl of g.animations){ const a=mixer.clipAction(cl);
-    a.loop=THREE.LoopOnce; a.clampWhenFinished=true; a.play();
-    simDur=Math.max(simDur,cl.duration); }
-  // measure at frame 0, when the pieces are assembled, not at the load pose
-  mixer.setTime(0); shards.updateMatrixWorld(true);
-  const b=new THREE.Box3().setFromObject(shards);
-  bustH=b.max.y-b.min.y; bustMinY=b.min.y;
-  // frame height at distance R is 2*R*tan(fov/2); solve for the share we want
+function frameFrom(h, minY){
+  bustH=h; bustMinY=minY;
   ORB = bustH/(2*FILL*Math.tan(THREE.MathUtils.degToRad(FOV/2)));
   const sc=key.shadow.camera, r=bustH*2.2;
   sc.left=-r; sc.right=r; sc.top=r; sc.bottom=-r;
   sc.near=0.1; sc.far=bustH*14; sc.updateProjectionMatrix();
   key.position.set(-bustH*0.9, bustMinY+bustH*2.4, bustH*1.1);
-  key.target.position.set(0,bustMinY,0); scene.add(key.target);
+  key.target.position.set(0,bustMinY,0);
+  if(!key.target.parent) scene.add(key.target);
+  framed=true;
+}
 
-  shardCount=n; simReady=true; assemble();
-},(e)=>{ got.sim=e.loaded||0; },(e)=>{hud.textContent='FAILED '+e;});
+function warmPipeline(){
+  try{
+    if(shards) shards.visible=true;
+    if(intact) intact.visible=true;
+    R.compile(scene, cam);
+    R.shadowMap.needsUpdate=true;
+    R.render(scene, cam);
+    if(shards) shards.visible=false;
+  }catch(_){}
+}
 
-L.load('./marie_lite.glb',(gi)=>{ bustGltf=gi; assemble(); },
-  (e)=>{ got.bust=e.loaded||0; },(e)=>{hud.textContent='FAILED '+e;});
+L.load('./marie_lite.glb',(gi)=>{
+  const ib=new THREE.Box3().setFromObject(gi.scene), ic=new THREE.Vector3(); ib.getCenter(ic);
+  const h=ib.max.y-ib.min.y;
+  if(!framed) frameFrom(h, 0);
+  gi.scene.position.sub(ic);
+  intact=new THREE.Group(); intact.add(gi.scene);
+  intact.scale.setScalar(bustH/h);
+  gi.scene.position.y += (ic.y-ib.min.y);        // feet at the group origin
+  intact.position.y = bustMinY;
+  intact.traverse(o=>{ if(o.isMesh){ o.material=marble; o.castShadow=true; } });
+  scene.add(intact);
+  bustReady=true; warmPipeline(); readyCheck(); dirty=true;
+},(e)=>{ got.bust=e.loaded||0; },(e)=>{hud.textContent='FAILED '+e;});
+
+// All three download together; the bust is the smallest so it lands first and
+// gets drawn while the other two are still arriving.
+loadRest();
+function loadRest(){
+  if(loadRest.done) return; loadRest.done=true;
+  dv.src = DUST_SRC;
+  L.load('../sim/sim.glb',(g)=>{
+    shards=g.scene; shards.visible=false; scene.add(shards);
+    let n=0; shards.traverse(o=>{ if(o.isMesh){ o.material=marble; o.castShadow=true; n++; } });
+    mixer=new THREE.AnimationMixer(shards); simDur=0;
+    for(const cl of g.animations){ const a=mixer.clipAction(cl);
+      a.loop=THREE.LoopOnce; a.clampWhenFinished=true; a.play();
+      simDur=Math.max(simDur,cl.duration); }
+    mixer.setTime(0); shards.updateMatrixWorld(true);
+    const b=new THREE.Box3().setFromObject(shards);
+    const sh=b.max.y-b.min.y;
+    if(!framed){ frameFrom(sh, b.min.y); }
+    else {
+      // match the bust already on screen, uniformly, so the shot is unchanged
+      shards.scale.setScalar(bustH/sh);
+      shards.updateMatrixWorld(true);
+      const b2=new THREE.Box3().setFromObject(shards);
+      shards.position.y += (bustMinY - b2.min.y);
+    }
+    shardCount=n; simReady=true;
+    hud.innerHTML='<b>shards</b> '+shardCount+'<br><b>bust</b> '+bustH.toFixed(2)+'u<br><b>orbit</b> '+
+      ORB.toFixed(2)+'u<br><b>drop</b> '+T_IMPACT.toFixed(2)+'s<br><b>fps</b> <span id="fps">--</span>';
+    warmPipeline(); readyCheck(); dirty=true;
+  },(e)=>{ got.sim=e.loaded||0; },(e)=>{hud.textContent='FAILED '+e;});
+}
 
 function sync(){
   const running = state!=='IDLE';
