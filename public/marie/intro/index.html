@@ -415,16 +415,21 @@ function sync(){
 
   // ── the swap, hidden inside the cloud, then the title through the haze ─
   const rv=elRev, ti=elTitle, sb=elSub;
-  const sw=hit ? Math.max(0,Math.min(1,(ta-SWAP_AT)/0.22)) : 0;
+  // The hall-and-title ending belongs to the dev view only. When the shot is
+  // going to hand over, drawing it means the reveal is already half faded in
+  // at the moment we freeze, so the held frame is the museum with the pile of
+  // shards sitting in the middle of it. Recorded on 2026-09-01: two full
+  // seconds of broken statue lying in the gallery.
+  const sw=(hit && !AUTONAV) ? Math.max(0,Math.min(1,(ta-SWAP_AT)/0.22)) : 0;
   rv.style.opacity = (sw*sw*(3-2*sw)).toFixed(3);
   // ease out of the push-in as the haze thins, so you settle into the room
   const settleIn = hit ? Math.max(0,Math.min(1,(ta-SWAP_AT)/1.05)) : 0;
   elHall.style.transform = 'scale('+(1.08-0.08*(settleIn*settleIn*(3-2*settleIn))).toFixed(4)+')';
-  const k=Math.max(0,Math.min(1,(ta-TITLE_AT)/0.8));
+  const k=AUTONAV ? 0 : Math.max(0,Math.min(1,(ta-TITLE_AT)/0.8));
   const e=k<0.5 ? 4*k*k*k : 1-Math.pow(-2*k+2,3)/2;
   ti.style.opacity=e.toFixed(3); sb.style.opacity=e.toFixed(3);
   // the way on: comes after the title so the room reads first
-  const kb=Math.max(0,Math.min(1,(ta-(TITLE_AT+0.72))/0.62));
+  const kb=AUTONAV ? 0 : Math.max(0,Math.min(1,(ta-(TITLE_AT+0.72))/0.62));
   const eb=kb<0.5 ? 4*kb*kb*kb : 1-Math.pow(-2*kb+2,3)/2;
   elEnter.style.opacity=eb.toFixed(3);
   elEnter.classList.toggle('on', eb>0.85);
