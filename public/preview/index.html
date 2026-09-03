@@ -512,7 +512,6 @@ var FRAMES = ["./img/1a923a3a305e.png", "./img/b9d179a82712.png", "./img/388aa2b
 document.getElementById('bg').src = "./img/dc332b79ef75.jpg";
 
 (function(){
-  var ROMAN='I II III IV V VI VII VIII IX X XI XII XIII XIV XV XVI XVII XVIII XIX XX XXI XXII XXIII XXIV XXV XXVI XXVII XXVIII XXIX XXX XXXI XXXII XXXIII XXXIV XXXV XXXVI XXXVII XXXVIII XXXIX XL'.split(' ');
   var host=document.getElementById('rooms'), book=document.getElementById('book'), plate=0;
 
   /* A salon hang. Works are laid out in overlapping columns across a wall that is
@@ -893,7 +892,7 @@ document.getElementById('bg').src = "./img/dc332b79ef75.jpg";
     var stage=sec.querySelector('.works');
 
     R.w.forEach(function(w,k){
-      plate++; w.pl=ROMAN[plate-1]||String(plate);
+      plate++; w.pl=String(plate);
       var b=document.createElement('button');
       b.className='work pre';
       b.setAttribute('aria-label',w.t);

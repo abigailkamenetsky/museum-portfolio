@@ -192,12 +192,12 @@ dv.addEventListener('error',()=>{ vidReady=false; readyCheck(); });
 // A bare "loading" for twenty seconds on a slow line is indistinguishable from
 // a broken page. Report real bytes instead.
 const WEIGHT = { sim:1410000, bust:676892,
-                 dust: /hevc/.test(DUST_SRC) ? 2614673 : 1265722 };
+                 dust: /hevc/.test(DUST_SRC) ? 628000 : 1265722 };
 const TOTAL = WEIGHT.sim + WEIGHT.bust + WEIGHT.dust;
 const got = { sim:0, bust:0, dust:0 };
 let progTimer = setInterval(showProgress, 180);
 function showProgress(){
-  if(bustReady && simReady && (vidReady || dv.error)){ clearInterval(progTimer); return; }
+  if(canRun()){ clearInterval(progTimer); return; }
   try{
     if(dv.buffered.length){
       const frac = dv.buffered.end(dv.buffered.length-1) / (dv.duration || vidDur);
@@ -208,12 +208,24 @@ function showProgress(){
   elHint.textContent = 'preparing the gallery \u00b7 ' + pct + '%';
 }
 
+let armCapped=false, capTimer=null;
+// One definition, used by the hint, the progress line, the tap, the key and the
+// replay button. They each used to test the video separately, so capping the
+// wait in one of them left the others still stuck.
+function canRun(){ return bustReady && simReady && (vidReady || dv.error || armCapped); }
 function readyCheck(){
-  // the shot needs the dust; without it the break has no consequence
-  if(bustReady && simReady && (vidReady || dv.error)){
+  const models = bustReady && simReady;
+  // iOS ignores preload on video: Safari will not buffer one until a gesture,
+  // so canplay never fires AND error never fires. This gate simply never opened
+  // and the progress sat frozen forever. Abby saw it stop at 45% on her phone.
+  // Wait a bounded time for the dust, then let her in regardless; the tap is
+  // itself the gesture that gets the video going.
+  if(models && !capTimer && !vidReady && !dv.error){
+    capTimer=setTimeout(()=>{ armCapped=true; readyCheck(); }, 2500);
+  }
+  if(models && (vidReady || dv.error || armCapped)){
     elHint.textContent='drag to look \u00b7 tap to shatter';
     elHint.classList.add('in');
-
   }
 }
 
@@ -507,7 +519,7 @@ addEventListener('pointermove',e=>{ if(!dragging) return;
 addEventListener('pointerup',e=>{ if(!dragging) return; dragging=false;
   if(inUI(e)) return;
   const quick=performance.now()-tDown<400;
-  const armed = shards && (vidReady || dv.error);   // no half-loaded runs
+  const armed = canRun();   // no half-loaded runs
   if(handedOver) return;
   if((dragAmt<14||quick) && armed && (state==='IDLE'||state==='DONE'||state==='SCRUB')){ start(); } });
 // Swap what is underneath the cloud. The dust keeps playing and thins out on
@@ -548,6 +560,14 @@ function start(){
   state='RUN'; t=0; t0=performance.now(); az0=az; el0=el; dirty=true; dustOn=false;
   if(AUTONAV) armUncoverBackstop();
   dustOn=false;
+  // This tap is a user gesture, and on iOS it is the only moment a script is
+  // allowed to start a video. Touching it here both unlocks the later play in
+  // the render loop and kicks off buffering if preload was ignored.
+  try{
+    if(dv.readyState===0) dv.load();
+    const pr=dv.play();
+    if(pr && pr.then) pr.then(()=>{ try{ dv.pause(); dv.currentTime=0; }catch(_){} }).catch(()=>{});
+  }catch(_){}
   if(vidReady){ try{ dv.pause(); dv.currentTime=0; }catch(_){} }
   dv.style.opacity='0';
   document.body.classList.add('run');
@@ -556,9 +576,9 @@ function start(){
 R.domElement.addEventListener('keydown',e=>{
   if(e.key!=='Enter' && e.key!==' ') return;
   e.preventDefault();
-  if(shards && (vidReady||dv.error)) start();
+  if(canRun()) start();
 });
-document.getElementById('pp').addEventListener('click',()=>{ if(shards && (vidReady||dv.error)) start(); });
+document.getElementById('pp').addEventListener('click',()=>{ if(canRun()) start(); });
 document.getElementById('sc').addEventListener('input',e=>{ if(!shards) return;
   state='SCRUB'; t=+e.target.value/500*DUR;
   document.getElementById('hint').classList.remove('in'); sync(); });
