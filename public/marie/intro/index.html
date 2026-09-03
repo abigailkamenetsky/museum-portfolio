@@ -117,6 +117,9 @@ const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const DEV = new URLSearchParams(location.search).has('dev')
   || new URLSearchParams(location.search).has('t');
 const AUTONAV = !DEV && !REDUCED;
+// ?auto=1 runs the shot as soon as it is ready. Needed to test on devices and
+// simulators where a synthetic tap is not available.
+const AUTOSTART = new URLSearchParams(location.search).has('auto');
 
 let handedOver = false, museumStarted = false;
 const R = new THREE.WebGLRenderer({antialias:true});
@@ -226,6 +229,7 @@ function readyCheck(){
   if(models && (vidReady || dv.error || armCapped)){
     elHint.textContent='drag to look \u00b7 tap to shatter';
     elHint.classList.add('in');
+    if(AUTOSTART && state==='IDLE'){ setTimeout(()=>{ if(state==='IDLE') start(); }, 900); }
   }
 }
 
