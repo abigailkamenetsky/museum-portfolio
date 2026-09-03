@@ -2,6 +2,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" href="data:,">
+<link rel="modulepreload" href="../vendor/three.module.js">
+<link rel="modulepreload" href="../vendor/three.core.js">
+<link rel="preload" as="fetch" crossorigin href="../vendor/draco/draco_decoder.wasm">
 <title>Marie &mdash; intro</title>
 <style>
  *{box-sizing:border-box} html,body{margin:0;height:100%;background:#000;overflow:hidden}
@@ -222,6 +225,7 @@ const HOME=0.34;                     // seconds to bring the view home
 const EL_MIN=-1.1, EL_MAX=1.25;
 
 const draco=new DRACOLoader(); draco.setDecoderPath('../vendor/draco/');
+draco.preload();   // otherwise it is fetched only once a model needs decoding
 const L=new GLTFLoader(); L.setDRACOLoader(draco);
 const hud=document.getElementById('hud');
 const elHint=document.getElementById('hint'), elRev=document.getElementById('reveal');
