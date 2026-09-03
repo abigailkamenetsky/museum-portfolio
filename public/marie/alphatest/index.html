@@ -1,0 +1,45 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><link rel="icon" href="data:,">
+<title>dust alpha support</title>
+<style>
+ body{margin:0;background:#c1121f;font:14px -apple-system,system-ui,sans-serif;color:#fff}
+ .row{position:relative;height:34vh;border-bottom:2px solid #000;overflow:hidden}
+ video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+ .lab{position:absolute;left:8px;top:6px;z-index:2;background:rgba(0,0,0,.6);padding:4px 8px;border-radius:5px}
+ #out{padding:10px;font:12px ui-monospace,Menlo,monospace;white-space:pre-wrap;background:#111}
+</style></head><body>
+<div class="row"><div class="lab" id="l1">HEVC</div><video id="v1" src="../intro/dust_hevc.mp4" muted playsinline autoplay loop></video></div>
+<div class="row"><div class="lab" id="l2">VP9 webm</div><video id="v2" src="../intro/dust_vp9.webm" muted playsinline autoplay loop></video></div>
+<div id="out">testing…</div>
+<script>
+var out=document.getElementById('out');
+function can(t){ return document.createElement('video').canPlayType(t)||'no'; }
+var lines=[];
+lines.push('hvc1      : '+can('video/mp4; codecs="hvc1"'));
+lines.push('hev1      : '+can('video/mp4; codecs="hev1"'));
+lines.push('vp9 webm  : '+can('video/webm; codecs="vp9"'));
+lines.push('vp8 webm  : '+can('video/webm; codecs="vp8"'));
+function probe(id,name){
+  var v=document.getElementById(id);
+  v.addEventListener('loadeddata',function(){
+    lines.push(name+': plays, '+v.videoWidth+'x'+v.videoHeight);
+    render();
+    setTimeout(function(){
+      var c=document.createElement('canvas'); c.width=60; c.height=34;
+      var g=c.getContext('2d'); 
+      try{ g.drawImage(v,0,0,60,34); var d=g.getImageData(0,0,60,34).data;
+        var red=0,tot=60*34;
+        for(var i=0;i<d.length;i+=4){ if(d[i]>140 && d[i+1]<70) red++; }
+        lines.push(name+': red backdrop visible through it = '+(100*red/tot).toFixed(1)+'%  '+
+          (red/tot>0.05?'ALPHA WORKS':'OPAQUE - no alpha'));
+      }catch(e){ lines.push(name+': canvas read blocked ('+e.name+')'); }
+      render();
+    },1400);
+  });
+  v.addEventListener('error',function(){ lines.push(name+': FAILED to load'); render(); });
+}
+function render(){ out.textContent=lines.join('\n'); }
+probe('v1','HEVC'); probe('v2','VP9 ');
+render();
+</script></body></html>
