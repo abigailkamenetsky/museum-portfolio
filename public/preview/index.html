@@ -317,8 +317,14 @@
   .plaque:active{transform:rotate(1.3deg)}
   #plaunch{top:2px}
   #glaunch{top:calc(clamp(104px,10.4vw,152px) * 1.333 + 6px);animation-delay:-3.4s}
-  @media (max-width:640px){.plaque{right:2px;width:clamp(78px,21vw,104px)}
-    #glaunch{top:calc(clamp(78px,21vw,104px) * 1.333 + 5px)}}
+  /* On a phone these two hang down to about 280px while the entrance text is
+     vertically centred right behind them, so the kicker read "EST. 2026 -
+     CHICA" with the rest lost under the cassette. Seen in the iOS simulator;
+     Chrome's phone emulation never showed it. */
+  @media (max-width:640px){.plaque{right:2px;width:clamp(58px,15vw,80px)}
+    #glaunch{top:calc(clamp(58px,15vw,80px) * 1.333 + 5px)}
+    .entrance{padding-top:calc(clamp(58px,15vw,80px) * 3.1)}
+    .kick{letter-spacing:.26em;font-size:9px}}
   @media (prefers-reduced-motion:reduce){.plaque{animation:none}}
 
   /* ── the museum map ────────────────────────────────────────────────────── */
