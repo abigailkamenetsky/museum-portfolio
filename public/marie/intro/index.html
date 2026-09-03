@@ -39,7 +39,7 @@
    opacity:0;pointer-events:none;background:#0b0a08}
  #museum.up{z-index:2;opacity:1}
  #museum.live{pointer-events:auto}
- #hint{position:fixed;left:0;right:0;bottom:12vh;text-align:center;z-index:4;color:#9a9188;
+ #hint{position:fixed;left:0;right:0;bottom:12vh;text-align:center;z-index:4;color:#ffffff;
    font-size:clamp(12px,1.6vw,17px);letter-spacing:.2em;opacity:0;transition:opacity 1s ease;
    pointer-events:none;text-transform:uppercase}
  #hint.in{opacity:.8}
@@ -210,8 +210,7 @@ function readyCheck(){
   if(bustReady && simReady && (vidReady || dv.error)){
     elHint.textContent='drag to look \u00b7 tap to shatter';
     elHint.classList.add('in');
-    // she is about to look at the bust for a few seconds: use them
-    if(AUTONAV && !museumStarted){ museumStarted=true; elMus.src=NEXT; }
+
   }
 }
 
@@ -288,6 +287,11 @@ L.load('./marie_lite.glb',(gi)=>{
 
 // All three download together; the bust is the smallest so it lands first and
 // gets drawn while the other two are still arriving.
+// Begin the museum immediately. Its work is mostly parsing and layout, which
+// overlaps with our own downloads; leaving it until the tap meant it ran during
+// the animation and froze it for over a second at a time.
+if(AUTONAV && !museumStarted){ museumStarted=true; elMus.src=NEXT; }
+
 loadRest();
 function loadRest(){
   if(loadRest.done) return; loadRest.done=true;
@@ -520,6 +524,12 @@ function uncoverMuseum(){
   }, 1100);
 }
 
+// A timer as well as the render loop: if the main thread stalls, the render
+// loop stops being called and the deadline above is never even tested.
+function armUncoverBackstop(){
+  setTimeout(()=>{ if(AUTONAV && !handedOver) uncoverMuseum(); }, (NAV_LIMIT+0.05)*1000);
+}
+
 function start(){
   if(REDUCED){                      // deliver the outcome without the motion
     if(!DEV){ location.href='../../preview/'; return; }
@@ -529,6 +539,7 @@ function start(){
     dv.style.opacity='0'; sync(); return;
   }
   state='RUN'; t=0; t0=performance.now(); az0=az; el0=el; dirty=true; dustOn=false;
+  if(AUTONAV) armUncoverBackstop();
   dustOn=false;
   if(vidReady){ try{ dv.pause(); dv.currentTime=0; }catch(_){} }
   dv.style.opacity='0';
