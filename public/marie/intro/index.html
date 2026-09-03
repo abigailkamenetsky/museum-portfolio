@@ -283,14 +283,18 @@ L.load('./marie_lite.glb',(gi)=>{
   intact.traverse(o=>{ if(o.isMesh){ o.material=marble; o.castShadow=true; } });
   scene.add(intact);
   bustReady=true; warmPipeline(); readyCheck(); dirty=true;
+  startMuseum();
 },(e)=>{ got.bust=e.loaded||0; },(e)=>{hud.textContent='FAILED '+e;});
 
 // All three download together; the bust is the smallest so it lands first and
 // gets drawn while the other two are still arriving.
-// Begin the museum immediately. Its work is mostly parsing and layout, which
-// overlaps with our own downloads; leaving it until the tap meant it ran during
-// the animation and froze it for over a second at a time.
-if(AUTONAV && !museumStarted){ museumStarted=true; elMus.src=NEXT; }
+// Timing here is a balance. Starting the museum at the tap meant it parsed and
+// built itself DURING the shot and froze it. Starting it at once made the bust
+// itself 1.7s slower to arrive, because it competes for the same bandwidth.
+// It starts once the bust is on screen: its work then lands in the gap between
+// the bust appearing and the visitor deciding to tap, while the remaining
+// downloads are network bound and the main thread is largely idle.
+function startMuseum(){ if(AUTONAV && !museumStarted){ museumStarted=true; elMus.src=NEXT; } }
 
 loadRest();
 function loadRest(){
