@@ -293,6 +293,12 @@ const ease=(x)=>1-Math.pow(1-x,3), accel=(x)=>x*x;
 // Framing is taken from whichever model lands first and the other is scaled
 // to match, so the bust appears the moment its own 646KB arrives.
 let simReady=false, bustReady=false, shardCount=0, framed=false;
+// The impact lights were tuned against a two unit bust. Framing now comes from
+// whichever model lands first, so bustH can be one, which halved every light
+// distance and, by inverse square, made the impact four times brighter: on a
+// phone the statue blew out to pure white and the break was invisible inside
+// it. Scale the distances and the intensities with the model instead.
+let LS=1, LS2=1;
 
 function frameFrom(h, minY){
   bustH=h; bustMinY=minY;
@@ -300,6 +306,9 @@ function frameFrom(h, minY){
   const sc=key.shadow.camera, r=bustH*2.2;
   sc.left=-r; sc.right=r; sc.top=r; sc.bottom=-r;
   sc.near=0.1; sc.far=bustH*14; sc.updateProjectionMatrix();
+  LS = bustH/2; LS2 = LS*LS;
+  flash.distance  = 9*LS;
+  bounce.distance = 6*LS;
   key.position.set(-bustH*0.9, bustMinY+bustH*2.4, bustH*1.1);
   key.target.position.set(0,bustMinY,0);
   if(!key.target.parent) scene.add(key.target);
@@ -449,9 +458,9 @@ function sync(){
   // ── the break ──────────────────────────────────────────────────────────
   if(mixer && hit) mixer.setTime(Math.min(ta+0.05,simDur));   // enter already moving
   bounce.position.set(0, bustMinY+bustH*0.10, bustH*0.35);
-  bounce.intensity = running ? near*near*1.5 + (hit?Math.max(0,1-ta*1.2)*0.8:0) : 0;
+  bounce.intensity = (running ? near*near*1.5 + (hit?Math.max(0,1-ta*1.2)*0.8:0) : 0) * LS2;
   flash.position.set(0,bustMinY+bustH*0.25,bustH*0.3);
-  flash.intensity = hit ? Math.max(0,1-ta/0.10)*1.6 : 0;   // floor bounce, not a spark
+  flash.intensity = (hit ? Math.max(0,1-ta/0.10)*1.6 : 0) * LS2;   // floor bounce, not a spark
 
   // ── the dust ───────────────────────────────────────────────────────────
   // the clip is shorter than the shot, so it must fade out rather than hold
