@@ -52,7 +52,8 @@
   .entrance::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
     background:radial-gradient(ellipse 64% 48% at 50% 48%,
       rgba(5,4,3,.74) 0%, rgba(5,4,3,.60) 44%, rgba(5,4,3,.24) 74%, rgba(5,4,3,0) 100%)}
-  .entrance .in,.entrance .cue{position:relative;z-index:1}
+  .entrance .in{position:relative;z-index:1}
+  .entrance .cue{z-index:1}
   .entrance .in{max-width:760px;animation:up 1.4s .45s cubic-bezier(.2,.8,.3,1) both}
   @keyframes up{from{opacity:0;transform:translateY(24px)}}
   .kick{font-family:var(--util);font-size:10px;letter-spacing:.42em;text-transform:uppercase;
