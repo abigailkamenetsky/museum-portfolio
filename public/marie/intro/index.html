@@ -183,10 +183,12 @@ contact.rotation.x=-Math.PI/2; scene.add(contact);
 // two encodes because only Safari does HEVC alpha and only Chrome/Firefox VP9 alpha
 const dv=document.getElementById('dustvid');
 let vidReady=false, vidDur=1.83, dustUsable=true, alphaChecked=false;
-// Safari plays the HEVC copy but composites it opaque, so what should be a
-// cloud lands as a grey rectangle. Measured on iOS 26: 0.0% of the backdrop
-// visible through it. Read one real frame and drop the dust if it is not
-// transparent, because no dust reads far better than a slab.
+// A safety net, not a workaround for a known fault. HEVC alpha DOES composite
+// correctly on iOS: an earlier probe said otherwise, but it read the frame 1.4s
+// into a 1.8s clip, where the cloud is legitimately at full coverage, and
+// mistook "fully covered" for "opaque". This samples early, where the clip
+// really is mostly transparent, and only drops the dust on a browser that
+// genuinely cannot composite it, since no dust reads better than a grey slab.
 function checkDustAlpha(){
   if(alphaChecked) return; alphaChecked=true;
   try{
