@@ -35,7 +35,7 @@
   section{position:relative;z-index:2}
 
   /* ── entrance ──────────────────────────────────────────────────────────── */
-  .entrance{min-height:100vh;display:grid;place-items:center;padding:72px 24px 96px;text-align:center}
+  .entrance{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:72px 24px 96px;text-align:center}
   .entrance .in{max-width:760px;animation:up 1.4s .45s cubic-bezier(.2,.8,.3,1) both}
   @keyframes up{from{opacity:0;transform:translateY(24px)}}
   .kick{font-family:var(--util);font-size:10px;letter-spacing:.42em;text-transform:uppercase;
@@ -46,6 +46,11 @@
   .flour i{height:1px;width:min(190px,26vw);background:linear-gradient(90deg,transparent,var(--gilt))}
   .flour i:last-child{background:linear-gradient(270deg,transparent,var(--gilt))}
   .flour b{color:var(--gilt);font-weight:400;font-size:18px}
+  .facts{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;
+    gap:clamp(10px,2.4vw,20px);margin:20px 0 0;font-family:var(--util);
+    font-size:clamp(9px,1.5vw,11px);letter-spacing:.30em;text-transform:uppercase;color:var(--gilt)}
+  .facts i{display:block;width:26px;height:1px;background:linear-gradient(90deg,transparent,var(--gilt),transparent)}
+  @media (max-width:640px){.facts{gap:9px;letter-spacing:.18em}.facts i{width:16px}}
   .entrance p{margin:0 auto;max-width:54ch;font-size:16.5px;line-height:1.74;color:#D6CCB1;
     text-shadow:0 2px 20px rgba(0,0,0,.75)}
   .enter{margin-top:34px;display:inline-flex;align-items:center;gap:11px;
@@ -323,7 +328,6 @@
      Chrome's phone emulation never showed it. */
   @media (max-width:640px){.plaque{right:2px;width:clamp(58px,15vw,80px)}
     #glaunch{top:calc(clamp(58px,15vw,80px) * 1.333 + 5px)}
-    .entrance{padding-top:calc(clamp(58px,15vw,80px) * 3.1)}
     .kick{letter-spacing:.26em;font-size:9px}}
   @media (prefers-reduced-motion:reduce){.plaque{animation:none}}
 
@@ -451,9 +455,8 @@
     <p class="kick">Est. 2026 &middot; Chicago</p>
     <h1>Abby&rsquo;s Museum</h1>
     <div class="flour"><i></i><b>&#10086;</b><i></i></div>
-    <p>My portfolio, hung as a private collection. Every project, role and piece of research
-       is a painting here, chosen because something in it matches something in the work.
-       Forty works across five rooms. Drag any painting to rehang it.</p>
+    <p class="lede">My portfolio, hung as a private collection.</p>
+    <div class="facts"><span>40 Works</span><i></i><span>10 Rooms</span><i></i><span>Admission Free</span></div>
     <button class="enter" id="enterBtn">Enter the collection</button>
   </div>
   <p class="cue">Scroll</p>
