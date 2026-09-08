@@ -43,7 +43,16 @@
   section{position:relative;z-index:2}
 
   /* ── entrance ──────────────────────────────────────────────────────────── */
-  .entrance{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:72px 24px 96px;text-align:center}
+  .entrance{position:relative;min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:72px 24px 96px;text-align:center}
+  /* The hall vignette is transparent through the middle, so the brightest part
+     of the photograph sits directly behind the type: measured, the facts line
+     fell to 3.09:1 where it needs 4.5. This lays a soft ground under the words
+     only, so the type has something constant to sit on and the room keeps its
+     depth everywhere else. */
+  .entrance::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(ellipse 64% 48% at 50% 48%,
+      rgba(5,4,3,.74) 0%, rgba(5,4,3,.60) 44%, rgba(5,4,3,.24) 74%, rgba(5,4,3,0) 100%)}
+  .entrance .in,.entrance .cue{position:relative;z-index:1}
   .entrance .in{max-width:760px;animation:up 1.4s .45s cubic-bezier(.2,.8,.3,1) both}
   @keyframes up{from{opacity:0;transform:translateY(24px)}}
   .kick{font-family:var(--util);font-size:10px;letter-spacing:.42em;text-transform:uppercase;
@@ -56,7 +65,7 @@
   .flour b{color:var(--gilt);font-weight:400;font-size:18px}
   .facts{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;
     gap:clamp(10px,2.4vw,20px);margin:20px 0 0;font-family:var(--util);
-    font-size:clamp(9px,1.5vw,11px);letter-spacing:.30em;text-transform:uppercase;color:var(--gilt)}
+    font-size:clamp(10px,1.6vw,12px);letter-spacing:.26em;text-transform:uppercase;color:var(--giltHi)}
   .facts i{display:block;width:26px;height:1px;background:linear-gradient(90deg,transparent,var(--gilt),transparent)}
   @media (max-width:640px){.facts{gap:9px;letter-spacing:.18em}.facts i{width:16px}}
   .entrance p{margin:0 auto;max-width:54ch;font-size:16.5px;line-height:1.74;color:#D6CCB1;
