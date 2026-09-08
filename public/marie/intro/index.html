@@ -555,29 +555,46 @@ addEventListener('pointerup',e=>{ if(!dragging) return; dragging=false;
   if((dragAmt<14||quick) && armed && (state==='IDLE'||state==='DONE'||state==='SCRUB')){ start(); } });
 // Swap what is underneath the cloud. The dust keeps playing and thins out on
 // its own, so the museum is simply revealed by it rather than cut to.
+// Verified on a real iPhone: the museum frame does not fire load for over
+// twelve seconds, while the shot hands over at about ten. We were uncovering
+// an empty frame, which is why iOS ended on a blank white screen. Never swap
+// until the museum has actually rendered; hold the cover until it has.
+function museumReady(){
+  try{
+    const d=elMus.contentDocument;
+    return !!(d && d.readyState!=='loading' && d.querySelector('.entrance h1'));
+  }catch(_){ return true; }   // same origin, so this should not happen: do not block on it
+}
+
 function uncoverMuseum(){
   if(handedOver) return;
   handedOver=true;
-  const swap=()=>{ elMus.classList.add('up'); R.domElement.style.opacity='0'; };
-  if(dustUsable){ swap(); }
-  else {
-    // no usable cloud on this browser: draw a haze over the cut instead of
-    // letting the museum simply appear
-    elHaze.classList.add('on');
-    setTimeout(()=>{ swap(); setTimeout(()=>elHaze.classList.remove('on'), 300); }, 480);
-  }
   elHint.classList.remove('in');
   document.getElementById('hud').style.display='none';
   document.getElementById('tl').classList.add('hide');
-  // let the cloud finish thinning before the museum starts taking taps
-  setTimeout(()=>{
-    elMus.classList.add('live');
-    // it was held out of the tab order while it sat hidden behind the shot.
-    // Leaving it there meant a keyboard visitor could never reach the museum.
-    elMus.removeAttribute('tabindex');
-    try{ elMus.focus({preventScroll:true}); }catch(_){}
-    try{ history.replaceState(null,'','../../preview/'); }catch(_){}
-  }, 1100);
+
+  const finish=()=>{
+    elMus.classList.add('up');
+    R.domElement.style.opacity='0';
+    setTimeout(()=>elHaze.classList.remove('on'), 320);
+    setTimeout(()=>{
+      elMus.classList.add('live');
+      // it was held out of the tab order while it sat hidden behind the shot.
+      // Leaving it there meant a keyboard visitor could never reach the museum.
+      elMus.removeAttribute('tabindex');
+      try{ elMus.focus({preventScroll:true}); }catch(_){}
+      try{ history.replaceState(null,'','../../preview/'); }catch(_){}
+    }, 1100);
+  };
+
+  const minCover = dustUsable ? 0 : 480;
+  const t0 = performance.now();
+  (function waitForMuseum(){
+    const waited = performance.now()-t0;
+    if((museumReady() && waited>=minCover) || waited>9000){ finish(); return; }
+    elHaze.classList.add('on');     // the cloud is thinning: cover the wait
+    setTimeout(waitForMuseum, 120);
+  })();
 }
 
 // A timer as well as the render loop: if the main thread stalls, the render
