@@ -299,6 +299,12 @@ const elHint=document.getElementById('hint'), elRev=document.getElementById('rev
 const elEnter=document.getElementById('renter');
 const elMus=document.getElementById('museum');
 const elHaze=document.getElementById('haze');
+// Abby's sound, a rock strike with the rubble left in. It only ever plays after
+// she has tapped, so this is never unsolicited audio.
+const sfx = new Audio('/marie/intro/shatter.mp3');
+sfx.preload='auto'; sfx.volume=0.55;
+sfx.id='shattersfx'; sfx.hidden=true; document.body.appendChild(sfx);
+let sfxFired=false;
 // The readout and scrubber are for working on the shot, not for visiting it.
 if(DEV){ document.getElementById('hud').hidden=false;
          document.getElementById('tl').classList.remove('hide'); }
@@ -409,6 +415,10 @@ function sync(){
   const running = state!=='IDLE';
   const hit = running && t>=T_IMPACT;
   const ta = Math.max(0, t-T_IMPACT);
+  if(hit && !sfxFired && state==='RUN'){
+    sfxFired=true;
+    try{ sfx.currentTime=0; sfx.play().catch(()=>{}); }catch(_){}
+  }
 
   // ── where she is ───────────────────────────────────────────────────────
   let lift = DROP*bustH;
@@ -652,6 +662,11 @@ function start(){
   // This tap is a user gesture, and on iOS it is the only moment a script is
   // allowed to start a video. Touching it here both unlocks the later play in
   // the render loop and kicks off buffering if preload was ignored.
+  sfxFired=false;
+  // iOS only lets a script start audio from inside a gesture, and this tap is
+  // the only one we get, so touch it here and rewind.
+  try{ const sp=sfx.play();
+       if(sp&&sp.then) sp.then(()=>{ try{ sfx.pause(); sfx.currentTime=0; }catch(_){} }).catch(()=>{}); }catch(_){}
   try{
     if(dv.readyState===0) dv.load();
     const pr=dv.play();
