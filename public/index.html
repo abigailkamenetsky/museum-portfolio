@@ -244,9 +244,15 @@ dv.addEventListener('error',()=>{ vidReady=false; readyCheck(); });
 
 // A bare "loading" for twenty seconds on a slow line is indistinguishable from
 // a broken page. Report real bytes instead.
-const WEIGHT = { sim:1410000, bust:676892,
+// Count only what actually holds the tap back. sim.glb is the biggest file of
+// the three and it is deliberately loaded after the bust, so including it made
+// the number crawl and then park: bust plus dust complete at exactly 48% of the
+// old total, which is the "frozen at 45%" Abby reported. The percentage now
+// reaches 100 at the moment the statue becomes tappable, which is what it was
+// always meant to say.
+const WEIGHT = { bust:676892,
                  dust: /hevc/.test(DUST_SRC) ? 628000 : 1265722 };
-const TOTAL = WEIGHT.sim + WEIGHT.bust + WEIGHT.dust;
+const TOTAL = WEIGHT.bust + WEIGHT.dust;
 const got = { sim:0, bust:0, dust:0 };
 let progTimer = setInterval(showProgress, 180);
 function showProgress(){
@@ -257,7 +263,7 @@ function showProgress(){
       got.dust = Math.min(WEIGHT.dust, WEIGHT.dust * frac);
     }
   }catch(_){}
-  const pct = Math.min(99, Math.round(100*(got.sim+got.bust+got.dust)/TOTAL));
+  const pct = Math.min(99, Math.round(100*(got.bust+got.dust)/TOTAL));
   elHint.textContent = (got.bust>=WEIGHT.bust*0.98 && !bustReady)
     ? 'unpacking the marble\u2026'
     : 'preparing the gallery \u00b7 ' + pct + '%';
