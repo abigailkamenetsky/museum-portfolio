@@ -22,6 +22,11 @@ const mapLinks=(ls)=>(ls||[]).flatMap(l=>{
   return [];
 });
 
+// Titles are the key between the two files, so a rename has to be declared here
+// or the work silently stops matching and keeps its old text.
+const RENAMES={'Gigamon - Global Program Office':'Gigamon - Product Management & Business Development',
+               'Tech Showcase Parking App':'Serai - Driveway Parking Marketplace'};
+
 const src={};
 for(const w of m.WINGS){
   const e=w.exhibit||{};
@@ -34,6 +39,7 @@ const mm=html.match(/var DATA = (\{[\s\S]*?\});\n/);
 const D=JSON.parse(mm[1]);
 let filled=0, grew=0, missed=[];
 for(const r of D.ROOMS) for(const w of r.w){
+  if(RENAMES[w.t]){ w.t=RENAMES[w.t]; }
   const s=src[w.t];
   if(!s){ missed.push(w.t); continue; }
   const before=(w.blurb||[]).length;
