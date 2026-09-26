@@ -122,13 +122,13 @@ import { DRACOLoader } from '/marie/vendor/loaders/DRACOLoader.js';
    Every number below is derived from measured geometry or stated once here.
    Nothing is a magic pixel value.                                          */
 const FOV       = 40;
-const FILL      = 0.46;   // she is the whole subject here, not one work on a wall
-const HEADROOM  = 0.17;   // above her crown at rest; the rest is room to fall into
+const FILL      = 0.38;   // she is the whole subject here, not one work on a wall
+const HEADROOM  = 0.10;   // above her crown at rest; the rest is room to fall into
 const T_EASE    = 0.11;
-const T_FALL    = 0.40;   // matches real gravity at bust scale
+const T_FALL    = 0.52;   // matches real gravity at bust scale
 const T_IMPACT  = T_EASE + T_FALL;
 const DROP      = 1.25;   // multiples of bust height
-const DUST_RATE = 1.38;   // play the dust at the same tightened pace
+const DUST_RATE = 1.18;   // play the dust at the same tightened pace
 const SWAP_AT   = 0.92;   // seconds after impact: peak obscuration
 const TITLE_AT  = 1.16;
 const DUR       = 3.20;
@@ -465,7 +465,7 @@ function sync(){
   const crown   = bustMinY + lift + bustH;
   const aimRest = (bustMinY + DROP*bustH + bustH) - frameH*(0.5-HEADROOM);
   const aimTrack= crown - frameH*(0.5-HEADROOM);
-  const FOLLOW  = 0.62;                       // it lags, so the drop still reads
+  const FOLLOW  = 0.25;                       // it lags, so the drop still reads
   // The camera simply stops where the fall left it. Any post-impact move
   // drifts the wreck back up the frame, and after a descent that reads as a
   // bounce - which is the thing that kept looking like a glitch.
