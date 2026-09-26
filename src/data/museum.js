@@ -396,8 +396,9 @@ export const WINGS = [
     art: 'orrery.jpg', artAspect: 0.740,
     exhibit: {
       blurb: [
-        "Licenses and certifications are coming this summer.",
-        "Speaker series events I have attended:",
+        "The D. E. Shaw group flew me to New York for Connect, their three day programme, and covered the flight and the hotel. We spent it at the Whitney Museum of American Art, meeting people from the firm and from the other cohorts.",
+        "Three days of conversations in a museum is a strange and very good way to learn what a place is actually like, and it is the reason this room exists at all: most of what I have learned outside a classroom came from being in a room with people who knew more than me.",
+        "Other speaker series I have attended:",
       ],
       items: ['Point72 Spring Academy Sessions', 'McKinsey Insight series'],
       why: "I chose A Philosopher Lecturing on the Orrery by Joseph Wright of Derby because it shows a room of people gathered around a speaker, lit up as they learn something new. That is exactly what these speaker series events feel like, and it fits a section about building knowledge and credentials.",
