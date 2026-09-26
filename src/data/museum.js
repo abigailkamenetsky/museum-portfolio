@@ -179,7 +179,12 @@ export const WINGS = [
           why: "I chose this painting because my literature review focused on LLM hallucination rates, methods for mitigating those hallucinations, and what they mean for using LLMs in mental health and psychiatry. Dalí's surreal, almost hallucinogenic paintings felt like the perfect match.",
           items: [], images: [], links: [{ label: 'Presentation', pdf: 'UCSB_Prompting_Techniques.pdf' }] },
         { title: 'Booth - Center for Applied AI', artwork: 'Joseph Wright of Derby - An Experiment on a Bird in the Air Pump', art: 'airpump.jpg', artAspect: 0.749,
-          blurb: "At the University of Chicago Booth Center for Applied AI, I am helping with data collection for a research project that Professor Levy and Anna Costello are working on. More details to come!",
+          blurb: [
+            "I worked at the University of Chicago Booth Center for Applied AI through the summer of 2026, on a research project run by Professor Levy and Anna Costello.",
+            "My work started as data collection. The project needed a large body of articles gathered and organised, and gathering them by hand is slow, repetitive and the kind of task that quietly eats a research timeline.",
+            "So I built an agent system that does it instead. It finds and downloads the articles on its own, with no human sitting over it, which turned the collection step from something somebody had to keep doing into something that simply runs.",
+          ],
+          skills: ['AI agents and automation', 'Research data collection', 'Working with academic researchers', 'Turning a manual process into a system'],
           why: "I chose this painting because it shows a group gathered around a live scientific experiment, watching the evidence unfold by candlelight. That mix of curiosity and careful observation is exactly what data collection and applied AI research feel like to me.",
           items: [], images: [], links: [] },
         { title: 'UChicago HealthLab - Housing & Health', artwork: 'Luke Fildes - The Doctor', art: 'doctor.jpg', artAspect: 0.677,
