@@ -258,16 +258,18 @@ function showProgress(){
     }
   }catch(_){}
   const pct = Math.min(99, Math.round(100*(got.sim+got.bust+got.dust)/TOTAL));
-  elHint.textContent = 'preparing the gallery \u00b7 ' + pct + '%';
+  elHint.textContent = (got.bust>=WEIGHT.bust*0.98 && !bustReady)
+    ? 'unpacking the marble\u2026'
+    : 'preparing the gallery \u00b7 ' + pct + '%';
 }
 
 let armCapped=false, capTimer=null;
 // One definition, used by the hint, the progress line, the tap, the key and the
 // replay button. They each used to test the video separately, so capping the
 // wait in one of them left the others still stuck.
-function canRun(){ return bustReady && simReady && (vidReady || dv.error || armCapped); }
+function canRun(){ return bustReady && (vidReady || dv.error || armCapped); }
 function readyCheck(){
-  const models = bustReady && simReady;
+  const models = bustReady;
   // iOS ignores preload on video: Safari will not buffer one until a gesture,
   // so canplay never fires AND error never fires. This gate simply never opened
   // and the progress sat frozen forever. Abby saw it stop at 45% on her phone.
@@ -279,6 +281,7 @@ function readyCheck(){
   if(state!=='IDLE') return;   // the shot has begun; never put the hint back
   if(models && (vidReady || dv.error || armCapped)){
     elHint.textContent='drag to look \u00b7 tap to shatter';
+    startMuseum();
     elHint.classList.add('in');
     if(AUTOSTART && state==='IDLE'){ setTimeout(()=>{ if(state==='IDLE') start(); }, 900); }
   }
@@ -292,6 +295,10 @@ const HOME=0.34;                     // seconds to bring the view home
 const EL_MIN=-1.1, EL_MAX=1.25;
 
 const draco=new DRACOLoader(); draco.setDecoderPath('/marie/vendor/draco/');
+// The shatter is 117 separate meshes, so it is 117 separate Draco decodes, and
+// the default pool of four workers makes them queue. Measured: the file landed
+// at 5.5s and did not finish decoding until 13.6s.
+draco.setWorkerLimit(Math.max(4, Math.min(16, (navigator.hardwareConcurrency||4))));
 draco.preload();   // otherwise it is fetched only once a model needs decoding
 const L=new GLTFLoader(); L.setDRACOLoader(draco);
 const hud=document.getElementById('hud');
@@ -299,12 +306,6 @@ const elHint=document.getElementById('hint'), elRev=document.getElementById('rev
 const elEnter=document.getElementById('renter');
 const elMus=document.getElementById('museum');
 const elHaze=document.getElementById('haze');
-// Abby's sound, a rock strike with the rubble left in. It only ever plays after
-// she has tapped, so this is never unsolicited audio.
-const sfx = new Audio('/marie/intro/shatter.mp3');
-sfx.preload='auto'; sfx.volume=0.55;
-sfx.id='shattersfx'; sfx.hidden=true; document.body.appendChild(sfx);
-let sfxFired=false;
 // The readout and scrubber are for working on the shot, not for visiting it.
 if(DEV){ document.getElementById('hud').hidden=false;
          document.getElementById('tl').classList.remove('hide'); }
@@ -370,22 +371,32 @@ L.load('/marie/intro/marie_lite.glb',(gi)=>{
   intact.traverse(o=>{ if(o.isMesh){ o.material=marble; o.castShadow=true; } });
   scene.add(intact);
   bustReady=true; warmPipeline(); readyCheck(); dirty=true;
+  setTimeout(loadRest, 0);     // once this frame is on screen
 },(e)=>{ got.bust=e.loaded||0; },(e)=>{hud.textContent='FAILED '+e;});
 
 // All three download together; the bust is the smallest so it lands first and
 // gets drawn while the other two are still arriving.
-// Measured three ways on a cold visit. Starting the museum at the tap froze
-// the shot: 4.6s lost to four stalls, because it parsed and built itself on the
-// same thread while the animation ran. Starting it when the bust appears was
-// worse still for the wait, 10.8s to first tap, because its work then collides
-// with our own decode. Starting it here is best: its parsing happens while we
-// are only waiting on the network, and the shot never stalls.
-if(AUTONAV && !museumStarted){ museumStarted=true; elMus.src=NEXT; }
+// The museum builds ten rooms and forty works synchronously, and it does that
+// on this page's main thread. Measured: starting it at page load pushed the
+// bust's own load callback from 1.8s out to 14.5s, so the bust could not be
+// tapped for fifteen seconds. It now starts the moment the shot is tappable,
+// which gives it all the time she is being looked at, and the uncover already
+// waits for it with the haze up if it is still building.
+function startMuseum(){
+  if(!AUTONAV || museumStarted) return;
+  museumStarted=true; elMus.src=NEXT;
+}
 
-loadRest();
+// The dust is a video, so it costs the main thread nothing: start it now.
+dv.src = DUST_SRC;
+
+// The shatter is 117 meshes and 117 animation clips, and parsing that occupies
+// the main thread for long enough to delay the bust's own load callback. Loaded
+// alongside the bust it held arming back to seventeen seconds even after the
+// tap stopped requiring it. It starts once the bust is on screen instead, and
+// has all the time she is being looked at to finish.
 function loadRest(){
   if(loadRest.done) return; loadRest.done=true;
-  dv.src = DUST_SRC;
   L.load('/marie/sim/sim.glb',(g)=>{
     shards=g.scene; shards.visible=false; scene.add(shards);
     let n=0; shards.traverse(o=>{ if(o.isMesh){ o.material=marble; o.castShadow=true; n++; } });
@@ -413,12 +424,11 @@ function loadRest(){
 
 function sync(){
   const running = state!=='IDLE';
+  // The shatter may still be decoding if she was tapped the instant the bust
+  // appeared. Hold her on the floor rather than breaking into nothing.
+  if(state==='RUN' && !simReady && t>T_IMPACT){ t=T_IMPACT; t0=performance.now()-T_IMPACT*1000; }
   const hit = running && t>=T_IMPACT;
   const ta = Math.max(0, t-T_IMPACT);
-  if(hit && !sfxFired && state==='RUN'){
-    sfxFired=true;
-    try{ sfx.currentTime=0; sfx.play().catch(()=>{}); }catch(_){}
-  }
 
   // ── where she is ───────────────────────────────────────────────────────
   let lift = DROP*bustH;
@@ -662,11 +672,6 @@ function start(){
   // This tap is a user gesture, and on iOS it is the only moment a script is
   // allowed to start a video. Touching it here both unlocks the later play in
   // the render loop and kicks off buffering if preload was ignored.
-  sfxFired=false;
-  // iOS only lets a script start audio from inside a gesture, and this tap is
-  // the only one we get, so touch it here and rewind.
-  try{ const sp=sfx.play();
-       if(sp&&sp.then) sp.then(()=>{ try{ sfx.pause(); sfx.currentTime=0; }catch(_){} }).catch(()=>{}); }catch(_){}
   try{
     if(dv.readyState===0) dv.load();
     const pr=dv.play();
