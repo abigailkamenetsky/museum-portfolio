@@ -27,17 +27,28 @@ const mapLinks=(ls)=>(ls||[]).flatMap(l=>{
 const RENAMES={'Gigamon - Global Program Office':'Gigamon - Product Management & Business Development',
                'Tech Showcase Parking App':'Serai - Driveway Parking Marketplace'};
 
+// Her own photographs. These are hers, not the museum artwork, so they carry
+// their own alt text and caption and render as snapshots rather than as a hung
+// painting. An entry may be a bare path or {src, alt, caption}.
+const mapPhotos=(ps)=>(ps||[]).map(p=>{
+  const o = typeof p==='string' ? {src:p} : p;
+  if(!o.src) return null;
+  return {u:o.src, a:(o.alt||'').trim(), c:(o.caption||'').trim()};
+}).filter(Boolean);
+
 const src={};
 for(const w of m.WINGS){
   const e=w.exhibit||{};
-  if(e.pieces) for(const p of e.pieces) src[p.title]={blurb:flat(p.blurb),why:(p.why||'').trim(),links:mapLinks(p.links)};
-  else src[w.title]={blurb:flat(e.blurb),why:(e.why||'').trim(),links:mapLinks(e.links)};
+  const pack=(x)=>({blurb:flat(x.blurb),why:(x.why||'').trim(),
+                    links:mapLinks(x.links),photos:mapPhotos(x.images)});
+  if(e.pieces) for(const p of e.pieces) src[p.title]=pack(p);
+  else src[w.title]=pack(e);
 }
 
 let html=fs.readFileSync(PAGE,'utf8');
 const mm=html.match(/var DATA = (\{[\s\S]*?\});\n/);
 const D=JSON.parse(mm[1]);
-let filled=0, grew=0, missed=[];
+let filled=0, grew=0, shots=0, missed=[];
 for(const r of D.ROOMS) for(const w of r.w){
   if(RENAMES[w.t]){ w.t=RENAMES[w.t]; }
   const s=src[w.t];
@@ -46,11 +57,13 @@ for(const r of D.ROOMS) for(const w of r.w){
   if(s.blurb.length){ w.blurb=s.blurb; if(before===0) filled++; else if(s.blurb.length>before) grew++; }
   if(s.why) w.why=s.why;
   if(s.links.length) w.links=s.links;
+  if(s.photos.length){ w.ph=s.photos; shots+=s.photos.length; }
 }
 html=html.replace(mm[0],'var DATA = '+JSON.stringify(D)+';\n');
 fs.writeFileSync(PAGE,html);
 console.log('  filled in from empty : '+filled);
 console.log('  expanded             : '+grew);
+console.log('  photographs placed   : '+shots);
 if(missed.length) console.log('  no match in the source: '+missed.join(', '));
 const empties=[]; for(const r of D.ROOMS) for(const w of r.w) if(!(w.blurb||[]).length) empties.push(w.t);
 console.log('  still empty          : '+(empties.length?empties.join(', '):'none'));

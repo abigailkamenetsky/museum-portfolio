@@ -420,6 +420,16 @@
   .pno{font-family:var(--util);font-size:9.5px;letter-spacing:.26em;color:var(--typeSoft);margin:0 0 6px}
   .pg hr{border:0;border-top:1px solid var(--rule);margin:12px 0}
   .body p{margin:0 0 10px;font-size:14px;line-height:1.62}
+  /* Her own photographs, mounted like snapshots laid into the catalogue rather
+     than hung like the paintings, so the two never read as the same thing. */
+  .snaps{margin-top:16px;display:grid;gap:13px;
+    grid-template-columns:repeat(auto-fit,minmax(138px,1fr))}
+  .snaps figure{margin:0}
+  .snaps img{display:block;width:100%;padding:7px;background:#F2EAD4;border-radius:1px;
+    box-shadow:0 9px 17px -10px rgba(0,0,0,.6);transform:rotate(-.7deg)}
+  .snaps figure:nth-child(even) img{transform:rotate(.8deg)}
+  .snaps figcaption{margin-top:6px;text-align:center;font-style:italic;
+    font-size:11.5px;line-height:1.45;color:var(--typeSoft)}
   .marg{margin-top:14px;padding-left:13px;border-left:2px solid rgba(42,62,99,.28);
     color:var(--hand);font-style:italic;font-size:13.5px}
   .lk{margin-top:14px;display:flex;gap:9px;flex-wrap:wrap}
@@ -534,6 +544,7 @@
       <h2 id="bTitle"></h2>
       <hr>
       <div class="body" id="bBody"></div>
+      <div class="snaps" id="bSnaps" hidden></div>
       <p class="marg" id="bMarg"></p>
       <div class="lk" id="bLinks"></div>
     </div>
@@ -1111,6 +1122,16 @@ var FRAMES = ["./img/1a923a3a305e.png", "./img/b9d179a82712.png", "./img/388aa2b
     document.getElementById('bTitle').textContent=w.t;
     var body=document.getElementById('bBody'); body.innerHTML='';
     (w.blurb||[]).forEach(function(t){var p=document.createElement('p');p.textContent=t;body.appendChild(p);});
+    var sn=document.getElementById('bSnaps'); sn.innerHTML='';
+    (w.ph||[]).forEach(function(p){
+      var f=document.createElement('figure');
+      var im=document.createElement('img');
+      im.src=p.u; im.alt=p.a||''; im.loading='lazy'; im.decoding='async';
+      f.appendChild(im);
+      if(p.c){ var c=document.createElement('figcaption'); c.textContent=p.c; f.appendChild(c); }
+      sn.appendChild(f);
+    });
+    sn.hidden = !(w.ph||[]).length;
     document.getElementById('bMarg').textContent=w.why||'';
     var lk=document.getElementById('bLinks'); lk.innerHTML='';
     (w.links||[]).forEach(function(l){
