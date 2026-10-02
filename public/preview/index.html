@@ -129,12 +129,21 @@
     .room.salon .wall{height:auto;min-height:0;padding:8px 0 26px}
     .room.salon .works{position:static;width:auto!important;transform:none!important;
       display:flex;flex-direction:column;align-items:center;gap:38px;
-      padding:0 max(14px, 26vw) 0 14px}          /* clear the fixed banner rail */
+      padding:0 14px}
     .room.salon .work{position:static!important;left:auto!important;top:auto!important;
       width:100%!important;max-width:330px!important;margin:0!important}
     .room.salon .work .card{padding:10px 12px}
     .room.salon .work .card b{font-size:13px}
     .room.salon .work .card i{font-size:12px}
+  }
+  /* The banner rail is fixed to the right edge and is 60px wide on a phone,
+     114px on a tablet. The old rule reserved 26vw for it, which grows with the
+     screen while the banners do not, so an iPad booked 213px for a 114px rail
+     and the column of works sat 100px left of centre with the right half of the
+     display empty. A 330px column only reaches the rail below about 520px, so
+     only a phone needs the reserve; everything wider simply centres. */
+  @media (max-width:520px){
+    .room.salon .works{padding-right:calc(clamp(58px,15vw,80px) + 18px)}
   }
   .dbg-box{position:absolute;border:1px solid rgba(255,90,90,.9);pointer-events:none;z-index:60}
   .dbg-safe{position:absolute;border:1px dashed rgba(90,200,255,.9);pointer-events:none;z-index:59}
@@ -438,6 +447,23 @@
   .shut{position:absolute;top:18px;right:24px;z-index:61;font-family:var(--util);font-size:9.5px;
     letter-spacing:.16em;text-transform:uppercase;background:transparent;color:#CFC3A4;
     border:1px solid #55503C;padding:9px 13px;cursor:pointer}
+
+  /* Every control here was sized for a mouse pointer. On a touch screen the
+     close button was 31px tall and the link chips 26px, against Apple's 44px
+     minimum, and the labels ran as small as 9px. These are the letterspaced
+     uppercase labels the design wants, so they keep their character and only
+     grow enough to be hit and read with a thumb. Keyed on the input device,
+     not the width, so an iPad gets this at any size and a desktop never does. */
+  @media (pointer:coarse){
+    .shut{font-size:11px;padding:15px 18px}
+    .lk a{font-size:10.5px;padding:15px 16px}
+    .enter{font-size:11.5px;padding:16px 30px}
+    .cue{font-size:10.5px}
+    .facts{font-size:clamp(11px,1.6vw,12px)}
+    .room > header i{font-size:11px}
+    .cap b{font-size:10.5px}
+    .pno{font-size:10.5px}
+  }
 
   /* ── interaction layer ──────────────────────────────────────────────────── */
 
