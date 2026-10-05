@@ -13,296 +13,326 @@
 <meta property="og:url" content="https://portfolio.abbykamenetsky.com/summary/">
 <style>
   :root{
-    --ink:#E8E2D2; --dim:#A49C87; --faint:#7C755F;
-    --bg:#0E120F; --card:#151B17; --rule:#2A332C;
-    --gilt:#C9A24E; --giltHi:#E3C87E;
+    --ink:#EDE7D8; --dim:#ABA38D; --faint:#847C66;
+    --bg:#0E120F; --bar:#0C100D; --rule:#2B342D; --hair:#1E2620;
+    --gilt:#C9A24E; --giltHi:#E8CF89;
     --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
     --util:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
   *{box-sizing:border-box}
-  html{-webkit-text-size-adjust:100%}
+  [hidden]{display:none!important}
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);
-    font-size:17px;line-height:1.62;
-    padding:0 20px env(safe-area-inset-bottom) 20px}
-  .wrap{max-width:760px;margin:0 auto;padding:56px 0 90px}
+    font-size:18px;line-height:1.74;padding:0 20px}
+  .wrap{max-width:720px;margin:0 auto;padding:46px 0 90px}
 
-  header.top{border-bottom:1px solid var(--rule);padding-bottom:26px;margin-bottom:10px}
-  h1{font-size:clamp(30px,6vw,44px);font-weight:400;margin:0 0 6px;letter-spacing:.2px}
-  .tag{color:var(--dim);margin:0 0 18px;font-size:16.5px}
-  .meta{font-family:var(--util);font-size:12px;letter-spacing:.09em;text-transform:uppercase;
+  h1{font-size:clamp(31px,6.4vw,46px);font-weight:400;margin:0 0 8px;letter-spacing:.2px;
+    line-height:1.14}
+  .meta{font-family:var(--util);font-size:12px;letter-spacing:.1em;text-transform:uppercase;
     color:var(--giltHi);margin:0 0 20px}
+  .tag{color:var(--dim);margin:0 0 20px;font-size:17px;max-width:60ch}
 
-  .lk{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0 0}
+  .lk{display:flex;flex-wrap:wrap;gap:8px;margin:0}
   .lk a{font-family:var(--util);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;
     color:var(--giltHi);text-decoration:none;border:1px solid #5B4C28;
     padding:11px 14px;border-radius:2px}
-  .lk a:hover,.lk a:focus-visible{border-color:var(--gilt);background:#1D2219;color:#F2E3BC}
+  .lk a:hover,.lk a:focus-visible{border-color:var(--gilt);background:#1D2219;color:#F5E8C4}
 
-  nav.toc{margin:22px 0 0;display:flex;flex-wrap:wrap;gap:8px}
-  nav.toc a{font-family:var(--util);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;
-    color:var(--dim);text-decoration:none;padding:9px 11px;border:1px solid var(--rule);border-radius:2px}
-  nav.toc a:hover,nav.toc a:focus-visible{color:var(--giltHi);border-color:#5B4C28}
+  /* The toolbar follows the reader: it says which section they are in and lets
+     them filter the whole page down to what they actually came to check. */
+  .bar{position:sticky;top:0;z-index:5;margin:30px 0 0;padding:12px 0 11px;
+    background:var(--bar);border-bottom:1px solid var(--rule)}
+  .bar::before{content:"";position:absolute;left:-20px;right:-20px;top:0;bottom:0;
+    background:var(--bar);border-bottom:1px solid var(--rule);z-index:-1}
+  .toc{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 9px}
+  .toc a{font-family:var(--util);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--faint);text-decoration:none;padding:8px 10px;border:1px solid transparent;
+    border-radius:2px}
+  .toc a:hover,.toc a:focus-visible{color:var(--giltHi)}
+  .toc a[aria-current="true"]{color:var(--giltHi);border-color:#4B4026;background:#161B15}
 
-  section{margin:46px 0 0;scroll-margin-top:18px}
+  .tools{display:flex;gap:8px;align-items:center}
+  #q{flex:1;min-width:0;font-family:var(--serif);font-size:15px;color:var(--ink);
+    background:#121711;border:1px solid var(--rule);border-radius:2px;padding:11px 13px}
+  #q::placeholder{color:var(--faint)}
+  #q:focus{outline:none;border-color:#5B4C28}
+  .tbtn{font-family:var(--util);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--dim);background:#121711;border:1px solid var(--rule);border-radius:2px;
+    padding:12px 13px;cursor:pointer;white-space:nowrap}
+  .tbtn:hover,.tbtn:focus-visible{color:var(--giltHi);border-color:#4B4026}
+  #count{font-family:var(--util);font-size:11px;color:var(--faint);margin:9px 0 0;min-height:1em}
+
+  section{margin:44px 0 0;scroll-margin-top:124px}
   h2{font-family:var(--util);font-size:12px;letter-spacing:.24em;text-transform:uppercase;
-    color:var(--gilt);font-weight:400;margin:0 0 4px;
-    padding-bottom:9px;border-bottom:1px solid var(--rule)}
-  .note{color:var(--faint);font-size:14px;margin:10px 0 0}
+    color:var(--gilt);font-weight:400;margin:0;padding-bottom:10px;
+    border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:9px}
+  h2 b{font-weight:400;color:var(--faint);font-size:11px;letter-spacing:.1em}
 
-  article{padding:22px 0;border-bottom:1px solid #1E2620}
+  article{padding:28px 0;border-bottom:1px solid var(--hair)}
   article:last-child{border-bottom:0}
-  h3{font-size:20px;font-weight:400;margin:0 0 8px;color:#F1EADA;line-height:1.3}
-  article p{margin:0 0 11px}
-  article ul{margin:0 0 11px;padding-left:20px}
-  article li{margin:0 0 4px}
+  h3{font-size:21px;font-weight:400;margin:0 0 10px;color:#F6EFDE;line-height:1.32}
+  article p{margin:0 0 12px}
+  article ul{margin:0 0 12px;padding-left:20px}
+  article li{margin:0 0 6px}
 
-  details{margin:2px 0 11px}
-  summary{cursor:pointer;font-family:var(--util);font-size:11.5px;letter-spacing:.1em;
-    text-transform:uppercase;color:var(--dim);padding:10px 0;list-style:none}
+  details{margin:0 0 12px}
+  summary{cursor:pointer;font-family:var(--util);font-size:11px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--dim);padding:9px 0;list-style:none;width:max-content}
   summary::-webkit-details-marker{display:none}
-  summary::before{content:"+ ";color:var(--gilt)}
-  details[open] summary::before{content:"\2212 "}
+  summary::before{content:"+";color:var(--gilt);display:inline-block;width:1.1em}
+  details[open] summary::before{content:"\2212"}
   summary:hover,summary:focus-visible{color:var(--giltHi)}
+  .less{display:none}
+  details[open] .more{display:none}
+  details[open] .less{display:inline}
   details > *:not(summary){margin-top:0}
 
-  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 0}
   .chips span{font-family:var(--util);font-size:11px;letter-spacing:.04em;color:var(--dim);
     border:1px solid var(--rule);padding:5px 9px;border-radius:2px}
+  article .lk{margin:14px 0 0}
 
-  .plain{columns:2;column-gap:28px;margin:14px 0 0;padding-left:20px}
-  .plain li{margin:0 0 5px;break-inside:avoid}
+  .plain{columns:2;column-gap:30px;margin:14px 0 0;padding-left:20px}
+  .plain li{margin:0 0 6px;break-inside:avoid}
   @media (max-width:560px){.plain{columns:1}}
 
-  footer{margin:58px 0 0;padding-top:24px;border-top:1px solid var(--rule);
-    color:var(--faint);font-size:14px}
+  #empty{color:var(--faint);font-style:italic;margin:34px 0 0}
+  .top{display:inline-block;margin:36px 0 0;font-family:var(--util);font-size:11px;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--faint);text-decoration:none}
+  .top:hover,.top:focus-visible{color:var(--giltHi)}
+
+  footer{margin:54px 0 0;padding-top:26px;border-top:1px solid var(--rule);
+    color:var(--faint);font-size:15px}
   footer a{color:var(--giltHi)}
 
-  a:focus-visible,summary:focus-visible{outline:2px solid var(--gilt);outline-offset:3px}
+  a:focus-visible,summary:focus-visible,button:focus-visible,#q:focus-visible{
+    outline:2px solid var(--gilt);outline-offset:3px}
 
   @media (pointer:coarse){
-    nav.toc a,.lk a{padding:13px 15px}
+    .toc a{padding:11px 12px;font-size:11.5px}
+    .lk a{padding:13px 15px}
     summary{padding:13px 0}
   }
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 
   @media print{
-    body{background:#fff;color:#000;font-size:11pt}
-    .lk a,nav.toc{display:none}
-    details{display:block}
+    body{background:#fff;color:#000;font-size:10.5pt;padding:0}
+    .bar,.lk,.top,#count{display:none}
+    details[open] summary,summary{display:none}
     details > *:not(summary){display:block!important}
-    summary{display:none}
-    article{break-inside:avoid;border-bottom:1px solid #ccc}
+    article{break-inside:avoid;border-bottom:1px solid #ccc;padding:14px 0}
+    section{margin:22px 0 0}
     h2{color:#000;border-color:#999}
     h3{color:#000}
     .chips span{color:#444;border-color:#bbb}
+    footer{display:none}
   }
 </style>
 </head>
 <body>
 <main class="wrap">
 
-<header class="top">
+<header>
   <h1>Abigail Kamenetsky</h1>
   <p class="meta">Economics &amp; Computer Science &middot; University of Chicago</p>
   <p class="tag">I'm currently an undergraduate at the University of Chicago, double majoring in Economics &amp; Computer Science with a minor in Astronomy/Astrophysics, and possibly English if time lets me.</p>
-  <p class="lk"><a href="https://www.linkedin.com/in/abigail-kamenetsky" target="_blank" rel="noopener">LinkedIn</a><a href="https://github.com/abigailkamenetsky" target="_blank" rel="noopener">GitHub</a><a href="https://www.instagram.com/abigailkamenetsky/" target="_blank" rel="noopener">Instagram</a><a href="https://app.thestorygraph.com/profile/abbykamenetsky" target="_blank" rel="noopener">StoryGraph</a><a href="https://beliapp.co/app/abbykamenetsky" target="_blank" rel="noopener">Beli</a><a href="mailto:abbykamenetsky@uchicago.edu">abbykamenetsky@uchicago.edu</a><a href="mailto:abigailk725@gmail.com">abigailk725@gmail.com</a></p>
-  <nav class="toc" aria-label="Sections">
-    <a href="#experience">Experience</a>
-    <a href="#projects">Projects</a>
-    <a href="#research">Research</a>
-    <a href="#university">University</a>
-    <a href="#awards">Awards</a>
-    <a href="#leadership">Leadership</a>
-    <a href="#skills">Skills</a>
-  </nav>
+  <p class="lk"><a href="https://www.linkedin.com/in/abigail-kamenetsky" target="_blank" rel="noopener">LinkedIn</a><a href="https://github.com/abigailkamenetsky" target="_blank" rel="noopener">GitHub</a><a href="https://www.instagram.com/abigailkamenetsky/" target="_blank" rel="noopener">Instagram</a><a href="https://app.thestorygraph.com/profile/abbykamenetsky" target="_blank" rel="noopener">StoryGraph</a><a href="https://beliapp.co/app/abbykamenetsky" target="_blank" rel="noopener">Beli</a><a href="mailto:abbykamenetsky@uchicago.edu">School email</a><a href="mailto:abigailk725@gmail.com">Home email</a></p>
 </header>
 
-<section id="experience">
-  <h2>Experience</h2>
+<div class="bar">
+  <nav class="toc" aria-label="Sections">
+    <a href="#experience">Experience</a><a href="#projects">Projects</a><a href="#research">Research</a><a href="#university">University</a><a href="#awards">Awards</a><a href="#leadership">Leadership</a>
+    <a href="#skills">Skills</a>
+  </nav>
+  <div class="tools">
+    <input id="q" type="search" placeholder="Filter by keyword, e.g. python, nonprofit, machine learning" aria-label="Filter entries by keyword" autocomplete="off">
+    <button type="button" class="tbtn" id="expand" aria-expanded="false">Expand all</button>
+  </div>
+  <p id="count" role="status" aria-live="polite"></p>
+</div>
+
+<section id="experience" data-label="Experience">
+  <h2>Experience <b>4</b></h2>
   <article>
   <h3>AWS - Retail Crime Prediction</h3>
   <p>I worked as a Computer Science Intern at Amazon Web Services in Seattle during the summer of 2024.</p>
-  <details><summary>More detail</summary><p>I built a machine learning model that used geographic datasets to find risk patterns and inform site selection decisions. I spent a lot of my time turning the technical output into clear business insights because the model only mattered if the people making decisions could actually use it.</p><p>I placed second in an international AWS data competition and I presented my findings to senior leadership. I focused on risk forecasting and on explaining my analysis carefully because I wanted the room to trust the numbers.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>I built a machine learning model that used geographic datasets to find risk patterns and inform site selection decisions. I spent a lot of my time turning the technical output into clear business insights because the model only mattered if the people making decisions could actually use it.</p><p>I placed second in an international AWS data competition and I presented my findings to senior leadership. I focused on risk forecasting and on explaining my analysis carefully because I wanted the room to trust the numbers.</p></details>
   <p class="chips"><span>Machine learning</span><span>Geographic data analysis</span><span>Turning technical results into business insights</span><span>Presenting to leadership</span><span>Risk forecasting</span></p>
   
 </article>
 <article>
   <h3>Maroon Cays Consulting</h3>
   <p>I worked as a Strategy Consulting Intern with the Winter Metcalf Clinic on the Maroon Cays Innovation Projects in early 2026.</p>
-  <details><summary>More detail</summary><p>I conducted market analysis and I evaluated the strategic positioning of a sustainability venture. I built investor-style pitch materials, and I prioritized partnerships based on market opportunity and how well they could scale.</p><p>I liked this work because it let me study a real business and then make concrete recommendations about where it should focus next.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>I conducted market analysis and I evaluated the strategic positioning of a sustainability venture. I built investor-style pitch materials, and I prioritized partnerships based on market opportunity and how well they could scale.</p><p>I liked this work because it let me study a real business and then make concrete recommendations about where it should focus next.</p></details>
   <p class="chips"><span>Market analysis</span><span>Strategic positioning</span><span>Investor pitch development</span><span>Partnership prioritization</span><span>Financial reasoning</span></p>
   
 </article>
 <article>
   <h3>Gigamon - Product Management &amp; Business Development</h3>
   <p>I joined Gigamon in June 2026 as a Product Management and Business Development Intern, working on the End of Sale and End of Life program: what happens when a product is retired, and how customers, partners and the sales teams hear about it in time to plan.</p>
-  <details><summary>More detail</summary><p>The program was under-resourced when I arrived, so I ran discovery, mapped what it actually did against what it needed to do, and then built the pieces myself.</p><p>What I built:</p><ul><li>An agent that formats the worldwide price list out of Salesforce, applies the pricing rules, and notifies the team the moment it is ready for a human to review</li><li>A notification system that runs monthly, finds every product reaching end of sale or end of life within the next year, fills out the customer notice template I wrote and had approved by product management and legal, pulls the matching customer smart list from Salesforce into Adobe Marketo, and queues the email for a human to approve and schedule</li><li>A data extractor that reads end of sale and end of life dates out of the product team's internal PDFs and writes them into Salesforce, so they carry on to every external system without anyone retyping them</li><li>An agent that drafts the internal Slack messages and emails, and posts the public announcement to external channels including Vue Community</li><li>A Trade Agreements Act certification agent that drafts TAA certifications for the products that need one, with the worldwide price list as the source of truth</li></ul><p>I also built a model that predicts end of sale and end of life dates, so the product lifecycle team can plan against a forecast instead of waiting for each decision to land.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>The program was under-resourced when I arrived, so I ran discovery, mapped what it actually did against what it needed to do, and then built the pieces myself.</p><p>What I built:</p><ul><li>An agent that formats the worldwide price list out of Salesforce, applies the pricing rules, and notifies the team the moment it is ready for a human to review</li><li>A notification system that runs monthly, finds every product reaching end of sale or end of life within the next year, fills out the customer notice template I wrote and had approved by product management and legal, pulls the matching customer smart list from Salesforce into Adobe Marketo, and queues the email for a human to approve and schedule</li><li>A data extractor that reads end of sale and end of life dates out of the product team's internal PDFs and writes them into Salesforce, so they carry on to every external system without anyone retyping them</li><li>An agent that drafts the internal Slack messages and emails, and posts the public announcement to external channels including Vue Community</li><li>A Trade Agreements Act certification agent that drafts TAA certifications for the products that need one, with the worldwide price list as the source of truth</li></ul><p>I also built a model that predicts end of sale and end of life dates, so the product lifecycle team can plan against a forecast instead of waiting for each decision to land.</p></details>
   <p class="chips"><span>Product discovery and scoping</span><span>Requirements definition</span><span>AI agents</span><span>Salesforce</span><span>Adobe Marketo</span><span>Working across product, legal and sales</span></p>
   
 </article>
 <article>
   <h3>SDIG - Web Development</h3>
   <p>SDIG is the Systemic Diversity and Inclusion Group, a nonprofit that helps organizations and communities advance diversity, equity and inclusion through consultancy, education and hands on programs. I was their web development intern, and I redesigned and rebuilt their website.</p>
-  <details><summary>More detail</summary><p>This was a complete redesign rather than a refresh. I rebuilt every page, eighteen of them, from the home page through services, courses, educational programs, events, partners, associates, the blog, the store and contact.</p><p>I worked from what the nonprofit told me they needed the site to do, and to their guidance on the colour palette. I designed around that: a warm terracotta and cream palette, a headline that cycles through peace, equality, justice and inclusion so the mission is the first thing you read, and a structure that puts their services and their partner universities where people actually look for them.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>This was a complete redesign rather than a refresh. I rebuilt every page, eighteen of them, from the home page through services, courses, educational programs, events, partners, associates, the blog, the store and contact.</p><p>I worked from what the nonprofit told me they needed the site to do, and to their guidance on the colour palette. I designed around that: a warm terracotta and cream palette, a headline that cycles through peace, equality, justice and inclusion so the mission is the first thing you read, and a structure that puts their services and their partner universities where people actually look for them.</p></details>
   <p class="chips"><span>Web design and redesign</span><span>Working to a client brief</span><span>Colour and visual identity</span><span>Information architecture</span><span>Building out a full multi page site</span></p>
   <p class="lk"><a href="https://abigailkamenetsky.github.io/sdig-site-preview/" target="_blank" rel="noopener">See the redesign</a></p>
 </article>
 </section>
-
-<section id="projects">
-  <h2>Projects</h2>
+<section id="projects" data-label="Projects">
+  <h2>Projects <b>6</b></h2>
   <article>
   <h3>HelpMynd</h3>
   <p>I founded HelpMynd because I cared about mental health and I wanted to build something that actually reached the people who needed support. I started it in February 2023 and I ran it as Founder and CEO until January 2026.</p>
-  <details><summary>More detail</summary><p>I grew HelpMynd into a registered 501(c)(3) nonprofit with a team of more than 35 people across 15 countries, reaching over 60,000 site visitors a year. I sourced and closed more than 10 institutional partnerships, including Stanford Hospital and Jamaica's Ministry of Health, because I wanted the work to be credible and connected to real medical systems.</p><p>I built and launched a curated global mental health directory so people could find resources near them. I also led international conferences and workshops because I wanted HelpMynd to bring people together in person and not only live online.</p><p>I learned how to recruit people, keep a large remote team motivated, and turn an idea I believed in into an organization that runs across many time zones.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>I grew HelpMynd into a registered 501(c)(3) nonprofit with a team of more than 35 people across 15 countries, reaching over 60,000 site visitors a year. I sourced and closed more than 10 institutional partnerships, including Stanford Hospital and Jamaica's Ministry of Health, because I wanted the work to be credible and connected to real medical systems.</p><p>I built and launched a curated global mental health directory so people could find resources near them. I also led international conferences and workshops because I wanted HelpMynd to bring people together in person and not only live online.</p><p>I learned how to recruit people, keep a large remote team motivated, and turn an idea I believed in into an organization that runs across many time zones.</p></details>
   <p class="chips"><span>Nonprofit leadership</span><span>Building and managing a remote team</span><span>Partnership development</span><span>Public speaking</span><span>Turning an idea into an organization</span></p>
   
 </article>
 <article>
   <h3>Museum Portfolio</h3>
   <p>This project is an interactive virtual museum designed to replace a traditional portfolio with an explorable digital experience.</p>
-  <details><summary>More detail</summary><p>Visitors navigate through galleries containing:</p><ul><li>Research experiences</li><li>Internships</li><li>Projects</li><li>Awards</li><li>UChicago programs</li><li>Hobbies</li><li>Personal interests</li></ul><p>Each painting functions as an interactive exhibit that tells part of my story.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>Visitors navigate through galleries containing:</p><ul><li>Research experiences</li><li>Internships</li><li>Projects</li><li>Awards</li><li>UChicago programs</li><li>Hobbies</li><li>Personal interests</li></ul><p>Each painting functions as an interactive exhibit that tells part of my story.</p></details>
   <p class="chips"><span>React and Three.js</span><span>3D web development</span><span>UX and UI design</span><span>Git and deployment</span><span>Creative problem solving</span></p>
   
 </article>
 <article>
   <h3>Serai - Driveway Parking Marketplace</h3>
   <p>Serai is a two sided marketplace for renting residential driveways by the hour. I founded it and built the whole thing myself for the UChicago Summer Tech Showcase, where it won first place out of more than 20 teams and a $1,500 prize.</p>
-  <details><summary>More detail</summary><p>I started with the research rather than the idea. I scrapped my original curb apron premise once city precedent said it would not hold, sized the real supply at 14,553 viable parcels out of 110,961 from DataSF geometry, and priced it with capped dynamic rates built on 47,525 SFMTA meter transactions.</p><p>Then I architected and deployed three applications: a driver app, a host wizard and an operator console, on Next.js 15, React 19 and TypeScript over PostgreSQL and PostGIS, with row level security and encrypted addresses. The map is hand inked and each listing gets its own generated illustration, both drawn on canvas from real city geometry.</p><p>It is in closed beta now while I validate demand on both sides before packaging it for the App Store and Google Play.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>I started with the research rather than the idea. I scrapped my original curb apron premise once city precedent said it would not hold, sized the real supply at 14,553 viable parcels out of 110,961 from DataSF geometry, and priced it with capped dynamic rates built on 47,525 SFMTA meter transactions.</p><p>Then I architected and deployed three applications: a driver app, a host wizard and an operator console, on Next.js 15, React 19 and TypeScript over PostgreSQL and PostGIS, with row level security and encrypted addresses. The map is hand inked and each listing gets its own generated illustration, both drawn on canvas from real city geometry.</p><p>It is in closed beta now while I validate demand on both sides before packaging it for the App Store and Google Play.</p></details>
   <p class="chips"><span>Market sizing and pricing strategy</span><span>Next.js, React and TypeScript</span><span>PostgreSQL and PostGIS</span><span>Product architecture</span><span>Shipping and running a beta</span></p>
   <p class="lk"><a href="https://serai-driver.vercel.app" target="_blank" rel="noopener">Serai</a></p>
 </article>
 <article>
   <h3>Handshake AI Agent</h3>
   <p>I don't like Handshake's recommendation algorithm for internships, jobs, and events, because it won't let you filter by internship time period or even by industry. So I am going to build my own.</p>
-  <details><summary>More detail</summary><p>I also want this agent to fill out my job applications for me, then email me to say it finished so I can do the final check. Hopefully a two day project I can knock out this summer.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>I also want this agent to fill out my job applications for me, then email me to say it finished so I can do the final check. Hopefully a two day project I can knock out this summer.</p></details>
   
   
 </article>
 <article>
   <h3>SporeKeeper</h3>
   <p>A privacy-first Chrome extension that notices when you have started working and asks whether you clocked in, then helps you file the tabs you piled up while doing it. Built in TypeScript with 452 tests, zero runtime dependencies, and zero network requests. It is live and free on the Chrome Web Store, and there is also a browser demo if you would rather try it without installing anything.</p>
-  <details><summary>More detail</summary><p>You tell it what you are tracking, a job, a thesis, a contract, and what counts as working on it: a website, a project folder in your editor, a person who emails you. When you have actually been at it long enough, one of 54 original pixel-art companions appears over the page you are on, in one of 11 hand-painted scenes, and asks whether you clocked in.</p><p>It grew a second half along the way, because the same people who forget to clock in also have forty tabs open. Spore Forest sorts open tabs into folders you define by rules you write, and shows you the whole plan and the specific rule that matched each tab before it moves a single one. For job hunting it will read the role and company off every posting you have open and export the lot as a spreadsheet.</p><p>The organising constraint was privacy, and it shaped every technical decision. Zero network requests is not a policy here, it is a property of the code: there is no HTTP client in the codebase at all, no server, no account, no analytics, no telemetry. Everything it knows lives in the browser's own local storage. All 10 Chrome permissions are justified in writing against the file that uses them, and anything that reads more than strictly necessary is off by default.</p><p>Underneath: about 13,400 lines of strict TypeScript, 4,300 lines of tests, 4,700 lines of hand-written CSS with no framework, and a 422-line native messaging host so the extension can count time spent in an editor, which a browser cannot see by itself. Vitest runs 452 tests across 27 files. It ships with 0 runtime dependencies, so nothing reaches a user but my own code.</p><p>Four invariant checks fail the build rather than warn. Every storage key in the source must appear in the privacy policy or it will not compile, which has caught me twice. The packager refuses to ship a bundle older than the code it was built from.</p><p>All 54 companions are generated rather than licensed. I read all 7 pixel-art packs I evaluated, and 6 forbid redistribution, which publishing to the Chrome Web Store is. So I wrote a generator instead: creatures defined as shapes in code, rendered at build time, with the PNG encoder written from scratch against the format spec so even image encoding pulls in no dependency.</p><p>The linked demo is not the extension. It is the extension's real interface and real compiled logic running in a page against a simulated browser, so you can see exactly how it works without installing it. Every decision in it is the real one. The service worker, Chrome storage and real tabs are stand-ins, and the demo page says so itself rather than leaving you to find out.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>You tell it what you are tracking, a job, a thesis, a contract, and what counts as working on it: a website, a project folder in your editor, a person who emails you. When you have actually been at it long enough, one of 54 original pixel-art companions appears over the page you are on, in one of 11 hand-painted scenes, and asks whether you clocked in.</p><p>It grew a second half along the way, because the same people who forget to clock in also have forty tabs open. Spore Forest sorts open tabs into folders you define by rules you write, and shows you the whole plan and the specific rule that matched each tab before it moves a single one. For job hunting it will read the role and company off every posting you have open and export the lot as a spreadsheet.</p><p>The organising constraint was privacy, and it shaped every technical decision. Zero network requests is not a policy here, it is a property of the code: there is no HTTP client in the codebase at all, no server, no account, no analytics, no telemetry. Everything it knows lives in the browser's own local storage. All 10 Chrome permissions are justified in writing against the file that uses them, and anything that reads more than strictly necessary is off by default.</p><p>Underneath: about 13,400 lines of strict TypeScript, 4,300 lines of tests, 4,700 lines of hand-written CSS with no framework, and a 422-line native messaging host so the extension can count time spent in an editor, which a browser cannot see by itself. Vitest runs 452 tests across 27 files. It ships with 0 runtime dependencies, so nothing reaches a user but my own code.</p><p>Four invariant checks fail the build rather than warn. Every storage key in the source must appear in the privacy policy or it will not compile, which has caught me twice. The packager refuses to ship a bundle older than the code it was built from.</p><p>All 54 companions are generated rather than licensed. I read all 7 pixel-art packs I evaluated, and 6 forbid redistribution, which publishing to the Chrome Web Store is. So I wrote a generator instead: creatures defined as shapes in code, rendered at build time, with the PNG encoder written from scratch against the format spec so even image encoding pulls in no dependency.</p><p>The linked demo is not the extension. It is the extension's real interface and real compiled logic running in a page against a simulated browser, so you can see exactly how it works without installing it. Every decision in it is the real one. The service worker, Chrome storage and real tabs are stand-ins, and the demo page says so itself rather than leaving you to find out.</p></details>
   
   <p class="lk"><a href="https://chromewebstore.google.com/detail/sporekeeper/ffeecklpjdoplegkcpjdmkhhcgggnojk" target="_blank" rel="noopener">Chrome Web Store</a><a href="https://abigailkamenetsky.github.io/sporekeeper/" target="_blank" rel="noopener">Live Demo</a><a href="https://github.com/abigailkamenetsky/sporekeeper" target="_blank" rel="noopener">Source</a></p>
 </article>
 <article>
   <h3>Lyft/Via UChicago App for Fall</h3>
   <p>I won't say too much, because I'm not sure if this is allowed, but when the Via system gets overloaded with free UChicago requests, Via gives you a free Lyft.</p>
-  <details><summary>More detail</summary><p>I want to see if I can overload it on demand to get a free Lyft every time I want to Via somewhere. (Free lyfts everytime, muahahahahah.) Timeline is TBD, hopefully done before school starts in fall 2026.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>I want to see if I can overload it on demand to get a free Lyft every time I want to Via somewhere. (Free lyfts everytime, muahahahahah.) Timeline is TBD, hopefully done before school starts in fall 2026.</p></details>
   
   
 </article>
 </section>
-
-<section id="research">
-  <h2>Research</h2>
+<section id="research" data-label="Research">
+  <h2>Research <b>4</b></h2>
   <article>
   <h3>CMU - Rectangle Packing (NP-hard)</h3>
   <p>I worked as a Research Intern at Carnegie Mellon University from January to November of 2024.</p>
-  <details><summary>More detail</summary><p>I designed and optimized algorithms for NP-hard rectangle packing problems. I worked directly with faculty and PhD researchers because the problems were hard and I learned a lot from people who had studied them for years.</p><p>I built the entire PackIt game, including its full AI mode. The game was presented at the 12th International Conference on Fun with Algorithms on the island of La Maddalena in Sardinia, Italy, in June 2024. I'm credited on page 26 of the published paper, which you can read below, and you can play the game at the link too.</p><p>I am proud of this work because rectangle packing problems are genuinely difficult and I got to push on them alongside serious researchers.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>I designed and optimized algorithms for NP-hard rectangle packing problems. I worked directly with faculty and PhD researchers because the problems were hard and I learned a lot from people who had studied them for years.</p><p>I built the entire PackIt game, including its full AI mode. The game was presented at the 12th International Conference on Fun with Algorithms on the island of La Maddalena in Sardinia, Italy, in June 2024. I'm credited on page 26 of the published paper, which you can read below, and you can play the game at the link too.</p><p>I am proud of this work because rectangle packing problems are genuinely difficult and I got to push on them alongside serious researchers.</p></details>
   <p class="chips"><span>Algorithm design</span><span>Optimization</span><span>NP-hard problem solving</span><span>Research collaboration</span><span>Technical presentation</span></p>
   <p class="lk"><a href="https://packit.surge.sh/" target="_blank" rel="noopener">Play PackIt</a></p>
 </article>
 <article>
   <h3>UCSB - LLM Hallucinations</h3>
   <p>I wrote a literature review paper on LLM hallucinations: how often they occur, the techniques used to reduce them, and what they mean for safely using large language models in mental health and clinical psychology. My paper focused on prompting techniques to reduce LLM hallucinations in clinical psychology settings.</p>
-  <details><summary>More detail</summary><p>I presented this paper at a UCSB international academic conference, where I was ranked in the top 10% of presenters out of more than 700, and I earned 2 UCSB academic credits for presenting it as a high schooler.</p><p>The full paper is being kept private while it is prepared for submission, so I'm sharing the presentation that walks through the work below.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>I presented this paper at a UCSB international academic conference, where I was ranked in the top 10% of presenters out of more than 700, and I earned 2 UCSB academic credits for presenting it as a high schooler.</p><p>The full paper is being kept private while it is prepared for submission, so I'm sharing the presentation that walks through the work below.</p></details>
   <p class="chips"><span>LLM evaluation</span><span>Research methods</span><span>Data analysis</span><span>Technical writing</span></p>
   
 </article>
 <article>
   <h3>Booth - Center for Applied AI</h3>
   <p>I worked at the University of Chicago Booth Center for Applied AI through the summer of 2026, on a research project run by Professor Levy and Anna Costello.</p>
-  <details><summary>More detail</summary><p>My work started as data collection. The project needed a large body of articles gathered and organised, and gathering them by hand is slow, repetitive and the kind of task that quietly eats a research timeline.</p><p>So I built an agent system that does it instead. It finds and downloads the articles on its own, with no human sitting over it, which turned the collection step from something somebody had to keep doing into something that simply runs.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>My work started as data collection. The project needed a large body of articles gathered and organised, and gathering them by hand is slow, repetitive and the kind of task that quietly eats a research timeline.</p><p>So I built an agent system that does it instead. It finds and downloads the articles on its own, with no human sitting over it, which turned the collection step from something somebody had to keep doing into something that simply runs.</p></details>
   <p class="chips"><span>AI agents and automation</span><span>Research data collection</span><span>Working with academic researchers</span><span>Turning a manual process into a system</span></p>
   
 </article>
 <article>
   <h3>UChicago HealthLab - Housing &amp; Health</h3>
   <p>I joined the University of Chicago Section of Hospital Medicine as a Research Assistant under Dr. Jong-Wook Ban, on research into the intersection of health and housing instability: how the research priorities named by the communities affected compare with the ones chosen by experts and already funded.</p>
-  <details><summary>More detail</summary><p>I built the lab's website and worked on their marketing and outreach, so the work would be findable by the people and partners it needs to reach. I also completed the research certification training the lab requires.</p><p>The position is on hold at the moment while the lab looks for further funding.</p><p>The point of the research is to help future work and policy reflect what people experiencing housing instability actually need, rather than what is easiest to study.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>I built the lab's website and worked on their marketing and outreach, so the work would be findable by the people and partners it needs to reach. I also completed the research certification training the lab requires.</p><p>The position is on hold at the moment while the lab looks for further funding.</p><p>The point of the research is to help future work and policy reflect what people experiencing housing instability actually need, rather than what is easiest to study.</p></details>
   <p class="chips"><span>Web development</span><span>Marketing and outreach</span><span>Research certification</span><span>Working inside an academic lab</span></p>
   
 </article>
 </section>
-
-<section id="university">
-  <h2>University Programs &amp; Clubs</h2>
+<section id="university" data-label="University">
+  <h2>University <b>5</b></h2>
   <article>
   <h3>Succeeding in the Entrepreneurial Workplace</h3>
   <p>The Succeeding in the Entrepreneurial Workplace program is a six-month professional development experience focused on preparing students for startup environments and entrepreneurial careers.</p>
-  <details><summary>More detail</summary><p>The program includes:</p><ul><li>Workshops on startup culture</li><li>Professional communication training</li><li>Career readiness sessions</li><li>AI productivity tools</li><li>Networking events</li><li>Required cohort meetings</li><li>Mentorship opportunities</li></ul><p>At the conclusion of the program, participants are matched with startup internship opportunities and gain exposure to early-stage companies and entrepreneurial ecosystems.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>The program includes:</p><ul><li>Workshops on startup culture</li><li>Professional communication training</li><li>Career readiness sessions</li><li>AI productivity tools</li><li>Networking events</li><li>Required cohort meetings</li><li>Mentorship opportunities</li></ul><p>At the conclusion of the program, participants are matched with startup internship opportunities and gain exposure to early-stage companies and entrepreneurial ecosystems.</p></details>
   
   
 </article>
 <article>
   <h3>Quantum in Business &amp; Technology (QUBIT)</h3>
   <p>I was selected as a member of the 2025–2026 QUBIT Cohort, a highly selective University of Chicago program that admits only a small group of students from a large applicant pool.</p>
-  <details><summary>More detail</summary><p>The program combines technology, business, research, and professional development. Activities included:</p><ul><li>Career development workshops</li><li>Technical training sessions</li><li>Industry guest speakers</li><li>Visits to organizations such as Argonne National Laboratory</li><li>Networking with professionals in science, technology, and business</li><li>Individualized career guidance</li><li>Additional summer funding opportunities</li></ul><p>Participation in QUBIT also provided an additional $1,000 in Metcalf summer funding support and access to a community of students interested in emerging technologies and interdisciplinary problem solving.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>The program combines technology, business, research, and professional development. Activities included:</p><ul><li>Career development workshops</li><li>Technical training sessions</li><li>Industry guest speakers</li><li>Visits to organizations such as Argonne National Laboratory</li><li>Networking with professionals in science, technology, and business</li><li>Individualized career guidance</li><li>Additional summer funding opportunities</li></ul><p>Participation in QUBIT also provided an additional $1,000 in Metcalf summer funding support and access to a community of students interested in emerging technologies and interdisciplinary problem solving.</p></details>
   <p class="chips"><span>Quantum and emerging tech literacy</span><span>Interdisciplinary thinking</span><span>Professional development</span><span>Networking</span></p>
   
 </article>
 <article>
   <h3>Venture Capital Immersion Week</h3>
   <p>I was selected to participate in the University of Chicago Venture Capital Immersion Week, taking place September 22–25, 2026.</p>
-  <details><summary>More detail</summary><p>The program includes:</p><ul><li>Venture capital history and foundations</li><li>Investment thesis development</li><li>Market sizing</li><li>Financial modeling workshops</li><li>Portfolio construction</li><li>Cap table analysis</li><li>Deal sourcing</li><li>Founder pitch evaluations</li><li>Investment committee simulations</li><li>Networking with investors and founders</li><li>Office visit to DRW Venture Capital</li><li>Sessions with Collaborative Fund, Chicago Ventures, Techstars, and other firms</li></ul><p>Prior to the program, participants must independently:</p><ul><li>Develop an investment thesis</li><li>Define sectors and fund strategy</li><li>Build a sourcing pipeline</li><li>Identify startup opportunities</li><li>Create investment memos</li><li>Analyze startup performance</li><li>Determine pricing and check sizes</li><li>Track portfolio performance over time</li></ul><p>The program provides a rare opportunity to experience how venture capital firms evaluate companies and allocate capital.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>The program includes:</p><ul><li>Venture capital history and foundations</li><li>Investment thesis development</li><li>Market sizing</li><li>Financial modeling workshops</li><li>Portfolio construction</li><li>Cap table analysis</li><li>Deal sourcing</li><li>Founder pitch evaluations</li><li>Investment committee simulations</li><li>Networking with investors and founders</li><li>Office visit to DRW Venture Capital</li><li>Sessions with Collaborative Fund, Chicago Ventures, Techstars, and other firms</li></ul><p>Prior to the program, participants must independently:</p><ul><li>Develop an investment thesis</li><li>Define sectors and fund strategy</li><li>Build a sourcing pipeline</li><li>Identify startup opportunities</li><li>Create investment memos</li><li>Analyze startup performance</li><li>Determine pricing and check sizes</li><li>Track portfolio performance over time</li></ul><p>The program provides a rare opportunity to experience how venture capital firms evaluate companies and allocate capital.</p></details>
   
   
 </article>
 <article>
   <h3>Blue Chips Investment Club</h3>
   <p>Blue Chips is one of the University of Chicago's most selective investing organizations. During my first year, I participated in New Member Education (NME), an intensive six-week program designed to teach students the fundamentals of value investing, equity research, financial accounting, valuation, and investment analysis.</p>
-  <details><summary>More detail</summary><p>The program required learning how to read and interpret financial statements, construct discounted cash flow (DCF) models from scratch, estimate intrinsic value, analyze competitive positioning, and ultimately develop an independent stock pitch supported by financial modeling. Participants were expected to absorb large amounts of material quickly and complete an examination covering the full curriculum.</p><p>Through the experience I discovered that while I genuinely enjoy investing, markets, and business strategy, I am more interested in building companies and products than pursuing traditional investment banking. Nevertheless, Blue Chips provided a strong foundation in valuation, financial analysis, and strategic thinking that continues to influence how I evaluate startups, research opportunities, and business models.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>The program required learning how to read and interpret financial statements, construct discounted cash flow (DCF) models from scratch, estimate intrinsic value, analyze competitive positioning, and ultimately develop an independent stock pitch supported by financial modeling. Participants were expected to absorb large amounts of material quickly and complete an examination covering the full curriculum.</p><p>Through the experience I discovered that while I genuinely enjoy investing, markets, and business strategy, I am more interested in building companies and products than pursuing traditional investment banking. Nevertheless, Blue Chips provided a strong foundation in valuation, financial analysis, and strategic thinking that continues to influence how I evaluate startups, research opportunities, and business models.</p></details>
   <p class="chips"><span>DCF valuation</span><span>Financial statement analysis</span><span>Equity research</span><span>Intrinsic value estimation</span><span>Investment analysis</span></p>
   
 </article>
 <article>
   <h3>Summer Tech Showcase - Parking &amp; Transportation App</h3>
   <p>The UChicago Summer Tech Showcase ran from June to July 2026: $750 in starting funding, mentorship and office hours, and a final presentation in front of judges.</p>
-  <details><summary>More detail</summary><p>I used it to build Serai, a marketplace for renting residential driveways by the hour, as founder and sole builder. It took first place out of more than 20 teams and a $1,500 prize.</p><p>The showcase is the reason it exists as a real product rather than a sketch. The deadline forced me to size the market properly, drop the premise that did not survive contact with city precedent, and ship three working applications rather than one demo.</p><p>There is a full account of what I built in the Projects room.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>I used it to build Serai, a marketplace for renting residential driveways by the hour, as founder and sole builder. It took first place out of more than 20 teams and a $1,500 prize.</p><p>The showcase is the reason it exists as a real product rather than a sketch. The deadline forced me to size the market properly, drop the premise that did not survive contact with city precedent, and ship three working applications rather than one demo.</p><p>There is a full account of what I built in the Projects room.</p></details>
   
   
 </article>
 </section>
-
-<section id="awards">
-  <h2>Honors &amp; Awards</h2>
+<section id="awards" data-label="Awards">
+  <h2>Awards <b>4</b></h2>
   <article>
   <h3>AP Scholar with Distinction</h3>
   <p>I earned the College Board's AP Scholar with Distinction award for my performance across my AP exams.</p>
-  <details><summary>More detail</summary><p>Scores of 5:</p><ul><li>AP Language &amp; Composition</li><li>AP Literature</li><li>AP Calculus AB</li><li>AP Calculus BC</li><li>AP Computer Science Principles</li><li>AP World History</li><li>AP US History</li><li>AP Government</li></ul><p>Scores of 4:</p><ul><li>AP Biology</li><li>AP Spanish Language</li><li>AP Physics C: Mechanics</li></ul><p>I also studied AP Psychology independently, though I chose not to sit the exam since UChicago does not grant credit for it.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>Scores of 5:</p><ul><li>AP Language &amp; Composition</li><li>AP Literature</li><li>AP Calculus AB</li><li>AP Calculus BC</li><li>AP Computer Science Principles</li><li>AP World History</li><li>AP US History</li><li>AP Government</li></ul><p>Scores of 4:</p><ul><li>AP Biology</li><li>AP Spanish Language</li><li>AP Physics C: Mechanics</li></ul><p>I also studied AP Psychology independently, though I chose not to sit the exam since UChicago does not grant credit for it.</p></details>
   
   
 </article>
 <article>
   <h3>NSPA Leadership Award</h3>
   <p>I received the National Scholastic Press Association Leadership Award three times for my work in student journalism.</p>
-  <details><summary>More detail</summary><p>I led a newsroom: assigning and editing, holding a publication schedule, and deciding what was worth printing. Three years of it, which is the part I am proudest of, because leading a staff well once is luck and doing it repeatedly is not.</p><p>I earned it because I cared about the people on my staff as much as the stories we published.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>I led a newsroom: assigning and editing, holding a publication schedule, and deciding what was worth printing. Three years of it, which is the part I am proudest of, because leading a staff well once is luck and doing it repeatedly is not.</p><p>I earned it because I cared about the people on my staff as much as the stories we published.</p></details>
   
   
 </article>
 <article>
   <h3>AWS AI Competition (2nd Place)</h3>
   <p>I placed second out of twenty two teams in an international AWS data competition, during my computer science internship at Amazon Web Services in Seattle.</p>
-  <details><summary>More detail</summary><p>I trained a machine learning model on geospatial datasets to find risk patterns and inform site selection: which places carried the most risk, and what in the geography explained it.</p><p>Then I presented it to senior leadership, and that part mattered as much as the model. I earned this because the analysis held up under scrutiny and because I could explain it clearly to people who were never going to read my code.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>I trained a machine learning model on geospatial datasets to find risk patterns and inform site selection: which places carried the most risk, and what in the geography explained it.</p><p>Then I presented it to senior leadership, and that part mattered as much as the model. I earned this because the analysis held up under scrutiny and because I could explain it clearly to people who were never going to read my code.</p></details>
   
   
 </article>
 <article>
   <h3>Congressional Recognition</h3>
   <p>I received Congressional Recognition from Representative Anna Eshoo, who represents the district I grew up in on the San Francisco Peninsula.</p>
-  <details><summary>More detail</summary><p>It came from work that reached my own community rather than anything abstract. Being recognised by my own representative meant a lot to me, because it tied the effort back to the place I am from and to the people it was actually for.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>It came from work that reached my own community rather than anything abstract. Being recognised by my own representative meant a lot to me, because it tied the effort back to the place I am from and to the people it was actually for.</p></details>
   
   
 </article>
 </section>
-
-<section id="leadership">
-  <h2>Leadership &amp; Activities</h2>
+<section id="leadership" data-label="Leadership">
+  <h2>Leadership <b>5</b></h2>
   <article>
   <h3>Journalism / Newspaper Leadership</h3>
   <p>I led my school newspaper, and I earned the NSPA Leadership Award for that work.</p>
-  <details><summary>More detail</summary><p>I ran the newsroom because I loved both the writing and the people. I edited stories, I set the direction for our coverage, and I made sure my staff had what they needed to do their best work.</p><p>I learned how to lead a creative team under deadline because a newspaper does not wait for anyone.</p></details>
+  <details><summary><span class="more">Read more</span><span class="less">Show less</span></summary><p>I ran the newsroom because I loved both the writing and the people. I edited stories, I set the direction for our coverage, and I made sure my staff had what they needed to do their best work.</p><p>I learned how to lead a creative team under deadline because a newspaper does not wait for anyone.</p></details>
   <p class="chips"><span>Editorial leadership</span><span>Team management</span><span>Writing and editing</span><span>Working under deadline</span><span>Communication</span></p>
   
 </article>
@@ -336,8 +366,8 @@
 </article>
 </section>
 
-<section id="skills">
-  <h2>Skills</h2>
+<section id="skills" data-label="Skills">
+  <h2>Skills <b>18</b></h2>
   <article>
     <h3>Technical</h3>
     <ul class="plain"><li>AI workflow automation (Claude &amp; LLM tools)</li><li>Financial modeling (DCF, valuation)</li><li>Python</li><li>JavaScript</li><li>Excel</li><li>Machine learning</li><li>Market analysis</li></ul>
@@ -350,25 +380,88 @@
     <h3>Relevant coursework</h3>
     <ul class="plain"><li>Linear Algebra</li><li>Calculus 3</li><li>Microeconomics</li><li>Macroeconomics</li></ul>
   </article>
+  <article>
+    <h3>Certifications &amp; speaker series</h3>
+    <p>The D. E. Shaw group flew me to New York for Connect, their three day programme, and covered the flight and the hotel. We spent it at the Whitney Museum of American Art, meeting people from the firm and from the other cohorts.</p>
+    <ul class="plain"><li>Point72 Spring Academy Sessions</li><li>McKinsey Insight series</li></ul>
+  </article>
+  <article>
+    <h3>Interests</h3>
+    <p>Reading · Cooking · Crocheting · Thrifting · Restaurants &amp; Food · Travel · Hiking &amp; Nature</p>
+  </article>
 </section>
 
-<section id="certifications">
-  <h2>Certifications &amp; Speaker Series</h2>
-  <p>The D. E. Shaw group flew me to New York for Connect, their three day programme, and covered the flight and the hotel. We spent it at the Whitney Museum of American Art, meeting people from the firm and from the other cohorts.</p><p>Three days of conversations in a museum is a strange and very good way to learn what a place is actually like, and it is the reason this room exists at all: most of what I have learned outside a classroom came from being in a room with people who knew more than me.</p><p>Other speaker series I have attended:</p>
-  <ul class="plain"><li>Point72 Spring Academy Sessions</li><li>McKinsey Insight series</li></ul>
-</section>
+<p id="empty" hidden>Nothing matches that. Clear the filter to see everything again.</p>
 
-<section id="interests">
-  <h2>Interests</h2>
-  <p>Reading · Cooking · Crocheting · Thrifting · Restaurants &amp; Food · Travel · Hiking &amp; Nature</p>
-</section>
+<a class="top" href="#">Back to top</a>
 
 <footer>
-  <p>This is the plain version. The same material is laid out as a walkable
-  museum at <a href="/preview/">the interactive portfolio</a>, where every
+  <p>This is the quick version. The same material is laid out as a museum you
+  walk through at <a href="/preview/">the interactive portfolio</a>, where every
   project hangs as a painting that opens.</p>
 </footer>
 
 </main>
+
+<script>
+(function(){
+  var arts = [].slice.call(document.querySelectorAll('article'));
+  var secs = [].slice.call(document.querySelectorAll('section'));
+  var links = [].slice.call(document.querySelectorAll('.toc a'));
+  var q = document.getElementById('q');
+  var count = document.getElementById('count');
+  var empty = document.getElementById('empty');
+  var expand = document.getElementById('expand');
+  var total = arts.length;
+
+  // Cache the searchable text once. Reading textContent per keystroke on a
+  // thirty entry page is wasteful and makes typing feel heavy on a phone.
+  arts.forEach(function(a){ a._t = a.textContent.toLowerCase(); });
+
+  function filter(){
+    var v = q.value.trim().toLowerCase();
+    var shown = 0;
+    arts.forEach(function(a){
+      var hit = !v || a._t.indexOf(v) !== -1;
+      a.hidden = !hit;
+      if (hit) shown++;
+    });
+    secs.forEach(function(s){
+      var any = s.querySelector('article:not([hidden])');
+      s.hidden = !any;
+    });
+    empty.hidden = shown !== 0;
+    count.textContent = v ? (shown + ' of ' + total + ' shown') : '';
+    // An open fold is how you read a filtered hit, so open them while filtering.
+    if (v) arts.forEach(function(a){
+      if (!a.hidden) [].forEach.call(a.querySelectorAll('details'), function(d){ d.open = true; });
+    });
+  }
+  q.addEventListener('input', filter);
+  q.addEventListener('search', filter);
+
+  expand.addEventListener('click', function(){
+    var open = expand.getAttribute('aria-expanded') !== 'true';
+    [].forEach.call(document.querySelectorAll('details'), function(d){ d.open = open; });
+    expand.setAttribute('aria-expanded', String(open));
+    expand.textContent = open ? 'Collapse all' : 'Expand all';
+  });
+
+  // Mark the section the reader is actually in.
+  if ('IntersectionObserver' in window){
+    var seen = {};
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(e){ seen[e.target.id] = e.isIntersecting ? e.intersectionRatio : 0; });
+      var best = null, bestR = 0;
+      Object.keys(seen).forEach(function(k){ if (seen[k] > bestR){ bestR = seen[k]; best = k; } });
+      links.forEach(function(a){
+        var on = best && a.getAttribute('href') === '#' + best;
+        if (on) a.setAttribute('aria-current','true'); else a.removeAttribute('aria-current');
+      });
+    }, { rootMargin: '-130px 0px -55% 0px', threshold: [0, .1, .4, 1] });
+    secs.forEach(function(s){ io.observe(s); });
+  }
+})();
+</script>
 </body>
 </html>
