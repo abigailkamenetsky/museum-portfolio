@@ -300,6 +300,7 @@ ${body}
   // Cache the searchable text once. Reading textContent per keystroke on a
   // thirty entry page is wasteful and makes typing feel heavy on a phone.
   arts.forEach(function(a){ a._t = a.textContent.toLowerCase(); });
+  [].forEach.call(document.querySelectorAll('h2 b'), function(b){ b.dataset.total = b.textContent; });
 
   function filter(){
     var v = q.value.trim().toLowerCase();
@@ -310,8 +311,12 @@ ${body}
       if (hit) shown++;
     });
     secs.forEach(function(s){
-      var any = s.querySelector('article:not([hidden])');
-      s.hidden = !any;
+      var n = s.querySelectorAll('article:not([hidden])').length;
+      s.hidden = n === 0;
+      // The heading count has to follow the filter, or a section reading
+      // "Experience 4" while showing one entry is simply wrong.
+      var b = s.querySelector('h2 b');
+      if (b) b.textContent = v ? n : b.dataset.total;
     });
     empty.hidden = shown !== 0;
     count.textContent = v ? (shown + ' of ' + total + ' shown') : '';
