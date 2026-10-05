@@ -90,6 +90,34 @@
  }
  #tl.hide{display:none}
  @media (prefers-reduced-motion:reduce){#hint{transition:none}}
+
+ /* The front door. An interviewer told Abby the museum was hard to read
+    quickly, which is a fair thing to say about a museum, so the choice is now
+    explicit instead of the museum being the only way in. Tapping "the museum"
+    is also the user gesture iOS needs before it will let the dust video play,
+    so the gate pays for itself on a phone. */
+ #gate{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;
+   background:#000;padding:28px 22px calc(28px + env(safe-area-inset-bottom));
+   opacity:1;transition:opacity .42s ease}
+ #gate.out{opacity:0;pointer-events:none}
+ .gin{width:100%;max-width:720px;text-align:center}
+ .geyebrow{margin:0 0 20px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+   font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:#7d7257}
+ #gatehead{margin:0 0 34px;font-weight:400;font-size:clamp(27px,6.2vw,44px);
+   color:#efe7d4;letter-spacing:.2px;line-height:1.2}
+ .gopts{display:grid;gap:14px;grid-template-columns:1fr 1fr;text-align:left}
+ @media (max-width:640px){.gopts{grid-template-columns:1fr}}
+ .gopt{display:block;width:100%;margin:0;cursor:pointer;text-decoration:none;text-align:left;
+   background:#0b0b09;border:1px solid #403823;border-radius:3px;
+   padding:22px 22px 24px;font-family:inherit;color:inherit;
+   transition:border-color .22s ease, background .22s ease, transform .22s ease}
+ .gopt b{display:block;font-size:20px;font-weight:400;color:#f1e8d3;margin:0 0 9px;
+   letter-spacing:.2px}
+ .gopt i{display:block;font-style:normal;font-size:14.5px;line-height:1.56;color:#9d9478}
+ .gopt:hover,.gopt:focus-visible{border-color:#c9a24e;background:#14130e;transform:translateY(-2px)}
+ .gopt:focus-visible{outline:2px solid #c9a24e;outline-offset:3px}
+ .gfoot{margin:26px 0 0;font-size:13.5px;color:#6f6753;font-style:italic}
+ @media (prefers-reduced-motion:reduce){#gate,.gopt{transition:none}}
 </style></head><body>
 <div class="hud" id="hud" hidden>loading&hellip;</div>
 <video id="dustvid" playsinline muted preload="auto" disablepictureinpicture></video>
@@ -100,6 +128,23 @@
 <div id="haze"></div>
 <div id="hint" class="in">preparing the gallery&hellip;</div>
 <a id="skipin" href="/preview/">Skip the introduction and enter the museum</a>
+<div id="gate" role="dialog" aria-modal="true" aria-labelledby="gatehead">
+  <div class="gin">
+    <p class="geyebrow">Abby Kamenetsky &middot; Portfolio</p>
+    <h1 id="gatehead">Two ways to do this.</h1>
+    <div class="gopts">
+      <button type="button" id="gmuseum" class="gopt">
+        <b>The museum</b>
+        <i>Ten rooms, forty works, and a marble bust of Marie Antoinette that you get to shatter. Give it a few minutes.</i>
+      </button>
+      <a id="gsummary" class="gopt" href="/summary/">
+        <b>The summary</b>
+        <i>One page. Bullet points. No marble. It will load before you finish reading this.</i>
+      </a>
+    </div>
+    <p class="gfoot">Same work in both. One of them is more fun.</p>
+  </div>
+</div>
 <div id="tl" class="hide"><button id="pp">replay</button><span id="tn">0.00s</span>
 <input type="range" id="sc" min="0" max="500" step="1" value="0" aria-label="Scrub the intro">
 <button id="hd">hide</button></div>
@@ -600,7 +645,27 @@ function sync(){
 
 // ── input: she is fixed, the camera orbits, and only on a real tap ────────
 let dragging=false,lx=0,ly=0,tDown=0;
-const inUI=(e)=>!!(e.target && e.target.closest && e.target.closest('#tl,#renter'));
+// The chooser sits over everything until she picks a side. While it is up no
+// drag or tap may reach the bust, or the shot starts behind it.
+const elGate=document.getElementById('gate');
+let gateUp=false;
+if(elGate){
+  if(AUTOSTART || DEV){ elGate.remove(); }
+  else {
+    gateUp=true;
+    document.getElementById('gmuseum').addEventListener('click',()=>{
+      // This click is the user gesture iOS requires before it will buffer or
+      // play the dust clip, so spend it here rather than waiting for the tap
+      // on the bust.
+      try{ const p=dv.play(); if(p&&p.then) p.then(()=>{dv.pause(); dv.currentTime=0;}).catch(()=>{}); }catch(_){}
+      gateUp=false;
+      elGate.classList.add('out');
+      setTimeout(()=>{ elGate.remove(); try{R.domElement.focus();}catch(_){} }, 460);
+    });
+    requestAnimationFrame(()=>{ try{ document.getElementById('gmuseum').focus(); }catch(_){} });
+  }
+}
+const inUI=(e)=>gateUp||!!(e.target && e.target.closest && e.target.closest('#tl,#renter,#gate'));
 addEventListener('pointerdown',e=>{ if(inUI(e)) return;
   dragging=true; lx=e.clientX; ly=e.clientY; dragAmt=0; tDown=performance.now();
   try{R.domElement.setPointerCapture(e.pointerId);}catch(_){} });
@@ -689,11 +754,12 @@ function start(){
   elHint.classList.remove('in');
 }
 R.domElement.addEventListener('keydown',e=>{
+  if(gateUp) return;
   if(e.key!=='Enter' && e.key!==' ') return;
   e.preventDefault();
   if(canRun()) start();
 });
-document.getElementById('pp').addEventListener('click',()=>{ if(canRun()) start(); });
+document.getElementById('pp').addEventListener('click',()=>{ if(!gateUp && canRun()) start(); });
 document.getElementById('sc').addEventListener('input',e=>{ if(!shards) return;
   state='SCRUB'; t=+e.target.value/500*DUR;
   document.getElementById('hint').classList.remove('in'); sync(); });

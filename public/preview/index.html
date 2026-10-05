@@ -83,6 +83,12 @@
     padding:14px 28px;cursor:pointer;font-family:var(--util);font-size:10px;
     letter-spacing:.24em;text-transform:uppercase}
   .enter:hover{border-color:var(--gilt);background:rgba(40,32,12,.72)}
+  /* A recruiter who does not want to walk through a museum should not have to
+     discover that the plain version exists. */
+  .alt{margin:16px 0 0;font-size:13.5px}
+  .alt a{color:var(--dim);text-decoration:none;border-bottom:1px solid #4A4433;
+    padding-bottom:2px}
+  .alt a:hover,.alt a:focus-visible{color:var(--giltHi);border-bottom-color:var(--gilt)}
   .cue{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);font-family:var(--util);
     font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);
     animation:bob 2.4s ease-in-out infinite}
@@ -519,6 +525,7 @@
     <p class="lede">My portfolio, hung as a private collection.</p>
     <div class="facts"><span>40 Works</span><i></i><span>10 Rooms</span><i></i><span>Admission Free</span></div>
     <button class="enter" id="enterBtn">Enter the collection</button>
+      <p class="alt"><a href="/summary/">or read the one page summary</a></p>
   </div>
   <p class="cue">Scroll</p>
 </section>
