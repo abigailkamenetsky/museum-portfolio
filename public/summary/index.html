@@ -149,6 +149,15 @@
   footer a{color:var(--giltHi)}
 
   a:focus-visible,summary:focus-visible{outline:2px solid var(--gilt);outline-offset:3px}
+
+  /* Sized for a thumb, not a pointer. The row headings look small here too but
+     their hit area is the whole row (.rlink::after), so they are left alone. */
+  @media (pointer:coarse){
+    .rail .rlinks a{padding:12px 15px}
+    summary{padding:13px 0}
+    .olinks a{padding:13px 0}
+    nav.side a{padding:12px 0}
+  }
   @media (prefers-reduced-motion:reduce){
     html{scroll-behavior:auto}
     *{transition:none!important}
