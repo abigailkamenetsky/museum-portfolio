@@ -19,7 +19,9 @@ const OUT = 'public/summary/index.html';
 const esc = (s) => String(s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   .replace(/"/g, '&quot;');
-const clean = (s) => String(s).replace(/\{\{SOCIALS\}\}/g, 'the links in the sidebar');
+// The links sit in the rail on a wide screen and above the content on a narrow
+// one, so the replacement has to read correctly either way.
+const clean = (s) => String(s).replace(/\{\{SOCIALS\}\}/g, 'the links on this page');
 
 const blocks = (b) => {
   if (!b) return [];
@@ -198,8 +200,9 @@ const html = `<!doctype html>
     padding:0 24px env(safe-area-inset-bottom)}
   @media (min-width:1024px){
     .page{display:flex;justify-content:space-between;gap:16px}
+    .blurb{max-width:36ch}
     .rail{position:sticky;top:0;display:flex;flex-direction:column;justify-content:space-between;
-      max-height:100vh;width:48%;padding:96px 0}
+      max-height:100dvh;width:48%;padding:96px 0}
     .main{width:52%;padding:96px 0}
   }
   .rail{padding:72px 0 0}
@@ -209,7 +212,7 @@ const html = `<!doctype html>
   h1{margin:0;font-size:clamp(34px,4.6vw,46px);font-weight:400;line-height:1.1;
     letter-spacing:.2px;color:var(--ink)}
   .role{margin:12px 0 0;font-size:18px;color:var(--ink)}
-  .blurb{margin:16px 0 0;max-width:36ch;font-size:16px}
+  .blurb{margin:16px 0 0;font-size:16px}
   .rail .rlinks{display:flex;flex-wrap:wrap;gap:7px;margin:26px 0 0;padding:0;list-style:none}
   .rail .rlinks a{display:inline-block;font-family:var(--util);font-size:11px;letter-spacing:.1em;
     text-transform:uppercase;color:var(--giltHi);text-decoration:none;
