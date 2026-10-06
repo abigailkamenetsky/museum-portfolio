@@ -12,12 +12,20 @@
 <meta property="og:description" content="Experience, projects, research, awards and leadership on one page.">
 <meta property="og:url" content="https://portfolio.abbykamenetsky.com/summary/">
 <style>
+  /* Dark academia by way of forest core. The ground is a real fir green rather
+     than the near-black it was, so the oil paintings in the rows sit on
+     something with a hue instead of a void. Brass not gold, moss for the
+     structural lines, dried terracotta for the dates, parchment for the type.
+     The labels are set in the same serif as the body: a monospace label is the
+     one thing that would break the spell. */
   :root{
-    --bg:#0B0F0C; --ink:#F2ECDC; --body:#A49C86; --faint:#7B7460;
-    --gilt:#C9A24E; --giltHi:#E8CF89;
-    --card:rgba(201,162,78,.045); --ring:rgba(201,162,78,.13);
+    --bg:#101710; --raised:#151D14;
+    --ink:#EFE8D4; --body:#AFA992; --faint:#87836B;
+    --brass:#B8954F; --brassHi:#DCC183;
+    --moss:#5F7350; --clay:#B5705C;
+    --card:rgba(95,115,80,.10); --ring:rgba(95,115,80,.24);
     --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
-    --util:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --util:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
   }
   *{box-sizing:border-box}
   [hidden]{display:none!important}
@@ -25,9 +33,9 @@
   body{margin:0;background:var(--bg);color:var(--body);font-family:var(--serif);
     font-size:17px;line-height:1.7;-webkit-font-smoothing:antialiased}
 
-  /* The reference's cursor spotlight, in gilt rather than teal. Pointer only. */
+  /* The reference's cursor spotlight, as candlelight. Pointer devices only. */
   #spot{position:fixed;inset:0;z-index:0;pointer-events:none;transition:opacity .3s;
-    background:radial-gradient(600px at var(--mx,50%) var(--my,50%),rgba(201,162,78,.055),transparent 80%)}
+    background:radial-gradient(620px at var(--mx,50%) var(--my,50%),rgba(184,149,79,.075),transparent 78%)}
   @media (pointer:coarse){#spot{display:none}}
 
   .page{position:relative;z-index:1;margin:0 auto;max-width:1152px;
@@ -36,7 +44,9 @@
     .page{display:flex;justify-content:space-between;gap:16px}
     .blurb{max-width:36ch}
     .rail{position:sticky;top:0;display:flex;flex-direction:column;justify-content:space-between;
-      max-height:100dvh;width:48%;padding:96px 0}
+      max-height:100dvh;width:48%;padding:76px 0 40px;
+      overflow-y:auto;scrollbar-width:none}
+    .rail::-webkit-scrollbar{display:none}
     .main{width:52%;padding:96px 0}
   }
   .rail{padding:72px 0 0}
@@ -47,37 +57,57 @@
     letter-spacing:.2px;color:var(--ink)}
   .role{margin:12px 0 0;font-size:18px;color:var(--ink)}
   .blurb{margin:16px 0 0;font-size:16px}
-  .rail .rlinks{display:flex;flex-wrap:wrap;gap:7px;margin:26px 0 0;padding:0;list-style:none}
-  .rail .rlinks a{display:inline-block;font-family:var(--util);font-size:11px;letter-spacing:.1em;
-    text-transform:uppercase;color:var(--giltHi);text-decoration:none;
-    border:1px solid rgba(201,162,78,.32);border-radius:999px;padding:9px 13px}
-  .rail .rlinks a:hover,.rail .rlinks a:focus-visible{border-color:var(--gilt);background:rgba(201,162,78,.10)}
+  .rail .rlinks{display:flex;flex-wrap:wrap;gap:6px;margin:22px 0 0;padding:0;list-style:none}
+  .rail .rlinks a{display:inline-block;font-family:var(--util);font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--brassHi);text-decoration:none;
+    border:1px solid rgba(184,149,79,.34);border-radius:999px;padding:9px 13px}
+  .rail .rlinks a:hover,.rail .rlinks a:focus-visible{border-color:var(--brass);background:rgba(184,149,79,.12)}
 
-  nav.side{display:none;margin:56px 0 0}
+  nav.side{display:none;margin:38px 0 0}
   @media (min-width:1024px){nav.side{display:block}}
   nav.side ul{margin:0;padding:0;list-style:none}
-  nav.side a{display:flex;align-items:center;gap:13px;padding:10px 0;text-decoration:none;
-    font-family:var(--util);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+  nav.side a{display:flex;align-items:center;gap:13px;padding:7px 0;text-decoration:none;
+    font-family:var(--util);font-size:13px;letter-spacing:.2em;text-transform:uppercase;
     color:var(--faint);transition:color .2s}
-  nav.side .bar{display:block;height:1px;width:32px;background:#4A4433;transition:width .2s,background .2s}
+  nav.side .bar{display:block;height:1px;width:32px;background:#4B5A40;transition:width .2s,background .2s}
   nav.side a:hover,nav.side a:focus-visible{color:var(--ink)}
   nav.side a:hover .bar,nav.side a:focus-visible .bar{width:64px;background:var(--ink)}
-  nav.side a[aria-current="true"]{color:var(--giltHi)}
-  nav.side a[aria-current="true"] .bar{width:64px;background:var(--giltHi)}
+  nav.side a[aria-current="true"]{color:var(--brassHi)}
+  nav.side a[aria-current="true"] .bar{width:64px;background:var(--brassHi)}
 
-  .ralt{margin:34px 0 0;font-size:14.5px;color:var(--faint)}
-  .ralt a{color:var(--giltHi)}
+  /* The way back into the museum has to be a door, not a sentence. Styled
+     after the entrance button in /preview/ so the two read as one building. */
+  .togo{display:inline-flex;align-items:center;gap:10px;margin:20px 0 0;
+    padding:15px 24px;min-height:48px;text-decoration:none;
+    font-family:var(--util);font-size:12.5px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--brassHi);background:rgba(95,115,80,.12);
+    border:1px solid rgba(184,149,79,.42);border-radius:2px;
+    transition:border-color .22s,background .22s,color .22s}
+  .togo:hover,.togo:focus-visible{border-color:var(--brass);background:rgba(95,115,80,.22);
+    color:#F4E6BE}
+  .togo .arw{width:.8em;height:.8em;margin:0}
+  .togo:hover .arw,.togo:focus-visible .arw{transform:translate(3px,-3px)}
+
 
   /* ── sections ─────────────────────────────────────────────────────────── */
+  /* On a short laptop the rail ran past the fold and the first thing lost was
+     the button back to the museum, which is the one control that must not be.
+     The blurb goes instead: the line above it already says what she does. */
+  @media (min-width:1024px) and (max-height:920px){
+    .blurb{display:none}
+    nav.side{margin-top:26px}
+    nav.side a{padding:5px 0}
+  }
+
   section{margin:0 0 86px;scroll-margin-top:24px}
   section:last-of-type{margin-bottom:40px}
   .shead{position:sticky;top:0;z-index:4;margin:0 -24px 18px;padding:14px 24px;
-    background:rgba(11,15,12,.86);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-  .shead h2{margin:0;font-family:var(--util);font-size:11.5px;letter-spacing:.24em;
+    background:rgba(16,23,16,.9);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  .shead h2{margin:0;font-family:var(--util);font-size:13px;letter-spacing:.3em;
     text-transform:uppercase;color:var(--ink);font-weight:400}
   @media (min-width:1024px){
     .shead{position:static;margin:0 0 14px;padding:0;background:none;backdrop-filter:none}
-    .shead h2{color:var(--gilt)}
+    .shead h2{color:var(--brass)}
   }
 
   .prose p{margin:0 0 15px;max-width:62ch}
@@ -98,21 +128,21 @@
   }
   .row:focus-within::before{background:var(--card);box-shadow:inset 0 1px 0 0 var(--ring)}
 
-  .when{font-family:var(--util);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
-    color:var(--faint);padding-top:7px;white-space:nowrap}
+  .when{font-family:var(--util);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--clay);padding-top:6px;white-space:nowrap}
   /* The paintings are portrait and landscape both, so an uncapped thumbnail
      makes every row a different height. Capped and contained, never cropped:
      these are artworks and half a painting is worse than a small one. */
   .shot{display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:3px;
-    border:1px solid rgba(201,162,78,.16);background:#0E130F;align-self:start;
+    border:1px solid rgba(184,149,79,.2);background:#141B13;align-self:start;
     width:132px;height:104px}
   .shot img{display:block;max-width:100%;max-height:100%;width:auto;height:auto}
-  .per{margin:0 0 7px;font-family:var(--util);font-size:11px;letter-spacing:.12em;
-    text-transform:uppercase;color:var(--faint)}
+  .per{margin:0 0 7px;font-family:var(--util);font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--clay)}
 
   .rbody h3{margin:0 0 8px;font-size:18.5px;font-weight:400;color:var(--ink);line-height:1.34}
   .rlink{color:inherit;text-decoration:none}
-  .row:hover .rlink,.rlink:focus-visible{color:var(--giltHi)}
+  .row:hover .rlink,.rlink:focus-visible{color:var(--brassHi)}
   /* the heading link is the whole row's hit area, as in the reference */
   .rlink::after{content:"";position:absolute;inset:-8px -18px;z-index:1}
   .arw{display:inline-block;width:.72em;height:.72em;margin-left:.3em;vertical-align:baseline;
@@ -124,22 +154,23 @@
 
   details{margin:0 0 11px;position:relative;z-index:2}
   summary{cursor:pointer;width:max-content;list-style:none;padding:7px 0;
-    font-family:var(--util);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+    font-family:var(--util);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
     color:var(--faint)}
   summary::-webkit-details-marker{display:none}
-  summary::before{content:"+";color:var(--gilt);display:inline-block;width:1.2em}
+  summary::before{content:"+";color:var(--clay);display:inline-block;width:1.2em}
   details[open] summary::before{content:"\2212"}
-  summary:hover,summary:focus-visible{color:var(--giltHi)}
+  summary:hover,summary:focus-visible{color:var(--brassHi)}
   .less{display:none}
   details[open] .more{display:none}
   details[open] .less{display:inline}
 
   .pills,.olinks{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 0;padding:0;list-style:none;
     position:relative;z-index:2}
-  .pills li{font-family:var(--util);font-size:11px;letter-spacing:.03em;color:var(--giltHi);
-    background:rgba(201,162,78,.10);border-radius:999px;padding:6px 11px;line-height:1.5}
-  .olinks a{display:inline-flex;align-items:center;font-family:var(--util);font-size:11px;
-    letter-spacing:.07em;text-transform:uppercase;color:var(--giltHi);text-decoration:none}
+  .pills li{font-family:var(--util);font-size:12.5px;letter-spacing:.01em;color:var(--brassHi);
+    background:rgba(95,115,80,.17);border:1px solid rgba(95,115,80,.22);
+    border-radius:999px;padding:5px 12px;line-height:1.55}
+  .olinks a{display:inline-flex;align-items:center;font-family:var(--util);font-size:12px;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--brassHi);text-decoration:none}
   .olinks a:hover span,.olinks a:focus-visible span{text-decoration:underline}
 
   .panel h3{margin:0 0 10px;font-size:15px;font-weight:400;color:var(--ink)}
@@ -147,9 +178,11 @@
   .panel p{margin:0 0 12px;font-size:15.5px;max-width:62ch}
 
   footer{margin:0;padding:0 0 70px;font-size:13.5px;color:var(--faint);max-width:56ch}
-  footer a{color:var(--giltHi)}
+  .endcta{margin:0 0 26px}
+  .endcta .togo{margin:0}
+  footer a{color:var(--brassHi)}
 
-  a:focus-visible,summary:focus-visible{outline:2px solid var(--gilt);outline-offset:3px}
+  a:focus-visible,summary:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
 
   /* Sized for a thumb, not a pointer. The row headings look small here too but
      their hit area is the whole row (.rlink::after), so they are left alone. */
@@ -157,7 +190,6 @@
     .rail .rlinks a{padding:12px 15px}
     summary{padding:13px 0}
     .olinks a{padding:13px 0}
-    nav.side a{padding:12px 0}
   }
   @media (prefers-reduced-motion:reduce){
     html{scroll-behavior:auto}
@@ -169,7 +201,7 @@
     body{background:#fff;color:#000;font-size:10.5pt}
     .page{display:block;max-width:none;padding:0}
     .rail,.main{width:auto;padding:0}
-    nav.side,.rail .rlinks,.shot,.olinks{display:none}
+    nav.side,.rail .rlinks,.shot,.olinks,.togo,.endcta{display:none}
     .shead{position:static;margin:0 0 8px;padding:0;background:none}
     .shead h2{color:#000}
     section{margin:0 0 18px}
@@ -216,7 +248,7 @@
         <li><a href="mailto:abbykamenetsky@uchicago.edu">School email</a></li>
         <li><a href="mailto:abigailk725@gmail.com">Home email</a></li>
       </ul>
-      <p class="ralt">Prefer the long way round? The same material is a museum you walk through at <a href="/preview/">the interactive portfolio</a>.</p>
+      <a class="togo" href="/preview/">Enter the museum<svg class="arw" aria-hidden="true" viewBox="0 0 20 20" fill="currentColor"><path d="M6.22 4.22a.75.75 0 0 1 1.06 0l5.25 5.25a.75.75 0 0 1 0 1.06l-5.25 5.25a.75.75 0 0 1-1.06-1.06L10.94 10 6.22 5.28a.75.75 0 0 1 0-1.06Z"/></svg></a>
     </div>
   </header>
 
@@ -570,6 +602,7 @@
 </div>
 </section>
     <footer>
+      <p class="endcta"><a class="togo" href="/preview/">Enter the museum<svg class="arw" aria-hidden="true" viewBox="0 0 20 20" fill="currentColor"><path d="M6.22 4.22a.75.75 0 0 1 1.06 0l5.25 5.25a.75.75 0 0 1 0 1.06l-5.25 5.25a.75.75 0 0 1-1.06-1.06L10.94 10 6.22 5.28a.75.75 0 0 1 0-1.06Z"/></svg></a></p>
       <p>Built from one source file, so this page and the museum always say the
       same thing. Set in Iowan Old Style, deployed on GitHub Pages.</p>
     </footer>
