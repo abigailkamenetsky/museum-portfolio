@@ -172,7 +172,7 @@ const html = `<!doctype html>
 <title>Abby Kamenetsky &middot; Summary</title>
 <meta name="description" content="Abigail (Abby) Kamenetsky: economics and computer science at the University of Chicago. Experience, projects, research, awards and leadership on one page.">
 <link rel="canonical" href="https://portfolio.abbykamenetsky.com/summary/">
-<meta name="theme-color" content="#0B0F0C">
+<meta name="theme-color" content="#17221B">
 <meta property="og:type" content="profile">
 <meta property="og:title" content="Abby Kamenetsky &middot; Summary">
 <meta property="og:description" content="Experience, projects, research, awards and leadership on one page.">
@@ -185,23 +185,29 @@ const html = `<!doctype html>
      The labels are set in the same serif as the body: a monospace label is the
      one thing that would break the spell. */
   :root{
-    --bg:#101710; --raised:#151D14;
-    --ink:#EFE8D4; --body:#AFA992; --faint:#87836B;
-    --brass:#B8954F; --brassHi:#DCC183;
-    --moss:#5F7350; --clay:#B5705C;
-    --card:rgba(95,115,80,.10); --ring:rgba(95,115,80,.24);
+    --bg:#17221B; --raised:#1E2B22;
+    --ink:#F0E9D6; --body:#C8C1A8; --faint:#9E9A84;
+    --brass:#CFA860; --brassHi:#F0DCA6;
+    --moss:#6E875C; --clay:#C9856A;
+    --card:rgba(110,135,92,.17); --ring:rgba(110,135,92,.34);
     --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
     --util:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
   }
   *{box-sizing:border-box}
   [hidden]{display:none!important}
   html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
-  body{margin:0;background:var(--bg);color:var(--body);font-family:var(--serif);
-    font-size:17px;line-height:1.7;-webkit-font-smoothing:antialiased}
+  body{margin:0;color:var(--body);font-family:var(--serif);
+    font-size:17px;line-height:1.7;-webkit-font-smoothing:antialiased;
+    background:var(--bg);
+    background-image:
+      radial-gradient(1100px 760px at 18% -6%, rgba(150,176,120,.13), transparent 62%),
+      radial-gradient(900px 700px at 102% 8%, rgba(207,168,96,.07), transparent 60%),
+      radial-gradient(130% 115% at 50% 46%, transparent 38%, rgba(6,11,7,.58) 100%);
+    background-attachment:fixed}
 
   /* The reference's cursor spotlight, as candlelight. Pointer devices only. */
   #spot{position:fixed;inset:0;z-index:0;pointer-events:none;transition:opacity .3s;
-    background:radial-gradient(620px at var(--mx,50%) var(--my,50%),rgba(184,149,79,.075),transparent 78%)}
+    background:radial-gradient(640px at var(--mx,50%) var(--my,50%),rgba(226,198,130,.10),transparent 76%)}
   @media (pointer:coarse){#spot{display:none}}
 
   .page{position:relative;z-index:1;margin:0 auto;max-width:1152px;
@@ -226,8 +232,8 @@ const html = `<!doctype html>
   .rail .rlinks{display:flex;flex-wrap:wrap;gap:6px;margin:22px 0 0;padding:0;list-style:none}
   .rail .rlinks a{display:inline-block;font-family:var(--util);font-size:12px;letter-spacing:.14em;
     text-transform:uppercase;color:var(--brassHi);text-decoration:none;
-    border:1px solid rgba(184,149,79,.34);border-radius:999px;padding:9px 13px}
-  .rail .rlinks a:hover,.rail .rlinks a:focus-visible{border-color:var(--brass);background:rgba(184,149,79,.12)}
+    border:1px solid rgba(207,168,96,.42);border-radius:999px;padding:9px 13px}
+  .rail .rlinks a:hover,.rail .rlinks a:focus-visible{border-color:var(--brass);background:rgba(110,135,92,.22)}
 
   nav.side{display:none;margin:38px 0 0}
   @media (min-width:1024px){nav.side{display:block}}
@@ -235,7 +241,7 @@ const html = `<!doctype html>
   nav.side a{display:flex;align-items:center;gap:13px;padding:7px 0;text-decoration:none;
     font-family:var(--util);font-size:13px;letter-spacing:.2em;text-transform:uppercase;
     color:var(--faint);transition:color .2s}
-  nav.side .bar{display:block;height:1px;width:32px;background:#4B5A40;transition:width .2s,background .2s}
+  nav.side .bar{display:block;height:1px;width:32px;background:#5E7A4E;transition:width .2s,background .2s}
   nav.side a:hover,nav.side a:focus-visible{color:var(--ink)}
   nav.side a:hover .bar,nav.side a:focus-visible .bar{width:64px;background:var(--ink)}
   nav.side a[aria-current="true"]{color:var(--brassHi)}
@@ -246,10 +252,10 @@ const html = `<!doctype html>
   .togo{display:inline-flex;align-items:center;gap:10px;margin:20px 0 0;
     padding:15px 24px;min-height:48px;text-decoration:none;
     font-family:var(--util);font-size:12.5px;letter-spacing:.2em;text-transform:uppercase;
-    color:var(--brassHi);background:rgba(95,115,80,.12);
-    border:1px solid rgba(184,149,79,.42);border-radius:2px;
+    color:var(--brassHi);background:rgba(110,135,92,.2);
+    border:1px solid rgba(207,168,96,.5);border-radius:2px;
     transition:border-color .22s,background .22s,color .22s}
-  .togo:hover,.togo:focus-visible{border-color:var(--brass);background:rgba(95,115,80,.22);
+  .togo:hover,.togo:focus-visible{border-color:var(--brass);background:rgba(110,135,92,.34);
     color:#F4E6BE}
   .togo .arw{width:.8em;height:.8em;margin:0}
   .togo:hover .arw,.togo:focus-visible .arw{transform:translate(3px,-3px)}
@@ -268,7 +274,7 @@ const html = `<!doctype html>
   section{margin:0 0 86px;scroll-margin-top:24px}
   section:last-of-type{margin-bottom:40px}
   .shead{position:sticky;top:0;z-index:4;margin:0 -24px 18px;padding:14px 24px;
-    background:rgba(16,23,16,.9);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+    background:rgba(23,34,27,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
   .shead h2{margin:0;font-family:var(--util);font-size:13px;letter-spacing:.3em;
     text-transform:uppercase;color:var(--ink);font-weight:400}
   @media (min-width:1024px){
@@ -300,7 +306,7 @@ const html = `<!doctype html>
      makes every row a different height. Capped and contained, never cropped:
      these are artworks and half a painting is worse than a small one. */
   .shot{display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:3px;
-    border:1px solid rgba(184,149,79,.2);background:#141B13;align-self:start;
+    border:1px solid rgba(207,168,96,.28);background:#111A14;align-self:start;
     width:132px;height:104px}
   .shot img{display:block;max-width:100%;max-height:100%;width:auto;height:auto}
   .per{margin:0 0 7px;font-family:var(--util);font-size:12px;letter-spacing:.14em;
@@ -333,7 +339,7 @@ const html = `<!doctype html>
   .pills,.olinks{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 0;padding:0;list-style:none;
     position:relative;z-index:2}
   .pills li{font-family:var(--util);font-size:12.5px;letter-spacing:.01em;color:var(--brassHi);
-    background:rgba(95,115,80,.17);border:1px solid rgba(95,115,80,.22);
+    background:rgba(110,135,92,.26);border:1px solid rgba(110,135,92,.4);
     border-radius:999px;padding:5px 12px;line-height:1.55}
   .olinks a{display:inline-flex;align-items:center;font-family:var(--util);font-size:12px;
     letter-spacing:.1em;text-transform:uppercase;color:var(--brassHi);text-decoration:none}
