@@ -117,8 +117,8 @@ function checkDustAlpha(){
     if(!dustUsable){ dv.style.display='none'; dv.style.opacity='0'; }
   }catch(_){}
 }
-const DUST_SRC = dv.currentSrc || dv.getAttribute('src') ||
-  (dv.canPlayType('video/mp4; codecs="hvc1"')!=='' ? '/marie/intro/dust_hevc.mp4' : '/marie/intro/dust_vp9.webm');
+const DUST_SRC = dv.canPlayType('video/mp4; codecs="hvc1"')!==''
+  ? '/marie/intro/dust_hevc.mp4' : '/marie/intro/dust_vp9.webm';
 dv.addEventListener('loadedmetadata',()=>{ if(dv.duration) vidDur=dv.duration; });
 dv.addEventListener('canplay',()=>{
   vidReady=true; readyCheck();
@@ -165,7 +165,7 @@ let armCapped=false, capTimer=null;
 // One definition, used by the hint, the progress line, the tap, the key and the
 // replay button. They each used to test the video separately, so capping the
 // wait in one of them left the others still stuck.
-function canRun(){ return bustReady && (vidReady || dv.error || armCapped); }
+function canRun(){ return bustReady; }
 function readyCheck(){
   const models = bustReady;
   // iOS ignores preload on video: Safari will not buffer one until a gesture,
@@ -173,11 +173,8 @@ function readyCheck(){
   // and the progress sat frozen forever. Abby saw it stop at 45% on her phone.
   // Wait a bounded time for the dust, then let her in regardless; the tap is
   // itself the gesture that gets the video going.
-  if(models && !capTimer && !vidReady && !dv.error){
-    capTimer=setTimeout(()=>{ armCapped=true; readyCheck(); }, 2500);
-  }
   if(state!=='IDLE') return;   // the shot has begun; never put the hint back
-  if(models && (vidReady || dv.error || armCapped)){
+  if(models){
     elHint.textContent='drag to look \u00b7 tap to shatter';
     startMuseum();
     elHint.classList.add('in');
@@ -269,7 +266,9 @@ L.load('/marie/intro/marie_lite.glb',(gi)=>{
   intact.traverse(o=>{ if(o.isMesh){ o.material=marble; o.castShadow=true; } });
   scene.add(intact);
   bustReady=true; warmPipeline(); readyCheck(); dirty=true;
-  setTimeout(loadRest, 0);     // once this frame is on screen
+  // Order matters on a slow line. The statue is up and tappable, so now fetch
+  // what the impact will need: the dust first, it is wanted before the shards.
+  setTimeout(()=>{ startDust(); loadRest(); }, 0);
 },(e)=>{ got.bust=e.loaded||0; },(e)=>{hud.textContent='FAILED '+e;});
 
 // All three download together; the bust is the smallest so it lands first and
@@ -286,7 +285,10 @@ function startMuseum(){
 }
 
 // The dust is a video, so it costs the main thread nothing: start it now.
-if(!dv.getAttribute('src')) dv.src = DUST_SRC;   // the gate normally set this already
+// The dust is 1.2MB and was racing the bust for the connection from the
+// moment of the choice. It starts once the statue is actually on screen.
+function startDust(){ if(startDust.done) return; startDust.done=true;
+  dv.src = DUST_SRC; try{ dv.load(); }catch(_){} }
 
 // The shatter is 117 meshes and 117 animation clips, and parsing that occupies
 // the main thread for long enough to delay the bust's own load callback. Loaded

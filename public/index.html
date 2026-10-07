@@ -188,10 +188,11 @@
     // Set the source and spend this gesture on the video here: iOS will not
     // buffer or play a clip unless play() is called inside a user gesture.
     try {
-      if (!dv.getAttribute('src')) {
-        dv.src = dv.canPlayType('video/mp4; codecs="hvc1"') !== ''
-          ? '/marie/intro/dust_hevc.mp4' : '/marie/intro/dust_vp9.webm';
-      }
+      // Unlock the element with a 1.6KB stub rather than the 1.2MB dust clip.
+      // iOS grants playback per element inside a gesture and keeps it across a
+      // later src change, so the real clip can arrive once the statue is up
+      // instead of racing it for the connection.
+      if (!dv.getAttribute('src')) dv.src = '/marie/intro/unlock.mp4';
       var p = dv.play();
       if (p && p.then) p.then(function(){ dv.pause(); dv.currentTime = 0; }).catch(function(){});
     } catch(_) {}
