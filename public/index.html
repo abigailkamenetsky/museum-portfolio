@@ -215,10 +215,15 @@
     var warmed = false;
     function warm(){
       if (warmed) return; warmed = true;
+      // modulepreload, not prefetch. Measured over three runs each on a slow
+      // line, prefetch made it 550ms SLOWER: it is low priority, the later
+      // import() does not reuse it, and the two then compete for the
+      // connection. modulepreload is fetched at the priority a module
+      // deserves and the import picks it straight out of the module map.
       ['/marie/vendor/three.module.js','/marie/vendor/three.core.js','/marie/intro/shot.js']
         .forEach(function(u){
           var l = document.createElement('link');
-          l.rel = 'prefetch'; l.href = u;
+          l.rel = 'modulepreload'; l.href = u;
           document.head.appendChild(l);
         });
     }
