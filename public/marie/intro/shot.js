@@ -142,7 +142,8 @@ dv.addEventListener('error',()=>{ vidReady=false; readyCheck(); });
 // old total, which is the "frozen at 45%" Abby reported. The percentage now
 // reaches 100 at the moment the statue becomes tappable, which is what it was
 // always meant to say.
-const WEIGHT = { bust:676892,
+// The stand-in is what gates the tap now, so the percentage counts that.
+const WEIGHT = { bust:170360,
                  dust: /hevc/.test(DUST_SRC) ? 628000 : 1265722 };
 const TOTAL = WEIGHT.bust + WEIGHT.dust;
 const got = { sim:0, bust:0, dust:0 };
@@ -254,7 +255,14 @@ function warmPipeline(){
   }catch(_){}
 }
 
-L.load('/marie/intro/marie_lite.glb',(gi)=>{
+// She is 130,000 triangles and 646KB, which is most of what stands between a
+// tap on the button and a statue on screen. Rather than cut her down, she now
+// arrives in two passes: a 166KB stand-in puts her up about four times sooner,
+// and the full model replaces its geometry in place once it lands. Same frame,
+// same material, same transform, so nothing moves, and what you end up looking
+// at is exactly what you looked at before.
+let bustMesh=null;
+function placeBust(gi){
   const ib=new THREE.Box3().setFromObject(gi.scene), ic=new THREE.Vector3(); ib.getCenter(ic);
   const h=ib.max.y-ib.min.y;
   if(!framed) frameFrom(h, 0);
@@ -263,12 +271,29 @@ L.load('/marie/intro/marie_lite.glb',(gi)=>{
   intact.scale.setScalar(bustH/h);
   gi.scene.position.y += (ic.y-ib.min.y);        // feet at the group origin
   intact.position.y = bustMinY;
-  intact.traverse(o=>{ if(o.isMesh){ o.material=marble; o.castShadow=true; } });
+  intact.traverse(o=>{ if(o.isMesh){ o.material=marble; o.castShadow=true; bustMesh=o; } });
   scene.add(intact);
+}
+function upgradeBust(){
+  L.load('/marie/intro/marie_lite.glb',(gf)=>{
+    // Once she is falling the shards take over, so a swap then would be both
+    // pointless and visible. Only while she is still standing.
+    if(state!=='IDLE' || !bustMesh) return;
+    let g=null;
+    gf.scene.traverse(o=>{ if(o.isMesh && !g) g=o.geometry; });
+    if(!g) return;
+    const old=bustMesh.geometry;
+    bustMesh.geometry=g;
+    if(old && old.dispose) old.dispose();
+    dirty=true;
+  },()=>{},()=>{});
+}
+L.load('/marie/intro/marie_lod.glb',(gi)=>{
+  placeBust(gi);
   bustReady=true; warmPipeline(); readyCheck(); dirty=true;
-  // Order matters on a slow line. The statue is up and tappable, so now fetch
-  // what the impact will need: the dust first, it is wanted before the shards.
-  setTimeout(()=>{ startDust(); loadRest(); }, 0);
+  // The statue is up and tappable. Now fetch what the impact will need, and
+  // the full resolution version of what she is already looking at.
+  setTimeout(()=>{ startDust(); loadRest(); upgradeBust(); }, 0);
 },(e)=>{ got.bust=e.loaded||0; },(e)=>{hud.textContent='FAILED '+e;});
 
 // All three download together; the bust is the smallest so it lands first and
