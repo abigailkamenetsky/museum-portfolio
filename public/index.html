@@ -208,7 +208,28 @@
   var btn = document.getElementById('gmuseum');
   if (btn) {
     btn.addEventListener('click', choose);
-    requestAnimationFrame(function(){ try { btn.focus(); } catch(_) {} });
+    // Reaching for the button is enough of a signal to start fetching. On a
+    // pointer this buys the whole hover; on a touch screen touchstart still
+    // lands before the click. Someone heading for the summary never triggers
+    // it, so it stays free for them.
+    var warmed = false;
+    function warm(){
+      if (warmed) return; warmed = true;
+      ['/marie/vendor/three.module.js','/marie/vendor/three.core.js','/marie/intro/shot.js']
+        .forEach(function(u){
+          var l = document.createElement('link');
+          l.rel = 'prefetch'; l.href = u;
+          document.head.appendChild(l);
+        });
+    }
+    btn.addEventListener('pointerenter', warm, {passive:true});
+    btn.addEventListener('touchstart', warm, {passive:true});
+    requestAnimationFrame(function(){
+      try { btn.focus(); } catch(_) {}
+      // Only after the opening focus, or this page focuses the button itself
+      // on load and warms for everyone, including the summary readers.
+      btn.addEventListener('focus', warm);
+    });
   } else {
     pull();   // no chooser in the document for some reason: behave as before
   }
