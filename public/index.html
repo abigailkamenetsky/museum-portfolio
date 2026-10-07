@@ -144,7 +144,7 @@
 <input type="range" id="sc" min="0" max="500" step="1" value="0" aria-label="Scrub the intro">
 <button id="hd">hide</button></div>
 <script type="importmap">
-{"imports":{"three":"/marie/vendor/three.module.js","three/addons/":"/marie/vendor/"}}
+{"imports":{"three":"/marie/vendor/three.module.min.js","three/addons/":"/marie/vendor/"}}
 </script>
 <script>
 /* The front door costs 40KB. Everything the statue needs costs 4.8MB, and it
@@ -166,7 +166,7 @@
   function pull(){
     if (started) return; started = true;
     // Warm the three hops the module will make, now that they are wanted.
-    ['/marie/vendor/three.module.js','/marie/vendor/three.core.js'].forEach(function(u){
+    ['/marie/vendor/three.module.min.js','/marie/vendor/three.core.min.js'].forEach(function(u){
       var l = document.createElement('link'); l.rel='modulepreload'; l.href=u;
       document.head.appendChild(l);
     });
@@ -220,7 +220,7 @@
       // import() does not reuse it, and the two then compete for the
       // connection. modulepreload is fetched at the priority a module
       // deserves and the import picks it straight out of the module map.
-      ['/marie/vendor/three.module.js','/marie/vendor/three.core.js','/marie/intro/shot.js']
+      ['/marie/vendor/three.module.min.js','/marie/vendor/three.core.min.js','/marie/intro/shot.js']
         .forEach(function(u){
           var l = document.createElement('link');
           l.rel = 'modulepreload'; l.href = u;
